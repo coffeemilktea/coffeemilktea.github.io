@@ -1,6 +1,6 @@
 <html>
   <head>
-    <title> Scott Wu </title>
+    Scott Wu
   </head>
   <body>
     <header>
