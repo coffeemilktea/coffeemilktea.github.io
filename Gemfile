@@ -1,1 +1,1 @@
-gem "jekyll-theme-simplex"
+gem install "jekyll-theme-simplex"
