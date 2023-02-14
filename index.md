@@ -13,7 +13,7 @@
       </ul>
     </nav>
     <main>
-      <p>Welcome to my personal website! This is a simple website that showcases my professional background and skills. Feel free to connect with me on LinkedIn and check out my projects on GitHub.</p>
+      <p>Welcome to my website, currently in progress and updating as of February 2023. I am a Healthcare IT Implementation engineer from San Jose, California.</p>
     </main>
     <footer>
       <p>Copyright © 2023 Scott Wu</p>
