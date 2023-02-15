@@ -8,6 +8,7 @@
     </header>
     <nav>
       <ul>
+ Socials:
         <li><a href="https://linkedin.com/in/scottswu">LinkedIn</a></li>
         <li><a href="https://github.com/coffeemilktea">GitHub</a></li>
       </ul>
