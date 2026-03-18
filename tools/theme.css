@@ -1,0 +1,109 @@
+/* HL7 Tools — shared Monokai theme
+   Used by: msgparser.html, dicom-generator.html, hl7-diff.html
+   ─────────────────────────────────────────────────────────── */
+
+/* ── Dark mode (default — Monokai) ── */
+:root {
+  --bg:       #272822;
+  --surface:  #1e1f1a;
+  --surface2: #3e3d32;
+  --border:   #49483e;
+  --accent:   #66d9ef;
+  --accent2:  #ae81ff;
+  --green:    #a6e22e;
+  --yellow:   #e6db74;
+  --red:      #f92672;
+  --orange:   #fd971f;
+  --text:     #f8f8f2;
+  --muted:    #75715e;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  --font-sans: system-ui, -apple-system, sans-serif;
+  --radius:   8px;
+
+  /* Aliases — used by dicom-generator.html */
+  --fg:       #f8f8f2;
+  --comment:  #75715e;
+  --input-bg: #15160f;
+  --cyan:     #66d9ef;
+  --pink:     #f92672;
+  --purple:   #ae81ff;
+}
+
+/* ── Light mode (Monokai-inspired warm paper) ── */
+[data-theme="light"] {
+  --bg:       #f9f8f5;
+  --surface:  #ffffff;
+  --surface2: #f0efe9;
+  --border:   #d6d5cc;
+  --accent:   #0597a7;
+  --accent2:  #7c3aed;
+  --green:    #5c8400;
+  --yellow:   #866e00;
+  --red:      #d4006e;
+  --orange:   #c96900;
+  --text:     #272822;
+  --muted:    #75715e;
+
+  /* Aliases for dicom-generator.html */
+  --fg:       #272822;
+  --comment:  #75715e;
+  --input-bg: #f0efe9;
+  --cyan:     #0597a7;
+  --pink:     #d4006e;
+  --purple:   #7c3aed;
+}
+
+/* ── Shared: App Header ── */
+.app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 24px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* ── Shared: Nav Links ── */
+.nav-links {
+  display: flex;
+  gap: 8px;
+}
+.nav-links a {
+  color: var(--muted);
+  font-size: 12px;
+  text-decoration: none;
+  padding: 5px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  transition: color .15s, border-color .15s, background .15s;
+  white-space: nowrap;
+}
+.nav-links a:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
+
+/* ── Shared: Theme Toggle Button ── */
+.btn-theme {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0 12px;
+  height: 30px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  transition: color .15s, border-color .15s, background .15s;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+}
+.btn-theme:hover { color: var(--text); border-color: var(--muted); }
+.btn-theme:active { transform: scale(0.98); }

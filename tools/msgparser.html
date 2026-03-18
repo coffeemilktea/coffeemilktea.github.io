@@ -4,41 +4,10 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HL7 v2.x Parser</title>
+  <link rel="stylesheet" href="theme.css" />
+  <script src="theme.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #22263a;
-      --border: #2e3350;
-      --accent: #4f8ef7;
-      --accent2: #7c5cbf;
-      --green: #3ecf8e;
-      --yellow: #f5c842;
-      --red: #f55f5f;
-      --orange: #f7974f;
-      --text: #e2e6f0;
-      --muted: #7a809e;
-      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-      --font-sans: system-ui, -apple-system, sans-serif;
-      --radius: 8px;
-    }
-
-    [data-theme="light"] {
-      --bg: #f1f3f9;
-      --surface: #ffffff;
-      --surface2: #e8eaf4;
-      --border: #cdd1e6;
-      --accent: #2563eb;
-      --accent2: #6d28d9;
-      --green: #059669;
-      --yellow: #b45309;
-      --red: #dc2626;
-      --orange: #c2410c;
-      --text: #111827;
-      --muted: #6b7280;
-    }
 
     /* Segment colours — darker for light mode readability */
     [data-theme="light"] .seg-name.MSH { color: #1d4ed8; }
@@ -74,26 +43,6 @@
     [data-theme="light"] .field-value.empty { color: #d1d5db; }
     [data-theme="light"] .rep-header { color: #92400e; }
     [data-theme="light"] .error-panel { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
-
-    /* Theme toggle button */
-    .btn-theme {
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 20px;
-      padding: 0 12px;
-      height: 30px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--muted);
-      cursor: pointer;
-      transition: color .15s, border-color .15s, background .15s;
-      display: flex;
-      align-items: center;
-      gap: 5px;
-      letter-spacing: 0.2px;
-    }
-    .btn-theme:hover { color: var(--text); border-color: var(--muted); background: var(--surface2); }
-    .btn-theme:active { transform: scale(0.98); }
 
     .sample-split {
       display: flex;
@@ -156,15 +105,6 @@
       min-height: 100vh;
       display: flex;
       flex-direction: column;
-    }
-
-    header {
-      padding: 14px 24px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      gap: 14px;
     }
 
     header h1 {
@@ -259,7 +199,7 @@
       box-shadow: 0 1px 3px rgba(0,0,0,.25);
     }
 
-    .btn-primary:hover { background: #3a7de8; box-shadow: 0 2px 6px rgba(79,142,247,.35); }
+    .btn-primary:hover { background: #4bc8e0; box-shadow: 0 2px 6px rgba(102,217,239,.35); }
     .btn-primary:active { transform: scale(0.98); }
 
     .btn-ghost {
@@ -294,7 +234,7 @@
       transition: background .15s, box-shadow .15s, transform .1s;
     }
 
-    .btn-parse:hover { background: #3a7de8; box-shadow: 0 3px 10px rgba(79,142,247,.4); }
+    .btn-parse:hover { background: #4bc8e0; box-shadow: 0 3px 10px rgba(102,217,239,.4); }
     .btn-parse:active { transform: scale(0.99); box-shadow: none; }
 
     textarea {
@@ -573,8 +513,8 @@
 
     /* Error panel */
     .error-panel {
-      background: #2a1a1a;
-      border: 1px solid #5a2a2a;
+      background: #271119;
+      border: 1px solid #5a1030;
       border-radius: var(--radius);
       padding: 12px 14px;
       color: var(--red);
@@ -587,18 +527,18 @@
     .seg-name.PID { color: var(--green); }
     .seg-name.PV1, .seg-name.PV2 { color: var(--orange); }
     .seg-name.OBR { color: var(--yellow); }
-    .seg-name.OBX { color: #a78bfa; }
-    .seg-name.ORC { color: #f472b6; }
-    .seg-name.DG1 { color: #34d399; }
-    .seg-name.NTE { color: #94a3b8; }
-    .seg-name.AL1 { color: #fb923c; }
+    .seg-name.OBX { color: #ae81ff; }
+    .seg-name.ORC { color: #f92672; }
+    .seg-name.DG1 { color: #a6e22e; }
+    .seg-name.NTE { color: #75715e; }
+    .seg-name.AL1 { color: #fd971f; }
     .seg-name.EVN { color: var(--accent2); }
-    .seg-name.IN1 { color: #60a5fa; }
-    .seg-name.NK1 { color: #f9a8d4; }
-    .seg-name.MRG { color: #fbbf24; }
-    .seg-name.RXO, .seg-name.RXE, .seg-name.RXA { color: #a3e635; }
-    .seg-name.SCH { color: #67e8f9; }
-    .seg-name.SPM { color: #c084fc; }
+    .seg-name.IN1 { color: #66d9ef; }
+    .seg-name.NK1 { color: #f92672; }
+    .seg-name.MRG { color: #e6db74; }
+    .seg-name.RXO, .seg-name.RXE, .seg-name.RXA { color: #a6e22e; }
+    .seg-name.SCH { color: #66d9ef; }
+    .seg-name.SPM { color: #ae81ff; }
     .seg-name.SAC { color: #818cf8; }
     .seg-name.TQ1, .seg-name.TQ2 { color: #fdba74; }
 
@@ -691,18 +631,234 @@
       }
       .panel { border-right: none; border-bottom: 1px solid var(--border); }
     }
+
+    /* ── FHIR Panel ─────────────────────────────────────────────────────────── */
+    #fhir-panel {
+      width: 100%;
+      padding: 20px 24px 32px;
+      display: none;
+      flex-direction: column;
+      gap: 20px;
+      overflow-y: auto;
+      background: var(--bg);
+    }
+
+    .fhir-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+    }
+
+    .fhir-badge {
+      background: var(--accent);
+      color: #1a1a1a;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 700;
+      padding: 3px 11px;
+      border-radius: 20px;
+      letter-spacing: 0.2px;
+    }
+
+    .fhir-header-id {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .fhir-header-id strong { color: var(--text); }
+
+    .fhir-header-date {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .fhir-version-label {
+      margin-left: auto;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--accent2);
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      padding: 2px 8px;
+      border-radius: 4px;
+    }
+
+    .fhir-section-title {
+      padding: 8px 12px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+      border-radius: var(--radius) var(--radius) 0 0;
+    }
+
+    .fhir-section {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+
+    .fhir-section-body {
+      padding: 14px;
+      background: var(--bg);
+    }
+
+    .fhir-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+
+    @media (max-width: 900px) {
+      .fhir-cards { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 560px) {
+      .fhir-cards { grid-template-columns: 1fr; }
+    }
+
+    .fhir-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      min-width: 0;
+    }
+
+    .fhir-card .card-label {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+    }
+
+    .fhir-card .card-value {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text);
+      word-break: break-word;
+      line-height: 1.5;
+    }
+
+    .fhir-empty {
+      color: var(--muted);
+      font-style: italic;
+      font-size: 12px;
+    }
+
+    .fhir-id-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .fhir-id-table th {
+      text-align: left;
+      padding: 5px 10px;
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+      background: var(--surface2);
+    }
+
+    .fhir-id-table td {
+      padding: 5px 10px;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--font-mono);
+      color: var(--text);
+      vertical-align: top;
+    }
+
+    .fhir-id-table tr:last-child td { border-bottom: none; }
+    .fhir-id-table tr:hover td { background: var(--surface2); }
+
+    .fhir-id-system {
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .fhir-raw details {
+      background: var(--surface);
+    }
+
+    .fhir-raw summary {
+      padding: 9px 12px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+      cursor: pointer;
+      user-select: none;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .fhir-raw summary::-webkit-details-marker { display: none; }
+
+    .fhir-raw summary::before {
+      content: '▸';
+      font-size: 10px;
+    }
+
+    .fhir-raw details[open] summary::before { content: '▾'; }
+
+    .fhir-raw pre {
+      margin: 0;
+      padding: 14px 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      overflow-x: auto;
+      background: var(--bg);
+      border-top: 1px solid var(--border);
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .fhir-scalar-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+      gap: 8px;
+      padding: 14px;
+    }
   </style>
 </head>
 <body>
 
-<header>
+<header class="app-header">
   <h1>HL7 Parser</h1>
   <span class="badge">v2.x</span>
   <span class="spacer"></span>
   <span class="hint">Paste an HL7 message to begin</span>
-  <button class="btn-theme" id="btn-theme" title="Toggle light/dark mode">
-    <span id="theme-icon">☀️</span>
-    <span id="theme-label">Light</span>
+  <div class="nav-links">
+    <a href="dicom-generator.html">DICOM Gen</a>
+    <a href="hl7-diff.html">Diff Checker</a>
+  </div>
+  <button class="btn-theme" id="btn-theme">
+    <span class="theme-icon">☀️</span>
+    <span class="theme-label">Light</span>
   </button>
 </header>
 
@@ -724,6 +880,10 @@
               <option value="ADT_A31">ADT^A31</option>
               <option value="ADT_A40">ADT^A40</option>
               <option value="OML">OML^O21</option>
+              <option disabled>──────────</option>
+              <option value="FHIR_PATIENT">FHIR Patient</option>
+              <option value="FHIR_OBSERVATION">FHIR Observation</option>
+              <option value="FHIR_DIAGNOSTICREPORT">FHIR DiagnosticReport</option>
             </select>
           </div>
         </div>
@@ -772,6 +932,8 @@
     </div>
   </div>
 </div>
+
+<div id="fhir-panel"></div>
 
 <script>
 // ─── HL7 Segment Field Definitions ───────────────────────────────────────────
@@ -1431,6 +1593,33 @@ let lastParsed = null;
 
 function doParse() {
   const raw = document.getElementById('hl7-input').value;
+  const trimmed = raw.trim();
+
+  // ── FHIR detection ──────────────────────────────────────────────────────────
+  const fhirKind = detectFHIR(trimmed);
+  if (fhirKind) {
+    showFHIROutput();
+    document.getElementById('msg-type-display').style.display = 'none';
+    try {
+      let resource, versionLabel;
+      if (fhirKind === 'json') {
+        resource = JSON.parse(trimmed);
+        versionLabel = 'FHIR R4 JSON';
+      } else {
+        resource = parseFHIRXML(trimmed);
+        versionLabel = 'FHIR R4 XML';
+      }
+      renderFHIR(resource, versionLabel);
+    } catch (e) {
+      const panel = document.getElementById('fhir-panel');
+      panel.innerHTML = `<div class="error-panel" style="margin:20px">FHIR parse error: ${esc(e.message)}</div>`;
+      panel.style.display = 'flex';
+    }
+    return;
+  }
+
+  // ── HL7 v2.x path ──────────────────────────────────────────────────────────
+  restoreHL7Panels();
   const structuredContainer = document.getElementById('output-structured');
   const rawContainer = document.getElementById('output-raw');
   const jsonContainer = document.getElementById('output-json');
@@ -1486,6 +1675,7 @@ document.getElementById('btn-clear').addEventListener('click', () => {
   document.getElementById('output-raw').innerHTML = '';
   document.getElementById('output-json').textContent = '';
   lastParsed = null;
+  restoreHL7Panels();
 });
 
 document.getElementById('btn-sample').addEventListener('click', () => {
@@ -1506,34 +1696,7 @@ document.querySelectorAll('.tab').forEach(tab => {
   });
 });
 
-// Theme toggle
-(function() {
-  const html = document.documentElement;
-  const btn = document.getElementById('btn-theme');
-  const icon = document.getElementById('theme-icon');
-  const label = document.getElementById('theme-label');
-
-  function applyTheme(theme) {
-    if (theme === 'light') {
-      html.setAttribute('data-theme', 'light');
-      icon.textContent = '🌙';
-      label.textContent = 'Dark';
-    } else {
-      html.removeAttribute('data-theme');
-      icon.textContent = '☀️';
-      label.textContent = 'Light';
-    }
-  }
-
-  const saved = localStorage.getItem('hl7-theme') || 'dark';
-  applyTheme(saved);
-
-  btn.addEventListener('click', () => {
-    const next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
-    localStorage.setItem('hl7-theme', next);
-    applyTheme(next);
-  });
-})();
+/* Theme toggle handled by theme.js */
 
 // Keyboard shortcut: Ctrl/Cmd + Enter to parse
 document.addEventListener('keydown', e => {
@@ -1542,6 +1705,469 @@ document.addEventListener('keydown', e => {
     doParse();
   }
 });
+
+// ─── FHIR Sample Messages ────────────────────────────────────────────────────
+SAMPLES.FHIR_PATIENT = JSON.stringify({
+  "resourceType": "Patient",
+  "id": "example-patient-001",
+  "meta": { "lastUpdated": "2024-03-15T10:30:00Z" },
+  "identifier": [{ "system": "http://hospital.example.org/mrn", "value": "MRN-123456" }],
+  "name": [{ "use": "official", "family": "Johnson", "given": ["Sarah", "Marie"] }],
+  "gender": "female",
+  "birthDate": "1985-07-22",
+  "address": [{ "use": "home", "line": ["123 Maple Street"], "city": "Springfield", "state": "IL", "postalCode": "62701" }],
+  "telecom": [{ "system": "phone", "value": "(217) 555-0142", "use": "home" }, { "system": "email", "value": "sarah.johnson@email.com" }],
+  "maritalStatus": { "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus", "code": "M", "display": "Married" }] }
+}, null, 2);
+
+SAMPLES.FHIR_OBSERVATION = JSON.stringify({
+  "resourceType": "Observation",
+  "id": "obs-glucose-001",
+  "meta": { "lastUpdated": "2024-03-15T14:22:00Z" },
+  "status": "final",
+  "code": { "coding": [{ "system": "http://loinc.org", "code": "2339-0", "display": "Glucose [Mass/volume] in Blood" }], "text": "Blood Glucose" },
+  "subject": { "reference": "Patient/example-patient-001", "display": "Sarah Johnson" },
+  "effectiveDateTime": "2024-03-15T14:00:00Z",
+  "valueQuantity": { "value": 95, "unit": "mg/dL", "system": "http://unitsofmeasure.org", "code": "mg/dL" },
+  "referenceRange": [{ "low": { "value": 70, "unit": "mg/dL" }, "high": { "value": 100, "unit": "mg/dL" } }],
+  "interpretation": [{ "coding": [{ "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation", "code": "N", "display": "Normal" }] }]
+}, null, 2);
+
+SAMPLES.FHIR_DIAGNOSTICREPORT = JSON.stringify({
+  "resourceType": "DiagnosticReport",
+  "id": "report-cbc-001",
+  "meta": { "lastUpdated": "2024-03-15T16:45:00Z" },
+  "status": "final",
+  "code": { "coding": [{ "system": "http://loinc.org", "code": "58410-2", "display": "CBC panel - Blood by Automated count" }], "text": "Complete Blood Count" },
+  "subject": { "reference": "Patient/example-patient-001", "display": "Sarah Johnson" },
+  "effectiveDateTime": "2024-03-15T14:00:00Z",
+  "issued": "2024-03-15T16:30:00Z",
+  "result": [
+    { "reference": "Observation/obs-wbc", "display": "WBC 7.2 K/uL" },
+    { "reference": "Observation/obs-rbc", "display": "RBC 4.8 M/uL" },
+    { "reference": "Observation/obs-hgb", "display": "Hemoglobin 14.2 g/dL" },
+    { "reference": "Observation/obs-plt", "display": "Platelets 245 K/uL" }
+  ],
+  "conclusion": "CBC within normal limits."
+}, null, 2);
+
+// ─── FHIR Detection ──────────────────────────────────────────────────────────
+function detectFHIR(text) {
+  const t = text.trim();
+  if (t.startsWith('{') && t.includes('"resourceType"')) return 'json';
+  if (t.startsWith('<') && t.includes('hl7.org/fhir')) return 'xml';
+  return null;
+}
+
+// ─── XML → JS Object conversion ─────────────────────────────────────────────
+function xmlNodeToObj(node) {
+  if (node.nodeType === Node.TEXT_NODE) {
+    const t = node.textContent.trim();
+    return t.length ? t : null;
+  }
+  if (node.nodeType !== Node.ELEMENT_NODE) return null;
+
+  const obj = {};
+
+  // Attributes
+  for (const attr of node.attributes) {
+    obj['@' + attr.name] = attr.value;
+  }
+
+  const children = Array.from(node.childNodes).filter(n =>
+    n.nodeType === Node.ELEMENT_NODE ||
+    (n.nodeType === Node.TEXT_NODE && n.textContent.trim().length > 0)
+  );
+
+  if (children.length === 0) {
+    // Leaf: use @value attribute if present, else text content
+    if (obj['@value'] !== undefined) return obj['@value'];
+    const txt = node.textContent.trim();
+    return txt.length ? txt : null;
+  }
+
+  // Children
+  const childCounts = {};
+  for (const ch of children) {
+    if (ch.nodeType === Node.ELEMENT_NODE) {
+      childCounts[ch.localName] = (childCounts[ch.localName] || 0) + 1;
+    }
+  }
+
+  const childObjs = {};
+  for (const ch of children) {
+    if (ch.nodeType === Node.TEXT_NODE) {
+      const t = ch.textContent.trim();
+      if (t) obj['_text'] = t;
+      continue;
+    }
+    const key = ch.localName;
+    const val = xmlNodeToObj(ch);
+    if (childCounts[key] > 1) {
+      if (!childObjs[key]) childObjs[key] = [];
+      childObjs[key].push(val);
+    } else {
+      childObjs[key] = val;
+    }
+  }
+
+  return Object.assign(obj, childObjs);
+}
+
+function parseFHIRXML(xmlText) {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xmlText, 'application/xml');
+  const parseError = doc.querySelector('parsererror');
+  if (parseError) throw new Error('XML parse error: ' + parseError.textContent.slice(0, 120));
+  const root = doc.documentElement;
+  const obj = xmlNodeToObj(root);
+  // Ensure resourceType is set from element name
+  if (typeof obj === 'object' && !obj.resourceType) {
+    obj.resourceType = root.localName;
+  }
+  return obj;
+}
+
+// ─── FHIR Rendering helpers ──────────────────────────────────────────────────
+function fhirCard(label, value) {
+  const card = document.createElement('div');
+  card.className = 'fhir-card';
+  const lbl = document.createElement('div');
+  lbl.className = 'card-label';
+  lbl.textContent = label;
+  const val = document.createElement('div');
+  val.className = 'card-value';
+  if (value === null || value === undefined || value === '') {
+    val.innerHTML = '<span class="fhir-empty">—</span>';
+  } else {
+    val.textContent = String(value);
+  }
+  card.appendChild(lbl);
+  card.appendChild(val);
+  return card;
+}
+
+function fhirSection(title) {
+  const sec = document.createElement('div');
+  sec.className = 'fhir-section';
+  const hdr = document.createElement('div');
+  hdr.className = 'fhir-section-title';
+  hdr.textContent = title;
+  sec.appendChild(hdr);
+  return sec;
+}
+
+function safeGet(obj, ...path) {
+  let cur = obj;
+  for (const k of path) {
+    if (cur === null || cur === undefined) return undefined;
+    if (typeof k === 'number') cur = Array.isArray(cur) ? cur[k] : undefined;
+    else cur = cur[k];
+  }
+  return cur;
+}
+
+function firstOf(...vals) {
+  for (const v of vals) {
+    if (v !== null && v !== undefined && v !== '') return v;
+  }
+  return null;
+}
+
+function fmtDate(iso) {
+  if (!iso) return null;
+  try {
+    const d = new Date(iso);
+    if (isNaN(d.getTime())) return iso;
+    return d.toLocaleString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', timeZoneName: 'short' });
+  } catch { return iso; }
+}
+
+function fmtDateOnly(iso) {
+  if (!iso) return null;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(iso)) return iso;
+  return fmtDate(iso);
+}
+
+// ─── Resource-type field extractors ─────────────────────────────────────────
+function extractFields(resource) {
+  const rt = resource.resourceType;
+  const cards = [];
+
+  function add(label, value) { cards.push([label, value]); }
+
+  if (rt === 'Patient') {
+    const officialName = (resource.name || []).find(n => n.use === 'official') || resource.name?.[0];
+    const fullName = officialName
+      ? [officialName.family, ...(officialName.given || [])].filter(Boolean).join(', ')
+      : null;
+    add('Name', fullName);
+    add('Birth Date', fmtDateOnly(resource.birthDate));
+    add('Gender', resource.gender);
+    add('MRN / Identifier', safeGet(resource, 'identifier', 0, 'value'));
+    const addr = resource.address?.[0];
+    if (addr) {
+      add('Address', [[...(addr.line || [])].join(', '), addr.city, addr.state, addr.postalCode].filter(Boolean).join(', '));
+    } else {
+      add('Address', null);
+    }
+    const phone = (resource.telecom || []).find(t => t.system === 'phone');
+    add('Phone', phone?.value ?? null);
+    add('Marital Status', firstOf(
+      safeGet(resource, 'maritalStatus', 'text'),
+      safeGet(resource, 'maritalStatus', 'coding', 0, 'display'),
+      safeGet(resource, 'maritalStatus', 'coding', 0, 'code')
+    ));
+    const deceased = resource.deceasedBoolean !== undefined
+      ? String(resource.deceasedBoolean)
+      : (resource.deceasedDateTime ? fmtDate(resource.deceasedDateTime) : null);
+    add('Deceased', deceased);
+
+  } else if (rt === 'Observation') {
+    add('Status', resource.status);
+    add('Code', firstOf(
+      safeGet(resource, 'code', 'text'),
+      safeGet(resource, 'code', 'coding', 0, 'display')
+    ));
+    add('Code System', safeGet(resource, 'code', 'coding', 0, 'system'));
+    add('Subject', safeGet(resource, 'subject', 'reference'));
+    add('Effective', fmtDate(resource.effectiveDateTime || safeGet(resource, 'effectivePeriod', 'start')));
+    const vq = resource.valueQuantity;
+    add('Value', vq ? `${vq.value} ${vq.unit || ''}`.trim() : firstOf(resource.valueString, safeGet(resource, 'valueCodeableConcept', 'text')));
+    add('Interpretation', safeGet(resource, 'interpretation', 0, 'coding', 0, 'code'));
+    const rr = resource.referenceRange?.[0];
+    if (rr) {
+      const lo = rr.low ? `${rr.low.value} ${rr.low.unit || ''}`.trim() : '';
+      const hi = rr.high ? `${rr.high.value} ${rr.high.unit || ''}`.trim() : '';
+      add('Reference Range', lo && hi ? `${lo} – ${hi}` : lo || hi || null);
+    } else {
+      add('Reference Range', null);
+    }
+
+  } else if (rt === 'DiagnosticReport') {
+    add('Status', resource.status);
+    add('Code', firstOf(safeGet(resource, 'code', 'text'), safeGet(resource, 'code', 'coding', 0, 'display')));
+    add('Subject', safeGet(resource, 'subject', 'reference'));
+    add('Effective', fmtDate(resource.effectiveDateTime));
+    add('Issued', fmtDate(resource.issued));
+    const results = (resource.result || []).map(r => r.display || r.reference).filter(Boolean).join('; ');
+    add('Results', results || null);
+    add('Conclusion', resource.conclusion);
+
+  } else if (rt === 'Encounter') {
+    add('Status', resource.status);
+    add('Class', firstOf(safeGet(resource, 'class', 'display'), safeGet(resource, 'class', 'code')));
+    add('Type', safeGet(resource, 'type', 0, 'text'));
+    add('Subject', safeGet(resource, 'subject', 'reference'));
+    add('Period Start', fmtDate(safeGet(resource, 'period', 'start')));
+    add('Period End', fmtDate(safeGet(resource, 'period', 'end')));
+    add('Reason', safeGet(resource, 'reasonCode', 0, 'text'));
+    add('Admit Source', safeGet(resource, 'hospitalization', 'admitSource', 'text'));
+    add('Discharge Disposition', safeGet(resource, 'hospitalization', 'dischargeDisposition', 'text'));
+
+  } else if (rt === 'Condition') {
+    add('Clinical Status', safeGet(resource, 'clinicalStatus', 'coding', 0, 'code'));
+    add('Verification Status', safeGet(resource, 'verificationStatus', 'coding', 0, 'code'));
+    add('Code', firstOf(safeGet(resource, 'code', 'text'), safeGet(resource, 'code', 'coding', 0, 'display')));
+    add('Subject', safeGet(resource, 'subject', 'reference'));
+    add('Onset', fmtDate(resource.onsetDateTime));
+    add('Recorded', fmtDate(resource.recordedDate));
+    add('Note', safeGet(resource, 'note', 0, 'text'));
+
+  } else if (rt === 'MedicationRequest') {
+    add('Status', resource.status);
+    add('Intent', resource.intent);
+    add('Medication', firstOf(
+      safeGet(resource, 'medicationCodeableConcept', 'text'),
+      safeGet(resource, 'medicationCodeableConcept', 'coding', 0, 'display'),
+      safeGet(resource, 'medicationReference', 'display')
+    ));
+    add('Subject', safeGet(resource, 'subject', 'reference'));
+    add('Authored On', fmtDate(resource.authoredOn));
+    add('Dosage Instructions', safeGet(resource, 'dosageInstruction', 0, 'text'));
+    const dq = safeGet(resource, 'dosageInstruction', 0, 'doseAndRate', 0, 'doseQuantity');
+    add('Dose', dq ? `${dq.value} ${dq.unit || ''}`.trim() : null);
+
+  } else if (rt === 'Procedure') {
+    add('Status', resource.status);
+    add('Code', firstOf(safeGet(resource, 'code', 'text'), safeGet(resource, 'code', 'coding', 0, 'display')));
+    add('Subject', safeGet(resource, 'subject', 'reference'));
+    add('Performed', fmtDate(resource.performedDateTime || safeGet(resource, 'performedPeriod', 'start')));
+    add('Outcome', safeGet(resource, 'outcome', 'text'));
+    add('Note', safeGet(resource, 'note', 0, 'text'));
+
+  } else if (rt === 'AllergyIntolerance') {
+    add('Clinical Status', safeGet(resource, 'clinicalStatus', 'coding', 0, 'code'));
+    add('Verification Status', safeGet(resource, 'verificationStatus', 'coding', 0, 'code'));
+    add('Type', resource.type);
+    add('Category', resource.category?.[0] ?? null);
+    add('Code', firstOf(safeGet(resource, 'code', 'text'), safeGet(resource, 'code', 'coding', 0, 'display')));
+    add('Patient', safeGet(resource, 'patient', 'reference'));
+    add('Manifestation', safeGet(resource, 'reaction', 0, 'manifestation', 0, 'text'));
+    add('Severity', safeGet(resource, 'reaction', 0, 'severity'));
+
+  } else if (rt === 'Immunization') {
+    add('Status', resource.status);
+    add('Vaccine', firstOf(safeGet(resource, 'vaccineCode', 'text'), safeGet(resource, 'vaccineCode', 'coding', 0, 'display')));
+    add('Patient', safeGet(resource, 'patient', 'reference'));
+    add('Occurrence', fmtDate(resource.occurrenceDateTime));
+    add('Lot Number', resource.lotNumber);
+    add('Site', safeGet(resource, 'site', 'text'));
+    add('Route', safeGet(resource, 'route', 'text'));
+
+  } else {
+    // Generic: all top-level scalars
+    for (const [k, v] of Object.entries(resource)) {
+      if (k === 'resourceType') continue;
+      if (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') {
+        add(k, String(v));
+      }
+    }
+  }
+
+  return cards;
+}
+
+// ─── FHIR Panel renderer ─────────────────────────────────────────────────────
+function renderFHIR(resource, fhirVersion) {
+  const panel = document.getElementById('fhir-panel');
+  panel.innerHTML = '';
+  panel.style.display = 'flex';
+
+  // 1. Header bar
+  const header = document.createElement('div');
+  header.className = 'fhir-header';
+
+  const badge = document.createElement('span');
+  badge.className = 'fhir-badge';
+  badge.textContent = resource.resourceType || 'Resource';
+  header.appendChild(badge);
+
+  if (resource.id) {
+    const idSpan = document.createElement('span');
+    idSpan.className = 'fhir-header-id';
+    idSpan.innerHTML = 'ID: <strong>' + esc(resource.id) + '</strong>';
+    header.appendChild(idSpan);
+  }
+
+  const lastUpdated = safeGet(resource, 'meta', 'lastUpdated');
+  if (lastUpdated) {
+    const dateSpan = document.createElement('span');
+    dateSpan.className = 'fhir-header-date';
+    dateSpan.textContent = 'Updated: ' + fmtDate(lastUpdated);
+    header.appendChild(dateSpan);
+  }
+
+  const vLabel = document.createElement('span');
+  vLabel.className = 'fhir-version-label';
+  vLabel.textContent = fhirVersion;
+  header.appendChild(vLabel);
+
+  panel.appendChild(header);
+
+  // 2. Key clinical fields
+  const rt = resource.resourceType;
+  const fields = extractFields(resource);
+  const isGeneric = !['Patient','Observation','DiagnosticReport','Encounter','Condition',
+    'MedicationRequest','Procedure','AllergyIntolerance','Immunization'].includes(rt);
+
+  const clinicSec = fhirSection('Key Fields');
+  const cardsDiv = document.createElement('div');
+  cardsDiv.className = isGeneric ? 'fhir-scalar-grid' : 'fhir-cards';
+  clinicSec.appendChild(cardsDiv);
+  const body = document.createElement('div');
+  body.className = 'fhir-section-body';
+  for (const [label, val] of fields) {
+    cardsDiv.appendChild(fhirCard(label, val));
+  }
+  if (!isGeneric) {
+    clinicSec.appendChild(document.createElement('div')); // spacer not needed; cards in body
+  }
+  // Move cardsDiv inside body for padding
+  clinicSec.removeChild(cardsDiv);
+  body.appendChild(cardsDiv);
+  clinicSec.appendChild(body);
+  panel.appendChild(clinicSec);
+
+  // For unknown resource types: also show raw JSON viewer inline (skip separate raw)
+  if (isGeneric) {
+    const note = document.createElement('p');
+    note.style.cssText = 'font-size:12px;color:var(--muted);padding:0 14px 10px;font-style:italic;';
+    note.textContent = 'Showing all top-level scalar fields. See raw viewer below for full resource.';
+    body.appendChild(note);
+  }
+
+  // 3. Identifiers section
+  const identifiers = resource.identifier || resource.identifier;
+  if (Array.isArray(resource.identifier) && resource.identifier.length > 0) {
+    const idSec = fhirSection('Identifiers');
+    const idBody = document.createElement('div');
+    idBody.className = 'fhir-section-body';
+    const tbl = document.createElement('table');
+    tbl.className = 'fhir-id-table';
+    tbl.innerHTML = '<thead><tr><th>System</th><th>Value</th><th>Use</th></tr></thead>';
+    const tbody = document.createElement('tbody');
+    for (const id of resource.identifier) {
+      const tr = document.createElement('tr');
+      tr.innerHTML = `<td class="fhir-id-system">${esc(id.system || '—')}</td><td>${esc(id.value || '—')}</td><td>${esc(id.use || '—')}</td>`;
+      tbody.appendChild(tr);
+    }
+    tbl.appendChild(tbody);
+    idBody.appendChild(tbl);
+    idSec.appendChild(idBody);
+    panel.appendChild(idSec);
+  }
+
+  // 4. Raw viewer
+  const rawSec = document.createElement('div');
+  rawSec.className = 'fhir-section fhir-raw';
+  const details = document.createElement('details');
+  const summary = document.createElement('summary');
+  summary.textContent = 'Raw Resource (JSON)';
+  details.appendChild(summary);
+  const pre = document.createElement('pre');
+  const jsonStr = JSON.stringify(resource, null, 2);
+  pre.innerHTML = fhirSyntaxHighlight(jsonStr);
+  details.appendChild(pre);
+  rawSec.appendChild(details);
+  panel.appendChild(rawSec);
+}
+
+function fhirSyntaxHighlight(json) {
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+    let color;
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) color = '#66d9ef'; // key → cyan
+      else color = '#e6db74';                  // string → yellow
+    } else if (/true|false/.test(match)) color = '#ae81ff'; // boolean → purple
+    else if (/null/.test(match)) color = '#f92672';         // null → red
+    else color = '#ae81ff';                                  // number → purple
+    return `<span style="color:${color}">${match}</span>`;
+  });
+}
+
+// ─── Show/hide helpers ───────────────────────────────────────────────────────
+function showHL7Output() {
+  document.querySelector('.main-grid').style.display = '';
+  document.getElementById('fhir-panel').style.display = 'none';
+}
+
+function showFHIROutput() {
+  // Keep the main-grid (input panel) visible, hide right-side output panel only
+  // We do this by hiding the right panel (second child of main-grid) and showing fhir-panel
+  const panels = document.querySelectorAll('.main-grid > .panel');
+  // panels[0] = left input, panels[1] = right output
+  if (panels[1]) panels[1].style.display = 'none';
+  document.getElementById('fhir-panel').style.display = 'flex';
+}
+
+function restoreHL7Panels() {
+  const panels = document.querySelectorAll('.main-grid > .panel');
+  if (panels[1]) panels[1].style.display = '';
+  document.getElementById('fhir-panel').style.display = 'none';
+}
+
+// (FHIR detection is integrated directly into doParse() above)
 </script>
 </body>
 </html>

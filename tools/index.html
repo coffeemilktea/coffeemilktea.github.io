@@ -4,32 +4,55 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>HL7 Diff Checker</title>
+  <link rel="stylesheet" href="theme.css" />
+  <script src="theme.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
     :root {
-      --bg: #0f1117;
-      --surface: #1a1d27;
-      --surface2: #22263a;
-      --border: #2e3350;
-      --accent: #4f8ef7;
-      --green: #3ecf8e;
-      --yellow: #f5c842;
-      --red: #f55f5f;
-      --orange: #f7974f;
-      --text: #e2e6f0;
-      --muted: #7a809e;
-      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-      --font-sans: system-ui, -apple-system, sans-serif;
-      --radius: 8px;
-
-      --row-diff-bg: rgba(245, 200, 66, 0.08);
-      --row-diff-border: rgba(245, 200, 66, 0.3);
-      --row-miss-bg: rgba(245, 95, 95, 0.08);
-      --row-miss-border: rgba(245, 95, 95, 0.3);
-      --cell-miss-bg: rgba(245, 95, 95, 0.15);
-      --cell-present-bg: rgba(62, 207, 142, 0.12);
+      --row-diff-bg: rgba(230, 219, 116, 0.08);
+      --row-diff-border: rgba(230, 219, 116, 0.3);
+      --row-miss-bg: rgba(249, 38, 114, 0.08);
+      --row-miss-border: rgba(249, 38, 114, 0.3);
+      --cell-miss-bg: rgba(249, 38, 114, 0.15);
+      --cell-present-bg: rgba(166, 226, 46, 0.12);
     }
+
+    /* ── Light mode overrides for hl7-diff ── */
+    [data-theme="light"] {
+      --row-diff-bg:    rgba(134,110,0,0.07);
+      --row-diff-border:rgba(134,110,0,0.25);
+      --row-miss-bg:    rgba(212,0,110,0.06);
+      --row-miss-border:rgba(212,0,110,0.25);
+      --cell-miss-bg:   rgba(212,0,110,0.10);
+      --cell-present-bg:rgba(92,132,0,0.10);
+    }
+    [data-theme="light"] .segment-block { background: var(--surface); border-color: var(--border); }
+    [data-theme="light"] .seg-header { background: var(--surface2); border-bottom-color: var(--border); }
+    [data-theme="light"] .seg-name { color: var(--accent); }
+    [data-theme="light"] thead th { background: var(--bg); }
+    [data-theme="light"] td { border-bottom-color: rgba(214,213,204,0.5); }
+    [data-theme="light"] .seg-absent { color: var(--muted); }
+    [data-theme="light"] textarea { background: var(--surface); color: var(--text); border-color: var(--border); }
+    [data-theme="light"] textarea:focus { border-color: var(--accent); }
+    [data-theme="light"] .btn-primary { background: var(--accent); }
+    [data-theme="light"] .btn-secondary { background: var(--surface2); color: var(--text); border-color: var(--border); }
+    [data-theme="light"] .stat { background: var(--surface); border-color: var(--border); }
+    [data-theme="light"] .stat-value.c-blue { color: var(--accent); }
+    [data-theme="light"] .stat-value.c-green { color: var(--green); }
+    [data-theme="light"] .stat-value.c-yellow { color: var(--yellow); }
+    [data-theme="light"] .stat-value.c-red { color: var(--red); }
+    [data-theme="light"] .toggle { color: var(--muted); }
+    [data-theme="light"] .toggle:hover { color: var(--text); }
+    [data-theme="light"] .seg-ok     { background: rgba(92,132,0,.12);    color: var(--green); }
+    [data-theme="light"] .seg-diff   { background: rgba(134,110,0,.12);   color: var(--yellow); }
+    [data-theme="light"] .seg-only-a { background: rgba(5,151,167,.10);   color: var(--accent); }
+    [data-theme="light"] .seg-only-b { background: rgba(201,105,0,.12);   color: var(--orange); }
+    [data-theme="light"] .seg-missing{ background: rgba(212,0,110,.10);   color: var(--red); }
+    [data-theme="light"] .cell-missing { background: rgba(212,0,110,0.08); color: var(--red); }
+    [data-theme="light"] .row-diff { background: var(--row-diff-bg); }
+    [data-theme="light"] .row-miss  { background: var(--row-miss-bg); }
+    [data-theme="light"] .header-icon { background: linear-gradient(135deg, var(--accent), var(--accent2)); }
 
     body {
       font-family: var(--font-sans);
@@ -39,18 +62,9 @@
     }
 
     /* ── Header ── */
-    header {
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      padding: 14px 24px;
-      display: flex;
-      align-items: center;
-      gap: 16px;
-    }
-
     .header-icon {
       width: 36px; height: 36px;
-      background: linear-gradient(135deg, #4f8ef7, #7c5cbf);
+      background: linear-gradient(135deg, #66d9ef, #ae81ff);
       border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
       font-size: 18px;
@@ -58,14 +72,6 @@
 
     header h1 { font-size: 1.1rem; font-weight: 700; letter-spacing: -0.02em; }
     header p  { font-size: 0.78rem; color: var(--muted); margin-top: 1px; }
-
-    .header-links { margin-left: auto; display: flex; gap: 8px; }
-    .header-links a {
-      color: var(--muted); font-size: 0.8rem; text-decoration: none;
-      padding: 5px 10px; border: 1px solid var(--border); border-radius: 6px;
-      transition: color .15s, border-color .15s;
-    }
-    .header-links a:hover { color: var(--text); border-color: var(--accent); }
 
     /* ── Main layout ── */
     .main { max-width: 1500px; margin: 0 auto; padding: 24px; }
@@ -201,14 +207,14 @@
       text-transform: uppercase; letter-spacing: .06em;
       font-family: var(--font-sans);
     }
-    .seg-ok     { background: rgba(62,207,142,.15); color: var(--green); }
-    .seg-diff   { background: rgba(245,200,66,.15);  color: var(--yellow); }
-    .seg-only-a { background: rgba(79,142,247,.15);  color: var(--accent); }
-    .seg-only-b { background: rgba(247,151,79,.15);  color: var(--orange); }
-    .seg-missing { background: rgba(245,95,95,.15);  color: var(--red); }
+    .seg-ok     { background: rgba(166,226,46,.15); color: var(--green); }
+    .seg-diff   { background: rgba(230,219,116,.15);  color: var(--yellow); }
+    .seg-only-a { background: rgba(102,217,239,.15);  color: var(--accent); }
+    .seg-only-b { background: rgba(253,151,31,.15);  color: var(--orange); }
+    .seg-missing { background: rgba(249,38,114,.15);  color: var(--red); }
 
     /* ── Field table ── */
-    table { width: 100%; border-collapse: collapse; }
+    table { width: 100%; border-collapse: collapse; table-layout: fixed; }
 
     thead th {
       padding: 7px 12px;
@@ -220,11 +226,11 @@
       text-align: left;
     }
     thead th:first-child { width: 200px; }
-    thead th:nth-child(2), thead th:nth-child(3) { width: calc(50% - 100px); }
+    thead th:nth-child(2), thead th:nth-child(3) { width: calc((100% - 200px) / 2); }
 
     td {
       padding: 6px 12px;
-      border-bottom: 1px solid rgba(46,51,80,.5);
+      border-bottom: 1px solid rgba(73,72,62,.5);
       font-family: var(--font-mono);
       font-size: 0.78rem;
       vertical-align: top;
@@ -319,16 +325,20 @@
 </head>
 <body>
 
-<header>
+<header class="app-header">
   <div class="header-icon">⇄</div>
   <div>
     <h1>HL7 Diff Checker</h1>
     <p>Side-by-side HL7 v2.x message comparison</p>
   </div>
-  <div class="header-links">
-    <a href="msgparser.html">Parser</a>
+  <div class="nav-links" style="margin-left:auto;">
+    <a href="msgparser.html">HL7 Parser</a>
     <a href="dicom-generator.html">DICOM Gen</a>
   </div>
+  <button class="btn-theme" id="btn-theme">
+    <span class="theme-icon">☀️</span>
+    <span class="theme-label">Light</span>
+  </button>
 </header>
 
 <div class="main">
@@ -360,11 +370,11 @@
   <div id="summary" class="summary" style="display:none"></div>
   <div id="legend"  class="legend"  style="display:none">
     <span>Legend:</span>
-    <span class="legend-item"><span class="legend-dot" style="background:rgba(62,207,142,.4)"></span> Identical</span>
-    <span class="legend-item"><span class="legend-dot" style="background:rgba(245,200,66,.4)"></span> Different value</span>
-    <span class="legend-item"><span class="legend-dot" style="background:rgba(245,95,95,.4)"></span> Missing in one message</span>
-    <span class="legend-item"><span class="legend-dot" style="background:rgba(79,142,247,.4)"></span> Segment only in A</span>
-    <span class="legend-item"><span class="legend-dot" style="background:rgba(247,151,79,.4)"></span> Segment only in B</span>
+    <span class="legend-item"><span class="legend-dot" style="background:rgba(166,226,46,.4)"></span> Identical</span>
+    <span class="legend-item"><span class="legend-dot" style="background:rgba(230,219,116,.4)"></span> Different value</span>
+    <span class="legend-item"><span class="legend-dot" style="background:rgba(249,38,114,.4)"></span> Missing in one message</span>
+    <span class="legend-item"><span class="legend-dot" style="background:rgba(102,217,239,.4)"></span> Segment only in A</span>
+    <span class="legend-item"><span class="legend-dot" style="background:rgba(253,151,31,.4)"></span> Segment only in B</span>
   </div>
   <div id="results"></div>
 </div>
