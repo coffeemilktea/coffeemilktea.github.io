@@ -1,0 +1,1547 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HL7 v2.x Parser</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0f1117;
+      --surface: #1a1d27;
+      --surface2: #22263a;
+      --border: #2e3350;
+      --accent: #4f8ef7;
+      --accent2: #7c5cbf;
+      --green: #3ecf8e;
+      --yellow: #f5c842;
+      --red: #f55f5f;
+      --orange: #f7974f;
+      --text: #e2e6f0;
+      --muted: #7a809e;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+      --font-sans: system-ui, -apple-system, sans-serif;
+      --radius: 8px;
+    }
+
+    [data-theme="light"] {
+      --bg: #f1f3f9;
+      --surface: #ffffff;
+      --surface2: #e8eaf4;
+      --border: #cdd1e6;
+      --accent: #2563eb;
+      --accent2: #6d28d9;
+      --green: #059669;
+      --yellow: #b45309;
+      --red: #dc2626;
+      --orange: #c2410c;
+      --text: #111827;
+      --muted: #6b7280;
+    }
+
+    /* Segment colours — darker for light mode readability */
+    [data-theme="light"] .seg-name.MSH { color: #1d4ed8; }
+    [data-theme="light"] .seg-name.PID { color: #065f46; }
+    [data-theme="light"] .seg-name.PV1,
+    [data-theme="light"] .seg-name.PV2 { color: #92400e; }
+    [data-theme="light"] .seg-name.OBR { color: #78350f; }
+    [data-theme="light"] .seg-name.OBX { color: #5b21b6; }
+    [data-theme="light"] .seg-name.ORC { color: #9d174d; }
+    [data-theme="light"] .seg-name.DG1 { color: #064e3b; }
+    [data-theme="light"] .seg-name.NTE { color: #374151; }
+    [data-theme="light"] .seg-name.AL1 { color: #92400e; }
+    [data-theme="light"] .seg-name.EVN { color: #4c1d95; }
+    [data-theme="light"] .seg-name.IN1 { color: #1e40af; }
+    [data-theme="light"] .seg-name.NK1 { color: #831843; }
+    [data-theme="light"] .seg-name.MRG { color: #78350f; }
+    [data-theme="light"] .seg-name.RXO,
+    [data-theme="light"] .seg-name.RXE,
+    [data-theme="light"] .seg-name.RXA { color: #3f6212; }
+    [data-theme="light"] .seg-name.SCH { color: #164e63; }
+    [data-theme="light"] .seg-name.SPM { color: #581c87; }
+    [data-theme="light"] .seg-name.SAC { color: #312e81; }
+    [data-theme="light"] .seg-name.TQ1,
+    [data-theme="light"] .seg-name.TQ2 { color: #7c2d12; }
+
+    /* Light mode inline colour overrides */
+    [data-theme="light"] .comp-label { color: #6d28d9; }
+    [data-theme="light"] .raw-seg-tag { color: #1d4ed8; font-weight: 700; }
+    [data-theme="light"] .raw-sep { color: #9ca3af; }
+    [data-theme="light"] .raw-comp-sep { color: #6d28d9; }
+    [data-theme="light"] .raw-rep-sep { color: #b45309; }
+    [data-theme="light"] .raw-sub-sep { color: #c2410c; }
+    [data-theme="light"] .field-value.empty { color: #d1d5db; }
+    [data-theme="light"] .rep-header { color: #92400e; }
+    [data-theme="light"] .error-panel { background: #fef2f2; border-color: #fca5a5; color: #dc2626; }
+
+    /* Theme toggle button */
+    .btn-theme {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 0 12px;
+      height: 30px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      transition: color .15s, border-color .15s, background .15s;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      letter-spacing: 0.2px;
+    }
+    .btn-theme:hover { color: var(--text); border-color: var(--muted); background: var(--surface2); }
+    .btn-theme:active { transform: scale(0.98); }
+
+    .sample-split {
+      display: flex;
+      align-items: center;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+      transition: border-color .15s;
+    }
+
+    .sample-split:hover { border-color: var(--muted); }
+    .sample-split:focus-within { border-color: var(--accent); }
+
+    .sample-split .btn-ghost {
+      border-radius: 0;
+      border: none;
+      border-right: 1px solid var(--border);
+      height: 28px;
+    }
+
+    .sample-split .btn-ghost:hover { border-color: transparent; }
+
+    .sample-split .select-wrap {
+      position: relative;
+      display: flex;
+      align-items: center;
+    }
+
+    .sample-split select {
+      appearance: none;
+      background: var(--surface2);
+      border: none;
+      color: var(--muted);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 0 22px 0 6px;
+      height: 28px;
+      cursor: pointer;
+      outline: none;
+      transition: color .15s, background .15s;
+    }
+
+    .sample-split select:hover { color: var(--text); }
+
+    .sample-split .select-wrap::after {
+      content: '▾';
+      position: absolute;
+      right: 5px;
+      font-size: 10px;
+      color: var(--muted);
+      pointer-events: none;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font-sans);
+      font-size: 14px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    header {
+      padding: 14px 24px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    header h1 {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+
+    header .badge {
+      background: var(--accent2);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 700;
+      padding: 2px 7px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+
+    header .spacer { flex: 1; }
+
+    header .hint {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .main-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: auto 1fr;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .panel {
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .panel:last-child { border-right: none; }
+
+    .panel-header {
+      padding: 10px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--muted);
+    }
+
+    .panel-header .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+    }
+
+    .panel-header .actions {
+      margin-left: auto;
+      display: flex;
+      gap: 6px;
+    }
+
+    button {
+      cursor: pointer;
+      border: none;
+      font-family: inherit;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      height: 28px;
+      padding: 0 11px;
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.2px;
+      transition: background .15s, color .15s, border-color .15s, box-shadow .15s;
+      white-space: nowrap;
+    }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 1px 3px rgba(0,0,0,.25);
+    }
+
+    .btn-primary:hover { background: #3a7de8; box-shadow: 0 2px 6px rgba(79,142,247,.35); }
+    .btn-primary:active { transform: scale(0.98); }
+
+    .btn-ghost {
+      background: var(--surface2);
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-ghost:hover { color: var(--text); border-color: var(--muted); background: var(--surface2); }
+    .btn-ghost:active { transform: scale(0.98); }
+
+    .btn-danger {
+      background: transparent;
+      color: var(--muted);
+      border: 1px solid var(--border);
+    }
+
+    .btn-danger:hover { color: var(--red); border-color: var(--red); background: transparent; }
+    .btn-danger:active { transform: scale(0.98); }
+
+    .btn-parse {
+      width: 100%;
+      height: 36px;
+      padding: 0 16px;
+      border-radius: var(--radius);
+      font-size: 13px;
+      font-weight: 700;
+      background: var(--accent);
+      color: #fff;
+      letter-spacing: 0.4px;
+      box-shadow: 0 1px 4px rgba(0,0,0,.2);
+      transition: background .15s, box-shadow .15s, transform .1s;
+    }
+
+    .btn-parse:hover { background: #3a7de8; box-shadow: 0 3px 10px rgba(79,142,247,.4); }
+    .btn-parse:active { transform: scale(0.99); box-shadow: none; }
+
+    textarea {
+      flex: 1;
+      background: var(--bg);
+      color: var(--text);
+      border: none;
+      outline: none;
+      resize: none;
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 13px;
+      line-height: 1.6;
+      tab-size: 2;
+    }
+
+    textarea::placeholder { color: var(--muted); }
+
+    .input-actions {
+      padding: 10px 16px;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .input-actions .spacer { flex: 1; }
+
+    .msg-type-badge {
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-family: var(--font-mono);
+    }
+
+    /* Structured layout — SmartHL7-style sidebar + flat table */
+    .structured-layout {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    .seg-nav {
+      width: 90px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border);
+      overflow-y: auto;
+      background: var(--surface);
+      padding: 6px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .seg-nav-item {
+      padding: 4px 6px 4px 10px;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      color: var(--muted);
+      border-left: 2px solid transparent;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: flex;
+      align-items: baseline;
+      gap: 2px;
+      transition: color .1s, background .1s;
+      user-select: none;
+    }
+
+    .seg-nav-item:hover { color: var(--text); background: var(--surface2); }
+    .seg-nav-item.nav-active { border-left-color: var(--accent); background: var(--surface2); }
+
+    .seg-nav-badge {
+      font-size: 9px;
+      color: var(--muted);
+      font-family: var(--font-sans);
+      font-weight: 400;
+      flex-shrink: 0;
+    }
+
+    /* Table scroll area */
+    .seg-table-wrap {
+      flex: 1;
+      overflow-y: auto;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    /* Empty state */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+      gap: 10px;
+      color: var(--muted);
+      text-align: center;
+      padding: 40px;
+    }
+
+    .empty-state .icon { font-size: 48px; opacity: .4; }
+    .empty-state p { font-size: 13px; line-height: 1.5; }
+
+    /* Segment block */
+    .seg-block {
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .seg-block-header {
+      display: flex;
+      align-items: center;
+      padding: 6px 10px;
+      background: var(--surface2);
+      border-bottom: 1px solid var(--border);
+      gap: 8px;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .seg-block-header:hover { filter: brightness(1.07); }
+    [data-theme="light"] .seg-block-header:hover { filter: brightness(0.96); }
+    .seg-block.collapsed .seg-chevron { transform: rotate(-90deg); }
+    .seg-block.collapsed .seg-tbl-body { display: none; }
+
+    .seg-name {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 700;
+      min-width: 36px;
+    }
+
+    .seg-desc {
+      font-size: 11px;
+      color: var(--muted);
+      flex: 1;
+    }
+
+    .seg-count {
+      font-size: 10px;
+      color: var(--muted);
+      background: var(--bg);
+      padding: 1px 6px;
+      border-radius: 10px;
+    }
+
+    .seg-chevron {
+      font-size: 10px;
+      color: var(--muted);
+      transition: transform .15s;
+    }
+
+    /* Flat field table */
+    .seg-tbl {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .seg-tbl tr { border-bottom: 1px solid var(--border); }
+    .seg-tbl tr:last-child { border-bottom: none; }
+    .seg-tbl tr:hover td { background: var(--surface2); }
+
+    .seg-tbl td {
+      padding: 4px 10px;
+      vertical-align: top;
+    }
+
+    .tbl-fid {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--muted);
+      white-space: nowrap;
+      width: 60px;
+    }
+
+    .tbl-fname {
+      font-size: 11px;
+      color: var(--muted);
+      width: 170px;
+    }
+
+    .tbl-fval {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: var(--text);
+      word-break: break-all;
+    }
+
+    .tbl-fval.empty {
+      color: var(--muted);
+      font-style: italic;
+      opacity: .4;
+      font-size: 11px;
+      font-family: var(--font-sans);
+    }
+
+    /* Component / repetition breakdown */
+    .comp-list {
+      margin-top: 4px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .comp-item {
+      display: flex;
+      gap: 8px;
+      align-items: baseline;
+      padding: 2px 0 2px 8px;
+      border-left: 2px solid var(--border);
+    }
+
+    .comp-label {
+      font-size: 10px;
+      color: var(--accent2);
+      min-width: 52px;
+      font-family: var(--font-mono);
+      flex-shrink: 0;
+    }
+
+    .comp-val {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: var(--text);
+      opacity: .85;
+      word-break: break-all;
+    }
+
+    .rep-block { margin-top: 3px; }
+
+    .rep-header {
+      font-size: 10px;
+      color: var(--yellow);
+      font-family: var(--font-mono);
+      margin-bottom: 2px;
+    }
+
+    /* Message summary bar */
+    .msg-summary {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .summary-item { display: flex; flex-direction: column; gap: 2px; }
+
+    .summary-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+    }
+
+    .summary-value {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .summary-value.green { color: var(--green); }
+    .summary-value.accent { color: var(--accent); }
+    .summary-value.yellow { color: var(--yellow); }
+    .summary-value.orange { color: var(--orange); }
+
+    /* Error panel */
+    .error-panel {
+      background: #2a1a1a;
+      border: 1px solid #5a2a2a;
+      border-radius: var(--radius);
+      padding: 12px 14px;
+      color: var(--red);
+      font-size: 13px;
+      font-family: var(--font-mono);
+    }
+
+    /* Segment color coding */
+    .seg-name.MSH { color: var(--accent); }
+    .seg-name.PID { color: var(--green); }
+    .seg-name.PV1, .seg-name.PV2 { color: var(--orange); }
+    .seg-name.OBR { color: var(--yellow); }
+    .seg-name.OBX { color: #a78bfa; }
+    .seg-name.ORC { color: #f472b6; }
+    .seg-name.DG1 { color: #34d399; }
+    .seg-name.NTE { color: #94a3b8; }
+    .seg-name.AL1 { color: #fb923c; }
+    .seg-name.EVN { color: var(--accent2); }
+    .seg-name.IN1 { color: #60a5fa; }
+    .seg-name.NK1 { color: #f9a8d4; }
+    .seg-name.MRG { color: #fbbf24; }
+    .seg-name.RXO, .seg-name.RXE, .seg-name.RXA { color: #a3e635; }
+    .seg-name.SCH { color: #67e8f9; }
+    .seg-name.SPM { color: #c084fc; }
+    .seg-name.SAC { color: #818cf8; }
+    .seg-name.TQ1, .seg-name.TQ2 { color: #fdba74; }
+
+    /* Tabs for output */
+    .tab-bar {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .tab {
+      padding: 8px 16px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--muted);
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+      transition: color .15s;
+      background: none;
+      letter-spacing: 0.3px;
+    }
+
+    .tab:hover { color: var(--text); }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    .tab-content { display: none; flex: 1; overflow: hidden; }
+    .tab-content.active { display: flex; flex-direction: column; overflow: hidden; }
+
+    /* Raw view */
+    .raw-view {
+      flex: 1;
+      overflow: auto;
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.8;
+    }
+
+    .raw-segment-line {
+      display: flex;
+      gap: 0;
+      flex-wrap: wrap;
+    }
+
+    .raw-seg-tag {
+      color: var(--accent);
+      font-weight: 700;
+    }
+
+    .raw-sep { color: var(--border); }
+    .raw-field { color: var(--text); }
+    .raw-comp-sep { color: var(--accent2); }
+    .raw-rep-sep { color: var(--yellow); }
+    .raw-sub-sep { color: var(--orange); }
+
+    /* JSON view */
+    .json-view {
+      flex: 1;
+      overflow: auto;
+      padding: 16px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      line-height: 1.6;
+      white-space: pre;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #3e4463; }
+
+    /* Stats row */
+    .stats-row {
+      padding: 6px 16px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      gap: 16px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .stats-row span b { color: var(--text); }
+
+    @media (max-width: 900px) {
+      .main-grid {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr 1fr;
+      }
+      .panel { border-right: none; border-bottom: 1px solid var(--border); }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>HL7 Parser</h1>
+  <span class="badge">v2.x</span>
+  <span class="spacer"></span>
+  <span class="hint">Paste an HL7 message to begin</span>
+  <button class="btn-theme" id="btn-theme" title="Toggle light/dark mode">
+    <span id="theme-icon">☀️</span>
+    <span id="theme-label">Light</span>
+  </button>
+</header>
+
+<div class="main-grid">
+  <!-- LEFT: Input -->
+  <div class="panel" style="grid-row: 1 / 3;">
+    <div class="panel-header">
+      <span class="dot" style="background: var(--accent)"></span>
+      Input Message
+      <div class="actions">
+        <div class="sample-split">
+          <button class="btn btn-ghost" id="btn-sample">Load Sample</button>
+          <div class="select-wrap">
+            <select id="sample-type" title="Sample message type">
+              <option value="ORU">ORU^R01</option>
+              <option value="ORM">ORM^O01</option>
+              <option value="ADT_A01">ADT^A01</option>
+              <option value="ADT_A08">ADT^A08</option>
+              <option value="ADT_A31">ADT^A31</option>
+              <option value="ADT_A40">ADT^A40</option>
+              <option value="OML">OML^O21</option>
+            </select>
+          </div>
+        </div>
+        <button class="btn btn-danger" id="btn-clear">Clear</button>
+      </div>
+    </div>
+    <textarea id="hl7-input" spellcheck="false"
+      placeholder="MSH|^~\&|SENDING|FACILITY|RECEIVING|FACILITY|20240301120000||ADT^A01|12345|P|2.5&#10;EVN|A01|20240301120000&#10;PID|1||MRN12345^^^HOSP^MR||DOE^JOHN^A||19800101|M|||123 MAIN ST^^ANYTOWN^CA^90210^USA||(555)555-1234|(555)555-5678||S||ACC12345|SSN-12345&#10;..."></textarea>
+    <div class="input-actions">
+      <span id="char-count" style="color: var(--muted); font-size: 11px;">0 chars</span>
+      <span class="spacer"></span>
+      <span id="msg-type-display" style="display:none" class="msg-type-badge"></span>
+      <button class="btn btn-primary" id="btn-parse" style="padding: 6px 18px;">Parse</button>
+    </div>
+  </div>
+
+  <!-- RIGHT: Output tabs -->
+  <div class="panel" style="display:flex; flex-direction:column; min-height:0; grid-row: 1 / 3; border-right: none;">
+    <div class="tab-bar">
+      <button class="tab active" data-tab="structured">Structured</button>
+      <button class="tab" data-tab="raw">Highlighted</button>
+      <button class="tab" data-tab="json">JSON</button>
+    </div>
+
+    <!-- Structured Tab -->
+    <div class="tab-content active" id="tab-structured" style="overflow:hidden;">
+      <div class="structured-layout">
+        <div class="seg-nav" id="seg-nav"></div>
+        <div class="seg-table-wrap" id="output-structured">
+          <div class="empty-state" id="empty-state">
+            <div class="icon">⚕</div>
+            <p>Paste an HL7 v2.x message in the input panel<br>and click <strong>Parse</strong> to inspect it.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Highlighted Raw Tab -->
+    <div class="tab-content" id="tab-raw">
+      <div class="raw-view" id="output-raw"></div>
+    </div>
+
+    <!-- JSON Tab -->
+    <div class="tab-content" id="tab-json">
+      <div class="json-view" id="output-json"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── HL7 Segment Field Definitions ───────────────────────────────────────────
+const SEG_DEFS = {
+  MSH: {
+    desc: "Message Header",
+    fields: ["(Field Separator)","Encoding Characters","Sending Application","Sending Facility","Receiving Application","Receiving Facility","Date/Time of Message","Security","Message Type","Message Control ID","Processing ID","Version ID","Sequence Number","Continuation Pointer","Accept Acknowledgment Type","Application Acknowledgment Type","Country Code","Character Set","Principal Language of Message","Alternate Character Set Handling Scheme","Message Profile Identifier","Sending Responsible Organization","Receiving Responsible Organization","Sending Network Address","Receiving Network Address"]
+  },
+  EVN: {
+    desc: "Event Type",
+    fields: ["Event Type Code","Recorded Date/Time","Date/Time Planned Event","Event Reason Code","Operator ID","Event Occurred","Event Facility"]
+  },
+  PID: {
+    desc: "Patient Identification",
+    fields: ["Set ID","Patient ID","Patient Identifier List","Alternate Patient ID","Patient Name","Mother's Maiden Name","Date/Time of Birth","Administrative Sex","Patient Alias","Race","Patient Address","County Code","Phone Number - Home","Phone Number - Business","Primary Language","Marital Status","Religion","Patient Account Number","SSN Number - Patient","Driver's License Number","Mother's Identifier","Ethnic Group","Birth Place","Multiple Birth Indicator","Birth Order","Citizenship","Veterans Military Status","Nationality","Patient Death Date and Time","Patient Death Indicator","Identity Unknown Indicator","Identity Reliability Code","Last Update Date/Time","Last Update Facility","Species Code","Breed Code","Strain","Production Class Code","Tribal Citizenship"]
+  },
+  PV1: {
+    desc: "Patient Visit",
+    fields: ["Set ID","Patient Class","Assigned Patient Location","Admission Type","Preadmit Number","Prior Patient Location","Attending Doctor","Referring Doctor","Consulting Doctor","Hospital Service","Temporary Location","Preadmit Test Indicator","Re-admission Indicator","Admit Source","Ambulatory Status","VIP Indicator","Admitting Doctor","Patient Type","Visit Number","Financial Class","Charge Price Indicator","Courtesy Code","Credit Rating","Contract Code","Contract Effective Date","Contract Amount","Contract Period","Interest Code","Transfer to Bad Debt Code","Transfer to Bad Debt Date","Bad Debt Agency Code","Bad Debt Transfer Amount","Bad Debt Recovery Amount","Delete Account Indicator","Delete Account Date","Discharge Disposition","Discharged to Location","Diet Type","Servicing Facility","Bed Status","Account Status","Pending Location","Prior Temporary Location","Admit Date/Time","Discharge Date/Time","Current Patient Balance","Total Charges","Total Adjustments","Total Payments","Alternate Visit ID","Visit Indicator","Other Healthcare Provider"]
+  },
+  PV2: {
+    desc: "Patient Visit - Additional",
+    fields: ["Prior Pending Location","Accommodation Code","Admit Reason","Transfer Reason","Patient Valuables","Patient Valuables Location","Visit User Code","Expected Admit Date/Time","Expected Discharge Date/Time","Estimated Length of Inpatient Stay","Actual Length of Inpatient Stay","Visit Description","Referral Source Code","Previous Service Date","Employment Illness Related Indicator","Purge Status Code","Purge Status Date","Special Program Code","Retention Indicator","Expected Number of Insurance Plans","Visit Publicity Code","Visit Protection Indicator","Clinic Organization Name","Patient Status Code","Visit Priority Code","Previous Treatment Date","Expected Discharge Disposition","Signature on File Date","First Similar Illness Date","Patient Charge Adjustment Code","Recurring Service Code","Billing Media Code","Expected Surgery Date and Time","Military Partnership Code","Military Non-Availability Code","Newborn Baby Indicator","Baby Detained Indicator","Mode of Arrival Code","Recreational Drug Use Code","Admission Level of Care Code","Precaution Code","Patient Condition Code","Living Will Code","Organ Donor Code","Advance Directive Code","Patient Status Effective Date","Expected LOA Return Date/Time","Expected Pre-admission Testing Date/Time","Notify Clergy Code"]
+  },
+  ORC: {
+    desc: "Common Order",
+    fields: ["Order Control","Placer Order Number","Filler Order Number","Placer Group Number","Order Status","Response Flag","Quantity/Timing","Parent","Date/Time of Transaction","Entered By","Verified By","Ordering Provider","Enterer's Location","Call Back Phone Number","Order Effective Date/Time","Order Control Code Reason","Entering Organization","Entering Device","Action By","Advanced Beneficiary Notice Code","Ordering Facility Name","Ordering Facility Address","Ordering Facility Phone Number","Ordering Provider Address","Order Status Modifier","Advanced Beneficiary Notice Override Reason","Filler's Expected Availability Date/Time","Confidence Code","Order Type","Enterer Authorization Mode","Parent Universal Service Identifier"]
+  },
+  OBR: {
+    desc: "Observation Request",
+    fields: ["Set ID","Placer Order Number","Filler Order Number","Universal Service Identifier","Priority","Requested Date/Time","Observation Date/Time","Observation End Date/Time","Collection Volume","Collector Identifier","Specimen Action Code","Danger Code","Relevant Clinical Information","Specimen Received Date/Time","Specimen Source","Ordering Provider","Order Callback Phone Number","Placer Field 1","Placer Field 2","Filler Field 1","Filler Field 2","Results Rpt/Status Change - Date/Time","Charge to Practice","Diagnostic Service Section ID","Result Status","Parent Result","Quantity/Timing","Result Copies To","Parent","Transportation Mode","Reason for Study","Principal Result Interpreter","Assistant Result Interpreter","Technician","Transcriptionist","Scheduled Date/Time","Number of Sample Containers","Transport Logistics of Collected Sample","Collector's Comment","Transport Arrangement Responsibility","Transport Arranged","Escort Required","Planned Patient Transport Comment","Procedure Code","Procedure Code Modifier","Placer Supplemental Service Information","Filler Supplemental Service Information","Medically Necessary Duplicate Procedure Reason","Result Handling","Parent Universal Service Identifier"]
+  },
+  OBX: {
+    desc: "Observation/Result",
+    fields: ["Set ID","Value Type","Observation Identifier","Observation Sub-ID","Observation Value","Units","References Range","Abnormal Flags","Probability","Nature of Abnormal Test","Observation Result Status","Effective Date of Reference Range","User Defined Access Checks","Date/Time of the Observation","Producer's ID","Responsible Observer","Observation Method","Equipment Instance Identifier","Date/Time of the Analysis","Observation Site","Observation Instance Identifier","Mood Code","Performing Organization Name","Performing Organization Address","Performing Organization Medical Director"]
+  },
+  NTE: {
+    desc: "Notes and Comments",
+    fields: ["Set ID","Source of Comment","Comment","Comment Type","Entered By","Entered Date/Time","Effective Start Date","Expiration Date"]
+  },
+  DG1: {
+    desc: "Diagnosis",
+    fields: ["Set ID","Diagnosis Coding Method","Diagnosis Code - DG1","Diagnosis Description","Diagnosis Date/Time","Diagnosis Type","Major Diagnostic Category","Diagnostic Related Group","DRG Approval Indicator","DRG Grouper Review Code","Outlier Type","Outlier Days","Outlier Cost","Grouper Version And Type","Diagnosis Priority","Diagnosing Clinician","Diagnosis Classification","Confidential Indicator","Attestation Date/Time","Diagnosis Identifier","Diagnosis Action Code","Parent Diagnosis","DRG CCL Value Code","DRG Grouping Usage","DRG Diagnostic Determination Status","Present On Admission (POA) Indicator"]
+  },
+  AL1: {
+    desc: "Patient Allergy Information",
+    fields: ["Set ID","Allergen Type Code","Allergen Code/Mnemonic/Description","Allergy Severity Code","Allergy Reaction Code","Identification Date"]
+  },
+  IN1: {
+    desc: "Insurance",
+    fields: ["Set ID","Health Plan ID","Insurance Company ID","Insurance Company Name","Insurance Company Address","Insurance Co Contact Person","Insurance Co Phone Number","Group Number","Group Name","Insured's Group Emp ID","Insured's Group Emp Name","Plan Effective Date","Plan Expiration Date","Authorization Information","Plan Type","Name of Insured","Insured's Relationship to Patient","Insured's Date of Birth","Insured's Address","Assignment of Benefits","Coordination of Benefits","Coord of Ben. Priority","Notice of Admission Flag","Notice of Admission Date","Report of Eligibility Flag","Report of Eligibility Date","Release Information Code","Pre-Admit Cert","Verification Date/Time","Verification By","Type of Agreement Code","Billing Status","Lifetime Reserve Days","Delay before L.R. Day","Company Plan Code","Policy Number","Policy Deductible","Policy Limit - Amount","Policy Limit - Days","Room Rate - Semi-Private","Room Rate - Private","Insured's Employment Status","Insured's Administrative Sex","Insured's Employer's Address","Verification Status","Prior Insurance Plan ID","Coverage Type","Handicap","Insured's ID Number","Signature Code","Signature Code Date","Insured's Birth Place","VIP Indicator"]
+  },
+  GT1: {
+    desc: "Guarantor",
+    fields: ["Set ID","Guarantor Number","Guarantor Name","Guarantor Spouse Name","Guarantor Address","Guarantor Ph Num - Home","Guarantor Ph Num - Business","Guarantor Date/Time of Birth","Guarantor Administrative Sex","Guarantor Type","Guarantor Relationship","Guarantor SSN","Guarantor Date - Begin","Guarantor Date - End","Guarantor Priority","Guarantor Employer Name","Guarantor Employer Address","Guarantor Employer Phone Number","Guarantor Employee ID Number","Guarantor Employment Status","Guarantor Organization Name","Guarantor Billing Hold Flag","Guarantor Credit Rating Code","Guarantor Death Date And Time","Guarantor Death Flag","Guarantor Charge Adjustment Code","Guarantor Household Annual Income","Guarantor Household Size","Guarantor Employer ID Number","Guarantor Marital Status Code","Guarantor Hire Effective Date","Employment Stop Date","Living Dependency","Ambulatory Status","Citizenship","Primary Language","Living Arrangement","Publicity Code","Protection Indicator","Student Indicator","Religion","Mother's Maiden Name","Nationality","Ethnic Group","Contact Person's Name","Contact Person's Telephone Number","Contact Reason","Contact Relationship","Job Title","Job Code/Class","Guarantor Employer's Organization Name","Handicap","Job Status","Guarantor Financial Class","Guarantor Race","Guarantor Birth Place","VIP Indicator"]
+  },
+  TXA: {
+    desc: "Transcription Document Header",
+    fields: ["Set ID","Document Type","Document Content Presentation","Activity Date/Time","Primary Activity Provider Code/Name","Origination Date/Time","Transcription Date/Time","Edit Date/Time","Originator Code/Name","Assigned Document Authenticator","Transcriptionist Code/Name","Unique Document Number","Parent Document Number","Placer Order Number","Filler Order Number","Unique Document File Name","Document Completion Status","Document Confidentiality Status","Document Availability Status","Document Storage Status","Document Change Reason","Authentication Person, Time Stamp","Distributed Copies"]
+  },
+  NK1: {
+    desc: "Next of Kin / Associated Parties",
+    fields: ["Set ID","Name","Relationship","Address","Phone Number","Business Phone Number","Contact Role","Start Date","End Date","Next of Kin / Associated Parties Job Title","Next of Kin / Associated Parties Job Code/Class","Next of Kin / Associated Parties Employee Number","Organization Name - NK1","Marital Status","Administrative Sex","Date/Time of Birth","Living Dependency","Ambulatory Status","Citizenship","Primary Language","Living Arrangement","Publicity Code","Protection Indicator","Student Indicator","Religion","Mother's Maiden Name","Nationality","Ethnic Group","Contact Reason","Contact Person's Name","Contact Person's Telephone Number","Contact Person's Address","Next of Kin/Associated Party's Identifiers","Job Status","Race","Handicap","Contact Person Social Security Number","Next of Kin Birth Place","VIP Indicator"]
+  },
+  MRG: {
+    desc: "Merge Patient Information",
+    fields: ["Prior Patient Identifier List","Prior Alternate Patient ID","Prior Patient Account Number","Prior Patient ID","Prior Visit Number","Prior Alternate Visit ID","Prior Patient Name"]
+  },
+  RXO: {
+    desc: "Pharmacy/Treatment Order",
+    fields: ["Requested Give Code","Requested Give Amount - Minimum","Requested Give Amount - Maximum","Requested Give Units","Requested Dosage Form","Provider's Pharmacy/Treatment Instructions","Provider's Administration Instructions","Deliver-to Location","Allow Substitutions","Requested Dispense Code","Requested Dispense Amount","Requested Dispense Units","Number of Refills","Ordering Provider's DEA Number","Pharmacist/Treatment Supplier's Verifier ID","Needs Human Review","Requested Give Per (Time Unit)","Requested Give Strength","Requested Give Strength Units","Indication","Requested Give Rate Amount","Requested Give Rate Units","Total Daily Dose","Supplementary Code","Requested Drug Strength Volume","Requested Drug Strength Volume Units","Pharmacy Order Type","Dispensing Interval"]
+  },
+  RXE: {
+    desc: "Pharmacy/Treatment Encoded Order",
+    fields: ["Quantity/Timing","Give Code","Give Amount - Minimum","Give Amount - Maximum","Give Units","Give Dosage Form","Provider's Administration Instructions","Deliver-to Location","Substitution Status","Dispense Amount","Dispense Units","Number of Refills","Ordering Provider's DEA Number","Pharmacist/Treatment Supplier's Verifier ID","Prescription Number","Number of Refills Remaining","Number of Refills/Doses Dispensed","D/T of Most Recent Refill or Dose Dispensed","Total Daily Dose","Needs Human Review","Pharmacy/Treatment Supplier's Special Dispensing Instructions","Give Per (Time Unit)","Give Rate Amount","Give Rate Units","Give Strength","Give Strength Units","Give Indication","Dispense Package Size","Dispense Package Size Unit","Dispense Package Method","Supplementary Code","Original Order Date/Time","Give Drug Strength Volume","Give Drug Strength Volume Units","Controlled Substance Schedule","Formulary Status","Pharmaceutical Substance Alternative","Pharmacy of Most Recent Fill","Initial Dispense Amount","Dispensing Pharmacy","Dispensing Pharmacy Address","Deliver-to Patient Location","Deliver-to Address","Pharmacy Order Type"]
+  },
+  RXA: {
+    desc: "Pharmacy/Treatment Administration",
+    fields: ["Give Sub-ID Counter","Administration Sub-ID Counter","Date/Time Start of Administration","Date/Time End of Administration","Administered Code","Administered Amount","Administered Units","Administered Dosage Form","Administration Notes","Administering Provider","Administered-at Location","Administered Per (Time Unit)","Administered Strength","Administered Strength Units","Substance Lot Number","Substance Expiration Date","Substance Manufacturer Name","Substance/Treatment Refusal Reason","Indication","Completion Status","Action Code - RXA","System Entry Date/Time","Administered Drug Strength Volume","Administered Drug Strength Volume Units","Administered Barcode Identifier","Pharmacy Order Type"]
+  },
+  SCH: {
+    desc: "Scheduling Activity Information",
+    fields: ["Placer Appointment ID","Filler Appointment ID","Occurrence Number","Placer Group Number","Schedule ID","Event Reason","Appointment Reason","Appointment Type","Appointment Duration","Appointment Duration Units","Appointment Timing Quantity","Placer Contact Person","Placer Contact Phone Number","Placer Contact Address","Placer Contact Location","Filler Contact Person","Filler Contact Phone Number","Filler Contact Address","Filler Contact Location","Entered By Person","Entered By Phone Number","Entered By Location","Parent Placer Appointment ID","Parent Filler Appointment ID","Filler Status Code","Placer Order Number","Filler Order Number"]
+  },
+  SPM: {
+    desc: "Specimen",
+    fields: ["Set ID","Specimen ID","Specimen Parent IDs","Specimen Type","Specimen Type Modifier","Specimen Additives","Specimen Collection Method","Specimen Source Site","Specimen Source Site Modifier","Specimen Collection Site","Specimen Role","Specimen Collection Amount","Grouped Specimen Count","Specimen Description","Specimen Handling Code","Specimen Risk Code","Specimen Collection Date/Time","Specimen Received Date/Time","Specimen Expiration Date/Time","Specimen Availability","Specimen Reject Reason","Specimen Quality","Specimen Appropriateness","Specimen Condition","Specimen Current Quantity","Number of Specimen Containers","Container Type","Container Condition","Specimen Child Role","Accession ID","Other Specimen ID","Shipment ID"]
+  },
+  SAC: {
+    desc: "Specimen Container Detail",
+    fields: ["External Accession Identifier","Accession Identifier","Container Identifier","Primary (Parent) Container Identifier","Equipment Container Identifier","Specimen Source","Registration Date/Time","Container Status","Carrier Type","Carrier Identifier","Position in Carrier","Tray Type - SAC","Tray Identifier","Position in Tray","Location","Container Height","Container Diameter","Barrier Delta","Bottom Delta","Container Height/Diameter/Delta Units","Container Volume","Available Specimen Volume","Initial Specimen Volume","Volume Units","Separator Type","Cap Type","Additive","Specimen Component","Dilution Factor","Treatment","Temperature","Hemolysis Index","Hemolysis Index Units","Lipemia Index","Lipemia Index Units","Icterus Index","Icterus Index Units","Fibrin Index","Fibrin Index Units","System Induced Contaminants","Drug Interference","Artificial Blood","Special Handling Code","Other Environmental Factors"]
+  },
+  TQ1: {
+    desc: "Timing/Quantity",
+    fields: ["Set ID","Quantity","Repeat Pattern","Explicit Time","Relative Time and Units","Service Duration","Start Date/Time","End Date/Time","Priority","Condition Text","Text Instruction","Conjunction","Occurrence Duration","Total Occurrences"]
+  },
+  TQ2: {
+    desc: "Timing/Quantity Relationship",
+    fields: ["Set ID","Sequence/Results Flag","Related Placer Number","Related Filler Number","Related Placer Group Number","Sequence Condition Code","Cyclic Entry/Exit Indicator","Sequence Condition Time Interval","Cyclic Group Maximum Number of Repeats","Special Service Request Relationship"]
+  },
+  OBL: {
+    desc: "Observation Request (Lab)",
+    fields: []
+  },
+  ZPD: { desc: "Custom Z-Segment (ZPD)", fields: [] },
+  ZPI: { desc: "Custom Z-Segment (ZPI)", fields: [] },
+  ZFI: { desc: "Custom Z-Segment (ZFI)", fields: [] },
+};
+
+const MSG_TYPES = {
+  "ADT^A01": "ADT - Admit",
+  "ADT^A02": "ADT - Transfer",
+  "ADT^A03": "ADT - Discharge",
+  "ADT^A04": "ADT - Register",
+  "ADT^A05": "ADT - Pre-Admit",
+  "ADT^A06": "ADT - Change Outpatient to Inpatient",
+  "ADT^A07": "ADT - Change Inpatient to Outpatient",
+  "ADT^A08": "ADT - Update Patient Info",
+  "ADT^A09": "ADT - Patient Departing",
+  "ADT^A10": "ADT - Patient Arriving",
+  "ADT^A11": "ADT - Cancel Admit",
+  "ADT^A12": "ADT - Cancel Transfer",
+  "ADT^A13": "ADT - Cancel Discharge",
+  "ADT^A17": "ADT - Swap Patients",
+  "ADT^A18": "ADT - Merge Patient Info",
+  "ADT^A20": "ADT - Bed Status Update",
+  "ADT^A21": "ADT - Patient Goes on Leave of Absence",
+  "ADT^A22": "ADT - Patient Returns from Leave of Absence",
+  "ADT^A23": "ADT - Delete Patient Event",
+  "ADT^A24": "ADT - Link Patient Information",
+  "ADT^A25": "ADT - Cancel Pending Discharge",
+  "ADT^A26": "ADT - Cancel Pending Transfer",
+  "ADT^A27": "ADT - Cancel Pending Admit",
+  "ADT^A28": "ADT - Add Person Information",
+  "ADT^A29": "ADT - Delete Person Information",
+  "ADT^A30": "ADT - Merge Person Information",
+  "ADT^A31": "ADT - Update Person Information",
+  "ADT^A32": "ADT - Cancel Patient Arriving",
+  "ADT^A33": "ADT - Cancel Patient Departing",
+  "ADT^A34": "ADT - Merge Patient Information - Patient ID Only",
+  "ADT^A35": "ADT - Merge Patient Information - Account Number Only",
+  "ADT^A36": "ADT - Merge Patient Information - Patient ID & Account Number",
+  "ADT^A37": "ADT - Unlink Patient Information",
+  "ADT^A38": "ADT - Cancel Pre-Admit",
+  "ADT^A39": "ADT - Merge Person - Patient ID",
+  "ADT^A40": "ADT - Merge Patient - Patient Identifier List",
+  "ADT^A41": "ADT - Merge Account - Patient Account Number",
+  "ADT^A45": "ADT - Move Visit Information",
+  "ADT^A47": "ADT - Change Patient Identifier List",
+  "ADT^A50": "ADT - Change Visit Number",
+  "ADT^A51": "ADT - Change Alternate Visit ID",
+  "ADT^A60": "ADT - Update Allergy Information",
+  "ORU^R01": "ORU - Unsolicited Observation",
+  "ORM^O01": "ORM - Order Message",
+  "ORR^O02": "ORR - Order Response",
+  "OML^O21": "OML - Lab Order",
+  "ORL^O22": "ORL - Lab Order Response",
+  "SIU^S12": "SIU - Schedule New Appointment",
+  "SIU^S13": "SIU - Request Appointment Rescheduling",
+  "SIU^S14": "SIU - Appointment Rescheduling",
+  "SIU^S15": "SIU - Request Appointment Cancellation",
+  "SIU^S17": "SIU - Appointment Deletion",
+  "MDM^T01": "MDM - New Document",
+  "MDM^T02": "MDM - New Document with Content",
+  "MDM^T03": "MDM - Document Status Change",
+  "MDM^T04": "MDM - Document Status Change with Content",
+  "MDM^T05": "MDM - Document Addendum",
+  "MDM^T06": "MDM - Document Addendum with Content",
+  "MDM^T07": "MDM - Document Edit",
+  "MDM^T08": "MDM - Document Edit with Content",
+  "ACK": "ACK - General Acknowledgment",
+  "ACK^A01": "ACK - Acknowledgment",
+  "QRY^A19": "QRY - Patient Query",
+  "ADR^A19": "ADR - Patient Query Response",
+  "BAR^P01": "BAR - Add Patient Account",
+  "BAR^P02": "BAR - Purge Patient Billing",
+  "DFT^P03": "DFT - Post Detail Financial Transaction",
+  "RDS^O13": "RDS - Pharmacy/Treatment Dispense",
+  "RDE^O11": "RDE - Pharmacy/Treatment Encoded Order",
+  "VXU^V04": "VXU - Unsolicited Vaccination Record Update",
+  "MFN^M04": "MFN - Master File Notification",
+  "MFR^M04": "MFR - Master File Response",
+};
+
+const SAMPLES = {};
+
+SAMPLES.ORU = `MSH|^~\\&|HIS|METRO_HOSPITAL|LAB|METRO_LAB|20240301143022||ORU^R01|MSG20240301143022|P|2.5|||AL|NE
+PID|1||MRN-78432^^^METRO_HOSPITAL^MR||JOHNSON^EMILY^MARIE||19851220|F|||742 EVERGREEN TERRACE^^SPRINGFIELD^IL^62701^USA||(217)555-0123|(217)555-9876||S||ACC-78432|SSN-876543210
+PV1|1|I|4N^403^A^METRO_HOSPITAL||||||SMITH^JAMES^B^^^DR|BROWN^ALICE^M^^^DR||||||AMB||JONES^ROBERT^T^^^DR||V778432|COM|||||||||||||||||||METRO|20240301080000
+ORC|RE|ORD-78432|LAB-78432|GRP-001|CM|||||20240301143022|||SMITH^JAMES^B^^^DR
+OBR|1|ORD-78432|LAB-78432|CBC^Complete Blood Count^L|||20240301140000|20240301143000|||||||20240301140000||SMITH^JAMES^B^^^DR||||||20240301143022||HE|F
+OBX|1|NM|718-7^Hemoglobin [Mass/volume] in Blood^LN||13.5|g/dL|12.0-16.0|N|||F|||20240301143022
+OBX|2|NM|789-8^Erythrocytes [#/volume] in Blood by Automated count^LN||4.50|10*6/uL|3.80-5.20|N|||F|||20240301143022
+OBX|3|NM|20563-3^Carboxyhemoglobin/Hemoglobin.total in Blood^LN||42.0|%|37.0-47.0|N|||F|||20240301143022
+OBX|4|NM|6690-2^Leukocytes [#/volume] in Blood by Automated count^LN||7.2|10*3/uL|4.5-11.0|N|||F|||20240301143022
+OBX|5|NM|777-3^Platelets [#/volume] in Blood by Automated count^LN||225|10*3/uL|150-400|N|||F|||20240301143022
+NTE|1|L|Results reviewed and approved by laboratory director.
+DG1|1|ICD10|Z00.00^Encounter for general adult medical examination without abnormal findings^ICD10||20240301|A`;
+
+SAMPLES.ORM = `MSH|^~\\&|CPOE|GENERAL_HOSPITAL|LIS|GENERAL_LAB|20240305140000||ORM^O01|ORM20240305140000|P|2.5
+PID|1||MRN-99201^^^GENERAL^MR||GARCIA^ELENA^MARIE||19750310|F|||200 PINE ST^^BOSTON^MA^02101^USA||(617)555-0145|||S||ACC-99201
+PV1|1|O|CLINIC^101^A^GENERAL|||||||NGUYEN^PAUL^H^^^DR||||||AMB
+ORC|NW|ORD-99201-1||GRP-ORM-001|IP||||20240305140000|||NGUYEN^PAUL^H^^^DR|||GENERAL_HOSPITAL
+OBR|1|ORD-99201-1||80048^Basic Metabolic Panel^CPT|||20240305140000|||||||||NGUYEN^PAUL^H^^^DR|||||||||LAB
+NTE|1|L|Fasting required. Patient last ate at 0600.
+ORC|NW|ORD-99201-2||GRP-ORM-001|IP||||20240305140000|||NGUYEN^PAUL^H^^^DR
+OBR|2|ORD-99201-2||81001^Urinalysis^CPT|||20240305140000|||||||||NGUYEN^PAUL^H^^^DR|||||||||LAB
+NTE|1|L|Midstream clean catch specimen required.
+ORC|NW|ORD-99201-3||GRP-ORM-001|IP||||20240305140000|||NGUYEN^PAUL^H^^^DR
+OBR|3|ORD-99201-3||85025^CBC with Differential^CPT|||20240305140000|||||||||NGUYEN^PAUL^H^^^DR|||||||||LAB
+DG1|1|ICD10|E11.9^Type 2 diabetes mellitus without complications^ICD10||20240305|A
+DG1|2|ICD10|I10^Essential (primary) hypertension^ICD10||20240305|A`;
+
+SAMPLES.ADT_A01 = `MSH|^~\\&|ADT|MERCY_HOSPITAL|EHR|MERCY|20240305083000||ADT^A01|ADT20240305083000|P|2.5
+EVN|A01|20240305083000|||NURSE01^JONES^SARAH
+PID|1||MRN-55123^^^MERCY^MR||SMITH^ROBERT^JAMES||19620714|M|||55 OAK AVENUE^^CHICAGO^IL^60601^USA||(312)555-0198|(312)555-7766||M|CAT|ACC-55123|SSN-123-45-6789
+NK1|1|SMITH^MARY^ANN|SPO|55 OAK AVENUE^^CHICAGO^IL^60601|(312)555-0198||EC
+PV1|1|I|3W^312^A^MERCY_HOSPITAL||||||PATEL^ANITA^K^^^DR|WONG^LEE^S^^^DR||MED|||||ADM||CHEN^DAVID^R^^^DR||V55123|COM|||||||||||||||||||MERCY|20240305083000
+PV2|||Chest pain with radiation to left arm|||||||||||||||||||||||N
+AL1|1|DA|PENICILLIN^Penicillin^L|SV|Hives~Anaphylaxis
+AL1|2|FA|PEANUTS^Peanuts^L|MO|Anaphylaxis
+DG1|1|ICD10|I21.9^Acute myocardial infarction, unspecified^ICD10||20240305|A
+IN1|1|BCBS001|BLUECROSS|BLUE CROSS BLUE SHIELD|200 HEALTH PLAZA^^CHICAGO^IL^60602|(312)555-9000||GRP-BCBS-7788|SMITH^ROBERT^JAMES|EMP-1234||20240101|20241231|||SMITH^ROBERT^JAMES|SEL|19620714|55 OAK AVENUE^^CHICAGO^IL^60601`;
+
+SAMPLES.ADT_A08 = `MSH|^~\\&|ADT|RIVERSIDE_HOSPITAL|EHR|RIVERSIDE|20240305112000||ADT^A08|ADT20240305112000|P|2.5
+EVN|A08|20240305112000|||CLERK02^PHAM^LINDA
+PID|1||MRN-33891^^^RIVERSIDE^MR||NGUYEN^DAVID^MINH||19550903|M|||1420 ELM STREET^^PORTLAND^OR^97201^USA||(503)555-0177|(503)555-3344||D|BUD|ACC-33891|SSN-234-56-7890
+PV1|1|O|CARD^220^A^RIVERSIDE|||||||TORRES^MARIA^L^^^DR||||||AMB||LEE^JAMES^K^^^DR||V33891|COM|||||||||||||||||||RIVERSIDE|20240305110000
+AL1|1|DA|ASPIRIN^Aspirin^L|MO|GI Bleeding
+AL1|2|MA|LATEX^Latex^L|SV|Contact Dermatitis
+DG1|1|ICD10|I25.10^Atherosclerotic heart disease of native coronary artery without angina pectoris^ICD10||20240305|A
+DG1|2|ICD10|E78.5^Hyperlipidemia, unspecified^ICD10||20240305|A
+IN1|1|AETNA001|AETNA|AETNA HEALTH INC|151 FARMINGTON AVE^^HARTFORD^CT^06156|(800)555-0100||GRP-AETNA-4421|NGUYEN^DAVID^MINH|EMP-5678||20240101|20241231|||NGUYEN^DAVID^MINH|SEL|19550903|1420 ELM STREET^^PORTLAND^OR^97201`;
+
+SAMPLES.ADT_A31 = `MSH|^~\\&|MPI|COUNTY_HEALTH|EHR|COUNTY|20240305093000||ADT^A31|ADT20240305093000|P|2.5
+EVN|A31|20240305093000|||REG01^KUMAR^PRIYA
+PID|1||MRN-72044^^^COUNTY^MR~PHN-OR-772044^^^STATE^PI||RODRIGUEZ^MARIA^ELENA||19880615|F|||789 CEDAR AVE^^EUGENE^OR^97401^USA||(541)555-0233|(541)555-8800||S|HIS|ACC-72044|SSN-345-67-8901
+NK1|1|RODRIGUEZ^CARLOS^JUAN|SPO|789 CEDAR AVE^^EUGENE^OR^97401|(541)555-0233||EC
+NK1|2|RODRIGUEZ^ELENA^MARIE|MTH|321 OAK BLVD^^SALEM^OR^97301|(503)555-7722||FC
+AL1|1|DA|SULFA^Sulfonamides^L|SV|Rash~Fever
+DG1|1|ICD10|Z00.00^Encounter for general adult medical examination without abnormal findings^ICD10||20240305|A`;
+
+SAMPLES.ADT_A40 = `MSH|^~\\&|MPI|UNIVERSITY_HOSPITAL|EHR|UNIVERSITY|20240305140000||ADT^A40|ADT20240305140000|P|2.5
+EVN|A40|20240305140000|||MPI01^CHEN^WEI
+PID|1||MRN-88123^^^UNIVERSITY^MR||THOMPSON^JAMES^EDWARD||19451222|M|||500 UNIVERSITY AVE^^SEATTLE^WA^98101^USA||(206)555-0144|||W|CAT|ACC-88123|SSN-456-78-9012
+MRG|MRN-OLD-88123^^^UNIVERSITY^MR||ACC-OLD-88123`;
+
+SAMPLES.OML = `MSH|^~\\&|CPOE|CITY_HOSPITAL|LIS|CITY_LAB|20240305150000||OML^O21|OML20240305150000|P|2.5
+PID|1||MRN-44567^^^CITY^MR||PATEL^PRIYA^S||19900422|F|||88 RIVER RD^^AUSTIN^TX^78701^USA||(512)555-0212|||S||ACC-44567
+PV1|1|O|ONC^205^B^CITY_HOSPITAL|||||||REYES^CARLOS^M^^^DR||||||AMB
+ORC|NW|ORD-44567-1||GRP-OML-001|IP||||20240305150000|||REYES^CARLOS^M^^^DR
+TQ1|1||||||20240305160000||R
+OBR|1|ORD-44567-1||85025^CBC with Differential^CPT|||20240305150000||||||||20240305150000||REYES^CARLOS^M^^^DR|||||||||LAB
+NTE|1|L|Expedite - oncology patient pre-chemotherapy screening.
+SPM|1|SPEC-44567-1||BLDV^Venous Blood^HL70487|||||||PST^Plastic separator tube^HL70488|||||20240305151500|20240305152000||2|mL
+SAC||TUBE-44567-1|TUBE-44567-1|||BLDV^Venous Blood^HL70487|20240305151500||OK|||LTUBE^Lavender Top Tube^L||||7|mL|6|mL
+ORC|NW|ORD-44567-2||GRP-OML-001|IP||||20240305150000|||REYES^CARLOS^M^^^DR
+TQ1|1||||||20240305160000||R
+OBR|2|ORD-44567-2||80053^Comprehensive Metabolic Panel^CPT|||20240305150000||||||||20240305150000||REYES^CARLOS^M^^^DR|||||||||LAB
+NTE|1|L|Fasting specimen preferred.
+SPM|2|SPEC-44567-2||BLDV^Venous Blood^HL70487|||||||SST^Serum Separator Tube^HL70488|||||20240305151500|20240305152000||1|mL
+SAC||TUBE-44567-2|TUBE-44567-2|||BLDV^Venous Blood^HL70487|20240305151500||OK|||GOLD^Gold Top SST^L||||5|mL|4|mL`;
+
+// ─── HL7 Parser ──────────────────────────────────────────────────────────────
+function parseHL7(text) {
+  // Normalize line endings; HL7 uses \r, but editors may use \n or \r\n
+  const raw = text.trim().replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+  const lines = raw.split('\n').filter(l => l.trim() !== '');
+
+  if (!lines.length) throw new Error('Empty message');
+
+  // Find MSH line
+  const mshLine = lines.find(l => l.startsWith('MSH'));
+  if (!mshLine) throw new Error('No MSH segment found');
+
+  const fieldSep = mshLine[3];
+  const encChars = mshLine[4] === fieldSep ? '' : mshLine.split(fieldSep)[1];
+  const compSep = encChars[0] || '^';
+  const repSep = encChars[1] || '~';
+  const escChar = encChars[2] || '\\';
+  const subSep = encChars[3] || '&';
+
+  const delimiters = { fieldSep, compSep, repSep, escChar, subSep };
+
+  const segments = [];
+  for (const line of lines) {
+    const segName = line.substring(0, 3);
+    const splitFields = line.split(fieldSep);
+
+    // MSH.1 is the field separator (|) itself — it is consumed by split() and absent
+    // from the result. Insert it synthetically so fields[N] === MSH.N for N >= 1.
+    const fields = (segName === 'MSH')
+      ? [splitFields[0], fieldSep, ...splitFields.slice(1)]
+      : splitFields;
+
+    const parsedFields = fields.map((rawField, fi) => {
+      if (segName === 'MSH' && (fi === 1 || fi === 2)) {
+        // MSH.1 = field separator, MSH.2 = encoding chars — treat both as literals
+        return { raw: rawField, repetitions: [{ raw: rawField, components: [{ raw: rawField, subcomponents: [rawField] }] }] };
+      }
+      return parseField(rawField, delimiters);
+    });
+
+    const def = SEG_DEFS[segName] || getZSegDef(segName);
+    segments.push({ name: segName, fields: parsedFields, def, raw: line });
+  }
+
+  // Extract message summary
+  const msh = segments.find(s => s.name === 'MSH');
+  const summary = {};
+  if (msh) {
+    summary.msgType = getFieldVal(msh, 9);   // MSH.9
+    summary.msgCtrlId = getFieldVal(msh, 10); // MSH.10
+    summary.sendingApp = getFieldVal(msh, 3); // MSH.3
+    summary.receivingApp = getFieldVal(msh, 5); // MSH.5
+    summary.datetime = getFieldVal(msh, 7);   // MSH.7
+    summary.version = getFieldVal(msh, 12);   // MSH.12
+    summary.processingId = getFieldVal(msh, 11); // MSH.11
+  }
+
+  return { segments, delimiters, summary };
+}
+
+function getZSegDef(name) {
+  if (name.startsWith('Z')) {
+    return { desc: `Custom Z-Segment (${name})`, fields: [] };
+  }
+  return { desc: 'Unknown Segment', fields: [] };
+}
+
+function parseField(rawField, d) {
+  const reps = rawField.split(d.repSep);
+  const repetitions = reps.map(rep => {
+    const comps = rep.split(d.compSep);
+    const components = comps.map(comp => {
+      const subs = comp.split(d.subSep);
+      return { raw: comp, subcomponents: subs };
+    });
+    return { raw: rep, components };
+  });
+  return { raw: rawField, repetitions };
+}
+
+function getFieldVal(seg, idx) {
+  const f = seg.fields[idx];
+  if (!f) return '';
+  return f.raw || '';
+}
+
+// ─── Rendering ───────────────────────────────────────────────────────────────
+function renderStructured(parsed) {
+  const { segments, summary } = parsed;
+  const container = document.getElementById('output-structured');
+  const navEl = document.getElementById('seg-nav');
+  container.innerHTML = '';
+  navEl.innerHTML = '';
+
+  // Summary bar
+  const msgTypeLabel = MSG_TYPES[summary.msgType] || MSG_TYPES[summary.msgType?.split('^')[0]] || summary.msgType || 'Unknown';
+  const bar = document.createElement('div');
+  bar.className = 'msg-summary';
+  bar.innerHTML = `
+    <div class="summary-item">
+      <span class="summary-label">Message Type</span>
+      <span class="summary-value accent">${esc(summary.msgType || '—')}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Description</span>
+      <span class="summary-value" style="color:var(--text)">${esc(msgTypeLabel)}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Version</span>
+      <span class="summary-value yellow">${esc(summary.version || '—')}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Ctrl ID</span>
+      <span class="summary-value green">${esc(summary.msgCtrlId || '—')}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Sending App</span>
+      <span class="summary-value orange">${esc(summary.sendingApp || '—')}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Receiving App</span>
+      <span class="summary-value orange">${esc(summary.receivingApp || '—')}</span>
+    </div>
+    <div class="summary-item">
+      <span class="summary-label">Segments</span>
+      <span class="summary-value green">${segments.length}</span>
+    </div>
+  `;
+  container.appendChild(bar);
+
+  // Build nav items and segment tables
+  const seenOcc = {};
+  const navItems = [];
+
+  for (const seg of segments) {
+    seenOcc[seg.name] = (seenOcc[seg.name] || 0) + 1;
+    const segIdx = seenOcc[seg.name];
+    const blockId = `seg-${seg.name}-${segIdx}`;
+
+    // Nav item
+    const navItem = document.createElement('div');
+    navItem.className = 'seg-nav-item';
+    navItem.dataset.target = blockId;
+    const nameSpan = document.createElement('span');
+    nameSpan.className = `seg-name ${esc(seg.name)}`;
+    nameSpan.textContent = seg.name;
+    navItem.appendChild(nameSpan);
+    if (segIdx > 1) {
+      const badge = document.createElement('span');
+      badge.className = 'seg-nav-badge';
+      badge.textContent = `[${segIdx}]`;
+      navItem.appendChild(badge);
+    }
+    navItem.addEventListener('click', () => {
+      navItems.forEach(n => n.classList.remove('nav-active'));
+      navItem.classList.add('nav-active');
+      const target = document.getElementById(blockId);
+      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+    navEl.appendChild(navItem);
+    navItems.push(navItem);
+
+    // Segment block (flat table)
+    container.appendChild(buildSegTable(seg, parsed.delimiters, blockId));
+  }
+
+  // Scroll spy: keep nav in sync with visible content
+  container.addEventListener('scroll', () => {
+    const wrapTop = container.getBoundingClientRect().top;
+    let activeIdx = 0;
+    for (let i = 0; i < navItems.length; i++) {
+      const el = document.getElementById(navItems[i].dataset.target);
+      if (el && el.getBoundingClientRect().top - wrapTop <= 10) activeIdx = i;
+    }
+    navItems.forEach((n, i) => n.classList.toggle('nav-active', i === activeIdx));
+  }, { passive: true });
+}
+
+function buildSegTable(seg, delimiters, blockId) {
+  const block = document.createElement('div');
+  block.className = 'seg-block';
+  block.id = blockId;
+
+  // Header
+  const header = document.createElement('div');
+  header.className = 'seg-block-header';
+  const nonEmpty = seg.fields.slice(1).filter(f => f && f.raw !== '').length;
+  header.innerHTML = `
+    <span class="seg-name ${esc(seg.name)}">${esc(seg.name)}</span>
+    <span class="seg-desc">${esc(seg.def?.desc || 'Unknown')}</span>
+    <span class="seg-count">${nonEmpty} / ${seg.fields.length - 1} field${seg.fields.length !== 2 ? 's' : ''}</span>
+    <span class="seg-chevron">▾</span>
+  `;
+  header.addEventListener('click', () => block.classList.toggle('collapsed'));
+  block.appendChild(header);
+
+  // Collapsible table body
+  const tbody = document.createElement('div');
+  tbody.className = 'seg-tbl-body';
+  const table = document.createElement('table');
+  table.className = 'seg-tbl';
+
+  const fieldNames = seg.def?.fields || [];
+  for (let i = 1; i < seg.fields.length; i++) {
+    const field = seg.fields[i];
+    const nameLabel = fieldNames[i - 1] || '';
+    const isMshSep = seg.name === 'MSH' && i === 1;
+    const isEmpty = !field || field.raw === '';
+
+    const tr = document.createElement('tr');
+
+    const tdId = document.createElement('td');
+    tdId.className = 'tbl-fid';
+    tdId.textContent = `${seg.name}.${i}`;
+
+    const tdName = document.createElement('td');
+    tdName.className = 'tbl-fname';
+    tdName.textContent = nameLabel;
+
+    const tdVal = document.createElement('td');
+    tdVal.className = 'tbl-fval';
+
+    if (isEmpty) {
+      tdVal.classList.add('empty');
+      tdVal.textContent = '—';
+    } else if (isMshSep) {
+      tdVal.textContent = field.raw;
+    } else {
+      const reps = field.repetitions;
+      const hasReps = reps.length > 1;
+      const hasComps = reps.some(r => r.components.length > 1);
+      const hasSubs = reps.some(r => r.components.some(c => c.subcomponents.length > 1));
+
+      if (!hasComps && !hasSubs && !hasReps) {
+        tdVal.textContent = field.raw;
+      } else {
+        const rawDiv = document.createElement('div');
+        rawDiv.textContent = field.raw;
+        rawDiv.style.marginBottom = '4px';
+        tdVal.appendChild(rawDiv);
+
+        const detail = document.createElement('div');
+        detail.className = 'comp-list';
+
+        reps.forEach((rep, ri) => {
+          if (hasReps) {
+            const rh = document.createElement('div');
+            rh.className = 'rep-header';
+            rh.textContent = `↻ Rep ${ri + 1}`;
+            detail.appendChild(rh);
+          }
+          rep.components.forEach((comp, ci) => {
+            const ci1 = ci + 1;
+            if (comp.subcomponents.length > 1) {
+              comp.subcomponents.forEach((sub, si) => {
+                const item = document.createElement('div');
+                item.className = 'comp-item';
+                item.innerHTML = `<span class="comp-label">.${ci1}.${si + 1}</span><span class="comp-val">${esc(sub)}</span>`;
+                detail.appendChild(item);
+              });
+            } else {
+              const item = document.createElement('div');
+              item.className = 'comp-item';
+              item.innerHTML = `<span class="comp-label">.${ci1}</span><span class="comp-val">${esc(comp.raw)}</span>`;
+              detail.appendChild(item);
+            }
+          });
+        });
+        tdVal.appendChild(detail);
+      }
+    }
+
+    tr.appendChild(tdId);
+    tr.appendChild(tdName);
+    tr.appendChild(tdVal);
+    table.appendChild(tr);
+  }
+
+  tbody.appendChild(table);
+  block.appendChild(tbody);
+  return block;
+}
+
+function renderHighlighted(parsed) {
+  const { segments, delimiters } = parsed;
+  const { fieldSep, compSep, repSep, subSep } = delimiters;
+  const container = document.getElementById('output-raw');
+  container.innerHTML = '';
+
+  for (const seg of segments) {
+    const line = document.createElement('div');
+    line.className = 'raw-segment-line';
+    line.style.marginBottom = '4px';
+
+    const parts = seg.raw.split(fieldSep);
+    parts.forEach((part, pi) => {
+      if (pi > 0) {
+        const sep = document.createElement('span');
+        sep.className = 'raw-sep';
+        sep.textContent = fieldSep;
+        line.appendChild(sep);
+      }
+      const span = document.createElement('span');
+      if (pi === 0) {
+        span.className = `raw-seg-tag seg-name ${esc(seg.name)}`;
+        span.textContent = part;
+      } else {
+        // Color sub-delimiters
+        const inner = colorizeField(part, compSep, repSep, subSep);
+        span.className = 'raw-field';
+        span.innerHTML = inner;
+      }
+      line.appendChild(span);
+    });
+
+    container.appendChild(line);
+  }
+}
+
+function colorizeField(text, compSep, repSep, subSep) {
+  let result = '';
+  for (const ch of text) {
+    if (ch === compSep) result += `<span class="raw-comp-sep">${esc(ch)}</span>`;
+    else if (ch === repSep) result += `<span class="raw-rep-sep">${esc(ch)}</span>`;
+    else if (ch === subSep) result += `<span class="raw-sub-sep">${esc(ch)}</span>`;
+    else result += esc(ch);
+  }
+  return result;
+}
+
+function renderJSON(parsed) {
+  const { segments, delimiters, summary } = parsed;
+  const container = document.getElementById('output-json');
+
+  const obj = {
+    summary,
+    delimiters,
+    segments: segments.map(seg => {
+      const fields = {};
+      const fieldNames = seg.def?.fields || [];
+      seg.fields.forEach((f, i) => {
+        if (i === 0) return; // skip segment name
+        const key = fieldNames[i - 1]
+          ? `${seg.name}.${i} - ${fieldNames[i - 1]}`
+          : `${seg.name}.${i}`;
+        if (f.raw === '') {
+          fields[key] = null;
+        } else if (f.repetitions.length === 1 && f.repetitions[0].components.length === 1 && f.repetitions[0].components[0].subcomponents.length === 1) {
+          fields[key] = f.raw;
+        } else {
+          fields[key] = f.repetitions.map(rep => {
+            if (rep.components.length === 1 && rep.components[0].subcomponents.length === 1) return rep.raw;
+            return rep.components.map(comp => {
+              if (comp.subcomponents.length === 1) return comp.raw;
+              return comp.subcomponents;
+            });
+          });
+          if (fields[key].length === 1) fields[key] = fields[key][0];
+        }
+      });
+      return { segment: seg.name, description: seg.def?.desc, fields };
+    })
+  };
+
+  container.textContent = JSON.stringify(obj, null, 2);
+  // Syntax highlight JSON
+  container.innerHTML = syntaxHighlightJSON(container.textContent);
+}
+
+function syntaxHighlightJSON(json) {
+  return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
+    let cls = 'color:var(--text)';
+    if (/^"/.test(match)) {
+      if (/:$/.test(match)) cls = 'color:var(--accent)';
+      else cls = 'color:var(--green)';
+    } else if (/true|false/.test(match)) cls = 'color:var(--yellow)';
+    else if (/null/.test(match)) cls = 'color:var(--muted)';
+    else cls = 'color:var(--orange)';
+    return `<span style="${cls}">${match}</span>`;
+  });
+}
+
+function esc(str) {
+  if (str === undefined || str === null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+// ─── App Logic ────────────────────────────────────────────────────────────────
+let lastParsed = null;
+
+function doParse() {
+  const raw = document.getElementById('hl7-input').value;
+  const structuredContainer = document.getElementById('output-structured');
+  const rawContainer = document.getElementById('output-raw');
+  const jsonContainer = document.getElementById('output-json');
+
+  try {
+    const parsed = parseHL7(raw);
+    lastParsed = parsed;
+
+    renderStructured(parsed);
+    renderHighlighted(parsed);
+    renderJSON(parsed);
+
+    // Update message type badge
+    const badge = document.getElementById('msg-type-display');
+    if (parsed.summary.msgType) {
+      badge.textContent = parsed.summary.msgType;
+      badge.style.display = '';
+      badge.style.background = 'var(--surface2)';
+      badge.style.color = 'var(--accent)';
+      badge.style.border = '1px solid var(--border)';
+    } else {
+      badge.style.display = 'none';
+    }
+  } catch (e) {
+    structuredContainer.innerHTML = `<div class="error-panel">Parse error: ${esc(e.message)}</div>`;
+    rawContainer.innerHTML = '';
+    jsonContainer.textContent = '';
+    document.getElementById('msg-type-display').style.display = 'none';
+  }
+}
+
+// Auto-parse on input with debounce
+let debounceTimer = null;
+document.getElementById('hl7-input').addEventListener('input', () => {
+  const val = document.getElementById('hl7-input').value;
+  document.getElementById('char-count').textContent = `${val.length} char${val.length !== 1 ? 's' : ''}`;
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(doParse, 350);
+});
+
+document.getElementById('btn-parse').addEventListener('click', doParse);
+
+document.getElementById('btn-clear').addEventListener('click', () => {
+  document.getElementById('hl7-input').value = '';
+  document.getElementById('char-count').textContent = '0 chars';
+  document.getElementById('msg-type-display').style.display = 'none';
+  document.getElementById('seg-nav').innerHTML = '';
+  document.getElementById('output-structured').innerHTML = `
+    <div class="empty-state" id="empty-state">
+      <div class="icon">⚕</div>
+      <p>Paste an HL7 v2.x message in the input panel<br>and click <strong>Parse</strong> to inspect it.</p>
+    </div>`;
+  document.getElementById('output-raw').innerHTML = '';
+  document.getElementById('output-json').textContent = '';
+  lastParsed = null;
+});
+
+document.getElementById('btn-sample').addEventListener('click', () => {
+  const type = document.getElementById('sample-type').value;
+  const msg = SAMPLES[type] || SAMPLES.ADT_A01 || SAMPLES.ORU;
+  document.getElementById('hl7-input').value = msg;
+  document.getElementById('char-count').textContent = `${msg.length} chars`;
+  doParse();
+});
+
+// Tab switching
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    tab.classList.add('active');
+    document.getElementById(`tab-${tab.dataset.tab}`).classList.add('active');
+  });
+});
+
+// Theme toggle
+(function() {
+  const html = document.documentElement;
+  const btn = document.getElementById('btn-theme');
+  const icon = document.getElementById('theme-icon');
+  const label = document.getElementById('theme-label');
+
+  function applyTheme(theme) {
+    if (theme === 'light') {
+      html.setAttribute('data-theme', 'light');
+      icon.textContent = '🌙';
+      label.textContent = 'Dark';
+    } else {
+      html.removeAttribute('data-theme');
+      icon.textContent = '☀️';
+      label.textContent = 'Light';
+    }
+  }
+
+  const saved = localStorage.getItem('hl7-theme') || 'dark';
+  applyTheme(saved);
+
+  btn.addEventListener('click', () => {
+    const next = html.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    localStorage.setItem('hl7-theme', next);
+    applyTheme(next);
+  });
+})();
+
+// Keyboard shortcut: Ctrl/Cmd + Enter to parse
+document.addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    doParse();
+  }
+});
+</script>
+</body>
+</html>

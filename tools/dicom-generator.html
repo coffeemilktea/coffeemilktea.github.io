@@ -1,0 +1,1412 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DICOM Toolbox</title>
+  <style>
+    /* ── Dracula palette ── */
+    :root {
+      --bg:       #282a36;
+      --surface:  #21222c;
+      --input-bg: #191a21;
+      --border:   #44475a;
+      --comment:  #6272a4;
+      --fg:       #f8f8f2;
+      --cyan:     #8be9fd;
+      --green:    #50fa7b;
+      --orange:   #ffb86c;
+      --pink:     #ff79c6;
+      --purple:   #bd93f9;
+      --red:      #ff5555;
+      --yellow:   #f1fa8c;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg);
+      color: var(--fg);
+      min-height: 100vh;
+      display: flex; align-items: flex-start; justify-content: center;
+      padding: 40px 20px;
+    }
+
+    .container {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      width: 100%; max-width: 720px;
+    }
+
+    .header { margin-bottom: 20px; }
+    h1 { font-size: 22px; font-weight: 600; color: var(--fg); margin-bottom: 6px; }
+    .subtitle { font-size: 14px; color: var(--comment); }
+
+    /* ── Tabs ── */
+    .tabs {
+      display: flex; gap: 2px; margin-bottom: 28px;
+      border-bottom: 1px solid var(--border);
+    }
+    .tab-btn {
+      padding: 8px 20px; font-size: 13px; font-weight: 500; cursor: pointer;
+      background: none; border: none; color: var(--comment);
+      border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color 0.15s, border-color 0.15s;
+    }
+    .tab-btn:hover { color: var(--fg); }
+    .tab-btn.active { color: var(--purple); border-bottom-color: var(--purple); }
+
+    /* ── Sections ── */
+    .section { margin-bottom: 24px; }
+    .section-title {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--purple);
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 8px; margin-bottom: 16px;
+    }
+
+    /* ── Grids ── */
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    .proc-code-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+    .span-2 { grid-column: span 2; }
+
+    /* ── Fields ── */
+    .field { margin-bottom: 14px; }
+
+    label {
+      display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+      font-size: 12px; font-weight: 500; color: #cac9d9; margin-bottom: 5px;
+    }
+
+    .tag {
+      font-family: 'Courier New', monospace; font-size: 10px;
+      color: var(--cyan); background: rgba(139,233,253,0.1);
+      border: 1px solid rgba(139,233,253,0.25); border-radius: 4px; padding: 1px 5px;
+    }
+    .vr {
+      font-family: 'Courier New', monospace; font-size: 10px;
+      color: var(--pink); background: rgba(255,121,198,0.1);
+      border: 1px solid rgba(255,121,198,0.25); border-radius: 4px; padding: 1px 5px;
+    }
+
+    input[type="text"], input[type="date"], select {
+      width: 100%; padding: 9px 12px;
+      background: var(--input-bg); border: 1px solid var(--border);
+      border-radius: 7px; color: var(--fg); font-size: 13px;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    select { cursor: pointer; }
+    input:focus, select:focus {
+      outline: none; border-color: var(--purple);
+      box-shadow: 0 0 0 3px rgba(189,147,249,0.15);
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.6); cursor: pointer; }
+
+    .hint     { font-size: 11px; color: var(--comment); margin-top: 3px; }
+    .seq-note { font-size: 11px; color: var(--comment); margin-top: -6px; margin-bottom: 12px; }
+
+    /* ── Custom tags ── */
+    .custom-tag-row {
+      display: flex; align-items: center; gap: 6px; margin-bottom: 8px;
+    }
+    .ct-group, .ct-element {
+      width: 58px; font-family: 'Courier New', monospace;
+      font-size: 12px; padding: 9px 8px; text-align: center;
+    }
+    .ct-comma  { color: var(--comment); font-size: 13px; flex-shrink: 0; }
+    .ct-vr     { width: 76px; font-family: 'Courier New', monospace; font-size: 12px; }
+    .ct-value  { flex: 1; }
+    .ct-remove {
+      background: none; border: 1px solid rgba(255,85,85,0.3);
+      color: var(--red); border-radius: 5px; width: 30px; height: 30px;
+      font-size: 17px; cursor: pointer; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      transition: background 0.15s;
+    }
+    .ct-remove:hover { background: rgba(255,85,85,0.12); }
+
+    .ct-empty {
+      font-size: 12px; color: var(--comment); text-align: center;
+      padding: 16px; border: 1px dashed var(--border);
+      border-radius: 7px; margin-bottom: 10px;
+    }
+    .btn-add-tag {
+      width: 100%; padding: 8px; border-radius: 7px; font-size: 13px;
+      font-weight: 500; cursor: pointer; background: none;
+      border: 1px dashed var(--border); color: var(--comment);
+      transition: border-color 0.15s, color 0.15s;
+    }
+    .btn-add-tag:hover { border-color: var(--purple); color: var(--purple); }
+
+    .ct-header {
+      display: flex; gap: 6px; align-items: center;
+      font-size: 10px; font-weight: 600; letter-spacing: 0.05em;
+      text-transform: uppercase; color: var(--comment);
+      margin-bottom: 6px; padding: 0 0 4px; border-bottom: 1px solid var(--border);
+    }
+    .ct-h-group  { width: 58px; text-align: center; }
+    .ct-h-sep    { width: 14px; }
+    .ct-h-elem   { width: 58px; text-align: center; }
+    .ct-h-vr     { width: 76px; }
+    .ct-h-value  { flex: 1; }
+    .ct-h-del    { width: 30px; }
+
+    /* ── Image upload ── */
+    .radio-group { display: flex; gap: 10px; margin-bottom: 14px; }
+    .radio-option {
+      display: flex; align-items: center; gap: 7px; font-size: 13px;
+      color: #cac9d9; cursor: pointer; padding: 8px 14px;
+      border: 1px solid var(--border); border-radius: 7px;
+      transition: border-color 0.15s, background 0.15s; user-select: none;
+    }
+    .radio-option:has(input:checked) {
+      border-color: var(--purple); background: rgba(189,147,249,0.07); color: var(--fg);
+    }
+    .radio-option input[type="radio"] { accent-color: var(--purple); }
+
+    .drop-zone {
+      border: 2px dashed var(--border); border-radius: 8px;
+      padding: 26px 20px; text-align: center; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+    }
+    .drop-zone:hover, .drop-zone.drag-over {
+      border-color: var(--purple); background: rgba(189,147,249,0.05);
+    }
+    .drop-zone-icon { font-size: 24px; margin-bottom: 6px; color: var(--comment); }
+    .drop-zone-text { font-size: 13px; color: #cac9d9; margin-bottom: 3px; }
+    .drop-zone-hint { font-size: 11px; color: var(--comment); }
+
+    .img-upload-preview {
+      display: flex; align-items: center; gap: 12px;
+      padding: 10px 12px; background: var(--input-bg);
+      border: 1px solid var(--border); border-radius: 8px; margin-top: 10px;
+    }
+    .upload-thumb {
+      width: 52px; height: 52px; object-fit: cover;
+      border-radius: 4px; border: 1px solid var(--border); image-rendering: pixelated;
+    }
+    .upload-info { flex: 1; min-width: 0; }
+    .upload-name { font-size: 13px; color: var(--fg); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .upload-dims { font-size: 11px; color: var(--comment); margin-top: 3px; }
+    .upload-clear {
+      background: none; border: 1px solid rgba(255,85,85,0.3);
+      color: var(--red); border-radius: 5px; padding: 4px 10px;
+      font-size: 12px; cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .upload-clear:hover { background: rgba(255,85,85,0.12); }
+
+    /* ── Buttons ── */
+    .btn {
+      width: 100%; padding: 11px; border-radius: 8px; font-size: 14px;
+      font-weight: 600; cursor: pointer; border: 1px solid; transition: all 0.15s;
+    }
+    .btn-primary {
+      background: rgba(189,147,249,0.12); border-color: var(--purple); color: var(--purple);
+    }
+    .btn-primary:hover { background: var(--purple); color: #282a36; }
+    .btn-primary:active { background: #a57de8; border-color: #a57de8; color: #282a36; }
+
+    hr { border: none; border-top: 1px solid var(--border); margin: 24px 0; }
+
+    /* ── Status ── */
+    .status { margin-top: 14px; padding: 11px 14px; border-radius: 8px; font-size: 13px; display: none; }
+    .status.success { display: block; background: rgba(80,250,123,0.1); border: 1px solid rgba(80,250,123,0.3); color: var(--green); }
+    .status.error   { display: block; background: rgba(255,85,85,0.1);  border: 1px solid rgba(255,85,85,0.3);  color: var(--red); }
+
+    /* ── Preview ── */
+    .preview-section { margin-top: 24px; display: none; }
+    .preview-section h2 {
+      font-size: 11px; font-weight: 600; letter-spacing: 0.08em;
+      text-transform: uppercase; color: var(--comment); margin-bottom: 12px;
+    }
+    .preview-grid { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; }
+    canvas { border: 1px solid var(--border); border-radius: 6px; image-rendering: pixelated; }
+
+    .tag-summary {
+      background: var(--input-bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 12px 14px;
+      font-family: 'Courier New', monospace; font-size: 11px;
+      line-height: 1.9; max-height: 300px; overflow-y: auto;
+    }
+    .tag-row    { display: flex; gap: 8px; }
+    .tag-key    { color: var(--cyan);   white-space: nowrap; min-width: 80px; }
+    .tag-vr-d   { color: var(--pink);   min-width: 26px; }
+    .tag-val    { color: var(--green);  word-break: break-all; }
+    .tag-sq     { color: var(--yellow); font-style: italic; }
+    .tag-custom { color: var(--orange); word-break: break-all; }
+    .tag-divider { border-top: 1px solid var(--border); margin: 4px 0; }
+
+    .size-badge {
+      display: inline-block; margin-top: 8px; font-size: 11px;
+      color: var(--comment); background: var(--border);
+      border-radius: 4px; padding: 2px 8px;
+    }
+
+    /* ── Reader ── */
+    .reader-drop {
+      border: 2px dashed var(--border); border-radius: 8px;
+      padding: 40px 20px; text-align: center; cursor: pointer;
+      transition: border-color 0.15s, background 0.15s; margin-bottom: 16px;
+    }
+    .reader-drop:hover, .reader-drop.drag-over {
+      border-color: var(--cyan); background: rgba(139,233,253,0.04);
+    }
+    .reader-drop-icon { font-size: 30px; margin-bottom: 10px; }
+    .reader-drop-text { font-size: 14px; color: #cac9d9; margin-bottom: 4px; }
+    .reader-drop-hint { font-size: 11px; color: var(--comment); }
+
+    .reader-status {
+      margin-bottom: 12px; padding: 10px 14px; border-radius: 8px;
+      font-size: 13px; display: none;
+    }
+    .reader-status.error {
+      display: block;
+      background: rgba(255,85,85,0.1); border: 1px solid rgba(255,85,85,0.3); color: var(--red);
+    }
+
+    .reader-results { display: none; }
+    .reader-file-info {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+      font-size: 12px; color: var(--comment); margin-bottom: 10px;
+    }
+    .reader-file-name {
+      font-family: 'Courier New', monospace; color: var(--cyan); font-size: 12px;
+    }
+    .reader-clear {
+      margin-left: auto; background: none;
+      border: 1px solid rgba(255,85,85,0.35); color: var(--red);
+      border-radius: 5px; padding: 3px 10px; font-size: 11px;
+      cursor: pointer; transition: background 0.15s; white-space: nowrap;
+    }
+    .reader-clear:hover { background: rgba(255,85,85,0.12); }
+
+    .reader-wrap {
+      background: var(--input-bg); border: 1px solid var(--border);
+      border-radius: 8px; overflow: auto; max-height: 580px;
+    }
+
+    .tag-table {
+      width: 100%; border-collapse: collapse;
+      font-size: 12px; font-family: 'Courier New', monospace;
+    }
+    .tag-table th {
+      text-align: left; font-size: 10px; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase;
+      color: var(--comment); padding: 8px 10px;
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; background: var(--input-bg); z-index: 1;
+    }
+    .tag-table th:nth-child(4) { text-align: right; }
+    .tag-table td {
+      padding: 3px 10px; vertical-align: top;
+      border-bottom: 1px solid rgba(68,71,90,0.35);
+    }
+    .tag-table tr:last-child td { border-bottom: none; }
+    .tag-table tr:hover td { background: rgba(255,255,255,0.025); }
+
+    .row-pixel td { opacity: 0.55; font-style: italic; }
+    .row-sq-hdr td { background: rgba(241,250,140,0.03); }
+    .row-item  td { background: rgba(139,233,253,0.025); }
+    .row-delim td { opacity: 0.28; }
+    .row-meta  td { background: rgba(189,147,249,0.03); }
+
+    .td-tag  { color: var(--cyan); white-space: nowrap; min-width: 94px; }
+    .td-name { color: #cac9d9; min-width: 140px; }
+    .td-vr   { color: var(--pink); min-width: 32px; }
+    .td-len  { color: var(--comment); text-align: right; min-width: 56px; padding-right: 14px; }
+    .td-val  { color: var(--green); word-break: break-all; }
+    .td-val.v-pixel { color: var(--comment); }
+    .td-val.v-sq    { color: var(--yellow); font-style: italic; }
+    .td-val.v-uid   { color: var(--purple); word-break: break-all; }
+    .td-val.v-meta  { color: var(--orange); word-break: break-all; }
+
+    .reader-summary {
+      display: flex; gap: 16px; flex-wrap: wrap;
+      font-size: 11px; color: var(--comment); margin-bottom: 10px;
+    }
+    .reader-summary span { background: var(--border); border-radius: 4px; padding: 2px 8px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>DICOM Toolbox</h1>
+    <p class="subtitle">Generate or inspect DICOM files in the browser — no server, no uploads</p>
+  </div>
+
+  <!-- ── TABS ── -->
+  <div class="tabs">
+    <button class="tab-btn active" onclick="switchTab('generator')" id="tab-gen-btn">Generator</button>
+    <button class="tab-btn"        onclick="switchTab('reader')"    id="tab-rdr-btn">Tag Reader</button>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════ GENERATOR PANE -->
+  <div id="pane-generator">
+
+    <!-- ── PATIENT ── -->
+    <div class="section">
+      <div class="section-title">Patient</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Patient Name <span class="tag">(0010,0010)</span> <span class="vr">PN</span></label>
+          <input type="text" id="patientName" value="Doe^John" placeholder="Last^First^Middle" />
+        </div>
+        <div class="field">
+          <label>Patient ID <span class="tag">(0010,0020)</span> <span class="vr">LO</span></label>
+          <input type="text" id="patientId" value="PAT-001234" maxlength="64" />
+        </div>
+        <div class="field">
+          <label>Date of Birth <span class="tag">(0010,0030)</span> <span class="vr">DA</span></label>
+          <input type="date" id="dob" value="1990-01-15" />
+          <div class="hint">Stored as YYYYMMDD</div>
+        </div>
+        <div class="field">
+          <label>Patient Sex <span class="tag">(0010,0040)</span> <span class="vr">CS</span></label>
+          <select id="patientSex">
+            <option value="M">M — Male</option>
+            <option value="F">F — Female</option>
+            <option value="O">O — Other / Unknown</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── STUDY ── -->
+    <div class="section">
+      <div class="section-title">Study</div>
+      <div class="field">
+        <label>Accession Number <span class="tag">(0008,0050)</span> <span class="vr">SH</span></label>
+        <input type="text" id="accessionNumber" value="ACC20240101001" maxlength="16" />
+        <div class="hint">Max 16 characters</div>
+      </div>
+      <div class="field">
+        <label>Study Description <span class="tag">(0008,1030)</span> <span class="vr">LO</span></label>
+        <input type="text" id="studyDescription" placeholder="e.g. Chest PA and Lateral" />
+      </div>
+      <div class="field">
+        <label>Referring Physician <span class="tag">(0008,0090)</span> <span class="vr">PN</span></label>
+        <input type="text" id="referringPhysician" placeholder="Last^First" />
+      </div>
+    </div>
+
+    <!-- ── SERIES ── -->
+    <div class="section">
+      <div class="section-title">Series</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Modality <span class="tag">(0008,0060)</span> <span class="vr">CS</span></label>
+          <select id="modality">
+            <option value="CR">CR — Computed Radiography</option>
+            <option value="CT">CT — Computed Tomography</option>
+            <option value="MR">MR — Magnetic Resonance</option>
+            <option value="US">US — Ultrasound</option>
+            <option value="DX">DX — Digital Radiography</option>
+            <option value="MG">MG — Mammography</option>
+            <option value="PT">PT — PET Scan</option>
+            <option value="NM">NM — Nuclear Medicine</option>
+            <option value="XA">XA — X-Ray Angiography</option>
+            <option value="RF">RF — Radio Fluoroscopy</option>
+            <option value="OT">OT — Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Body Part Examined <span class="tag">(0018,0015)</span> <span class="vr">CS</span></label>
+          <input type="text" id="bodyPart" placeholder="e.g. CHEST, HEAD, KNEE" />
+        </div>
+        <div class="field">
+          <label>Series Description <span class="tag">(0008,103E)</span> <span class="vr">LO</span></label>
+          <input type="text" id="seriesDescription" placeholder="e.g. PA Chest" />
+        </div>
+        <div class="field">
+          <label>Protocol Name <span class="tag">(0018,1030)</span> <span class="vr">LO</span></label>
+          <input type="text" id="protocolName" placeholder="e.g. CHEST_ROUTINE" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ── PROCEDURE ── -->
+    <div class="section">
+      <div class="section-title">Procedure</div>
+      <div class="field">
+        <label>Procedure Description <span class="tag">(0032,1060)</span> <span class="vr">LO</span></label>
+        <input type="text" id="procedureDescription" placeholder="e.g. Chest X-Ray 2 Views" />
+      </div>
+      <div class="proc-code-grid">
+        <div class="field">
+          <label>Code Value <span class="tag">(0008,0100)</span> <span class="vr">SH</span></label>
+          <input type="text" id="procCodeValue" placeholder="e.g. 24627-2" maxlength="16" />
+        </div>
+        <div class="field">
+          <label>Coding Scheme <span class="tag">(0008,0102)</span> <span class="vr">SH</span></label>
+          <input type="text" id="procCodingScheme" value="LOINC" maxlength="16" />
+        </div>
+        <div class="field span-2">
+          <label>Code Meaning <span class="tag">(0008,0104)</span> <span class="vr">LO</span></label>
+          <input type="text" id="procCodeMeaning" placeholder="e.g. XR Chest AP" />
+        </div>
+      </div>
+      <div class="seq-note">When Code Value is set, a Procedure Code Sequence <span class="tag">(0008,1032)</span> <span class="vr">SQ</span> is generated.</div>
+    </div>
+
+    <!-- ── ADMINISTRATIVE ── -->
+    <div class="section">
+      <div class="section-title">Administrative</div>
+      <div class="grid-2">
+        <div class="field">
+          <label>Institution Name <span class="tag">(0008,0080)</span> <span class="vr">LO</span></label>
+          <input type="text" id="institutionName" placeholder="e.g. General Hospital" />
+        </div>
+        <div class="field">
+          <label>Department Name <span class="tag">(0008,1040)</span> <span class="vr">LO</span></label>
+          <input type="text" id="departmentName" placeholder="e.g. Radiology" />
+        </div>
+      </div>
+    </div>
+
+    <!-- ── CUSTOM TAGS ── -->
+    <div class="section">
+      <div class="section-title">Custom Tags</div>
+      <div id="ctHeader" class="ct-header" style="display:none">
+        <div class="ct-h-group">Group</div>
+        <div class="ct-h-sep"></div>
+        <div class="ct-h-elem">Elem</div>
+        <div class="ct-h-vr">VR</div>
+        <div class="ct-h-value">Value</div>
+        <div class="ct-h-del"></div>
+      </div>
+      <div id="customTagEmpty" class="ct-empty">
+        No custom tags added. Tags are sorted by address and inserted into the dataset.
+      </div>
+      <div id="customTagList"></div>
+      <button class="btn-add-tag" onclick="addCustomTag()">+ Add Custom Tag</button>
+    </div>
+
+    <!-- ── IMAGE ── -->
+    <div class="section">
+      <div class="section-title">Image</div>
+      <div class="radio-group">
+        <label class="radio-option">
+          <input type="radio" name="imgSrc" value="generated" checked onchange="toggleImageSource('generated')">
+          Default test image
+        </label>
+        <label class="radio-option">
+          <input type="radio" name="imgSrc" value="upload" onchange="toggleImageSource('upload')">
+          Upload custom image
+        </label>
+      </div>
+      <div id="uploadArea" style="display:none">
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('imgFile').click()">
+          <input type="file" id="imgFile" accept="image/*" style="display:none" />
+          <div class="drop-zone-icon">&#8679;</div>
+          <div class="drop-zone-text">Click to upload or drag &amp; drop</div>
+          <div class="drop-zone-hint">PNG, JPEG, BMP, GIF &mdash; resized to max 512&times;512, converted to grayscale</div>
+        </div>
+        <div id="uploadPreviewArea" style="display:none">
+          <div class="img-upload-preview">
+            <img id="uploadThumb" class="upload-thumb" src="" alt="preview" />
+            <div class="upload-info">
+              <div class="upload-name" id="uploadName"></div>
+              <div class="upload-dims" id="uploadDims"></div>
+            </div>
+            <button class="upload-clear" onclick="clearUpload()">Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <hr />
+    <button class="btn btn-primary" onclick="generateAndDownload()">Generate &amp; Download DICOM (.dcm)</button>
+    <div id="status" class="status"></div>
+
+    <div class="preview-section" id="previewSection">
+      <h2>Generated File</h2>
+      <div class="preview-grid">
+        <canvas id="canvas" width="128" height="128"></canvas>
+        <div>
+          <div class="tag-summary" id="tagSummary"></div>
+          <span class="size-badge" id="sizeBadge"></span>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /pane-generator -->
+
+  <!-- ══════════════════════════════════════════════════════════ READER PANE -->
+  <div id="pane-reader" style="display:none">
+
+    <div class="reader-drop" id="readerDrop" onclick="document.getElementById('readerFile').click()">
+      <input type="file" id="readerFile" accept=".dcm,.DCM,application/dicom" style="display:none" />
+      <div class="reader-drop-icon">🔬</div>
+      <div class="reader-drop-text">Click to open or drag &amp; drop a DICOM file</div>
+      <div class="reader-drop-hint">.dcm — parsed entirely in-browser, nothing is uploaded</div>
+    </div>
+
+    <div class="reader-status" id="readerStatus"></div>
+
+    <div class="reader-results" id="readerResults">
+      <div class="reader-file-info">
+        <span>File:</span>
+        <span class="reader-file-name" id="readerFileName"></span>
+        <div class="reader-summary" id="readerSummary"></div>
+        <button class="reader-clear" onclick="clearReader()">✕ Clear</button>
+      </div>
+      <div class="reader-wrap">
+        <table class="tag-table" id="readerTable">
+          <thead>
+            <tr>
+              <th>Tag</th>
+              <th>Name</th>
+              <th>VR</th>
+              <th>Len</th>
+              <th>Value</th>
+            </tr>
+          </thead>
+          <tbody id="readerTbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+  </div><!-- /pane-reader -->
+
+</div><!-- /container -->
+
+<script>
+// ─── DICOM encoder (Explicit VR Little Endian) ─────────────────────────────────
+
+const LONG_VRS = new Set(['OB','OD','OF','OL','OV','OW','SQ','UC','UN','UR','UT']);
+
+function u16LE(v) { const b = new Uint8Array(2); new DataView(b.buffer).setUint16(0, v, true); return b; }
+function u32LE(v) { const b = new Uint8Array(4); new DataView(b.buffer).setUint32(0, v, true); return b; }
+
+function strBytes(s) {
+  const b = new Uint8Array(s.length);
+  for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i);
+  return b;
+}
+
+function concat(...arrays) {
+  const total = arrays.reduce((n, a) => n + a.length, 0);
+  const out = new Uint8Array(total);
+  let off = 0;
+  for (const a of arrays) { out.set(a, off); off += a.length; }
+  return out;
+}
+
+function elem(group, element, vr, valueBytes) {
+  const tag = concat(u16LE(group), u16LE(element));
+  const vrB = strBytes(vr);
+  const hdr = LONG_VRS.has(vr)
+    ? concat(tag, vrB, new Uint8Array(2), u32LE(valueBytes.length))
+    : concat(tag, vrB, u16LE(valueBytes.length));
+  return concat(hdr, valueBytes);
+}
+
+function selem(group, element, vr, str) {
+  let s = String(str);
+  if (s.length % 2 !== 0) s += (vr === 'UI') ? '\0' : ' ';
+  return elem(group, element, vr, strBytes(s));
+}
+
+function uselem(group, element, v) { return elem(group, element, 'US', u16LE(v)); }
+
+function seqItem(dataset) {
+  return concat(new Uint8Array([0xFE,0xFF,0x00,0xE0]), u32LE(dataset.length), dataset);
+}
+
+function genUID() { return `2.25.${Date.now()}${Math.floor(Math.random()*1e9)}`; }
+
+// ─── Custom tags ──────────────────────────────────────────────────────────────
+
+const CUSTOM_VRS = [
+  'AE','AS','CS','DA','DS','DT','FL','FD',
+  'IS','LO','LT','PN','SH','SL','SS','ST',
+  'TM','UI','UL','UR','US','UT'
+];
+const VR_OPTIONS = CUSTOM_VRS.map(v => `<option value="${v}">${v}</option>`).join('');
+
+function updateCustomTagUI() {
+  const rows = document.querySelectorAll('.custom-tag-row');
+  document.getElementById('customTagEmpty').style.display = rows.length ? 'none' : 'block';
+  document.getElementById('ctHeader').style.display = rows.length ? 'flex' : 'none';
+}
+
+function addCustomTag(group = '', element = '', vr = 'LO', value = '') {
+  const list = document.getElementById('customTagList');
+  const row  = document.createElement('div');
+  row.className = 'custom-tag-row';
+  row.innerHTML = `
+    <input class="ct-group"   type="text" placeholder="0008" maxlength="4"
+           value="${group}" spellcheck="false" style="text-transform:uppercase" />
+    <span class="ct-comma">,</span>
+    <input class="ct-element" type="text" placeholder="0050" maxlength="4"
+           value="${element}" spellcheck="false" style="text-transform:uppercase" />
+    <select class="ct-vr">${VR_OPTIONS}</select>
+    <input class="ct-value" type="text" placeholder="value" value="${value}" />
+    <button class="ct-remove" onclick="this.closest('.custom-tag-row').remove(); updateCustomTagUI()"
+            title="Remove">&times;</button>
+  `;
+  row.querySelector('.ct-vr').value = vr;
+  list.appendChild(row);
+  updateCustomTagUI();
+}
+
+function getCustomTagElements() {
+  const tags = [];
+  for (const row of document.querySelectorAll('.custom-tag-row')) {
+    const gHex = row.querySelector('.ct-group').value.trim().padStart(4,'0');
+    const eHex = row.querySelector('.ct-element').value.trim().padStart(4,'0');
+    const vr   = row.querySelector('.ct-vr').value;
+    const val  = row.querySelector('.ct-value').value;
+    const group   = parseInt(gHex, 16);
+    const element = parseInt(eHex, 16);
+    if (isNaN(group) || isNaN(element)) continue;
+    if (!['US','UL','SS','SL','FL','FD'].includes(vr) && !val.trim()) continue;
+    tags.push({ group, element, vr, value: val });
+  }
+  return tags;
+}
+
+function encodeCustomTag({ group, element, vr, value }) {
+  switch (vr) {
+    case 'US': return uselem(group, element, parseInt(value) || 0);
+    case 'UL': return elem(group, element, 'UL', u32LE(parseInt(value) || 0));
+    case 'SS': { const b=new Uint8Array(2); new DataView(b.buffer).setInt16(0, parseInt(value)||0,true); return elem(group,element,'SS',b); }
+    case 'SL': { const b=new Uint8Array(4); new DataView(b.buffer).setInt32(0, parseInt(value)||0,true); return elem(group,element,'SL',b); }
+    case 'FL': { const b=new Uint8Array(4); new DataView(b.buffer).setFloat32(0, parseFloat(value)||0,true); return elem(group,element,'FL',b); }
+    case 'FD': { const b=new Uint8Array(8); new DataView(b.buffer).setFloat64(0, parseFloat(value)||0,true); return elem(group,element,'FD',b); }
+    default:   return selem(group, element, vr, value.trim());
+  }
+}
+
+// ─── Custom image state ───────────────────────────────────────────────────────
+
+let customImage = null;
+
+function toggleImageSource(val) {
+  document.getElementById('uploadArea').style.display = val === 'upload' ? 'block' : 'none';
+  if (val === 'generated') clearUpload();
+}
+
+function clearUpload() {
+  customImage = null;
+  document.getElementById('uploadPreviewArea').style.display = 'none';
+  document.getElementById('dropZone').style.display = 'block';
+  document.getElementById('imgFile').value = '';
+}
+
+function handleImageFile(file) {
+  if (!file || !file.type.startsWith('image/')) {
+    showStatus('error', 'Please upload a valid image file (PNG, JPEG, BMP, GIF).'); return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const img = new Image();
+    img.onload = () => {
+      const MAX = 512;
+      let w = img.width, h = img.height;
+      if (w > MAX || h > MAX) { const s = MAX/Math.max(w,h); w=Math.round(w*s); h=Math.round(h*s); }
+      const cv = document.createElement('canvas');
+      cv.width = w; cv.height = h;
+      cv.getContext('2d').drawImage(img, 0, 0, w, h);
+      const rgba = cv.getContext('2d').getImageData(0,0,w,h).data;
+      let pixels = new Uint8Array(w*h);
+      for (let i=0; i<w*h; i++)
+        pixels[i] = Math.round(0.299*rgba[i*4] + 0.587*rgba[i*4+1] + 0.114*rgba[i*4+2]);
+      if (pixels.length%2 !== 0) { const p=new Uint8Array(pixels.length+1); p.set(pixels); pixels=p; }
+      customImage = { pixels, rows:h, cols:w };
+      document.getElementById('uploadThumb').src = cv.toDataURL();
+      document.getElementById('uploadName').textContent = file.name;
+      document.getElementById('uploadDims').textContent =
+        `${img.width}×${img.height} → stored as ${w}×${h} · 8-bit grayscale`;
+      document.getElementById('dropZone').style.display = 'none';
+      document.getElementById('uploadPreviewArea').style.display = 'block';
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ─── Default 64×64 test image ─────────────────────────────────────────────────
+
+function makePixelData(rows, cols) {
+  const buf = new Uint8Array(rows*cols*2), view = new DataView(buf.buffer);
+  const MAX=4095, cr=rows>>1, cc=cols>>1;
+  for (let r=0; r<rows; r++) for (let c=0; c<cols; c++) {
+    let v = Math.round(((r+c)/(rows+cols-2))*MAX);
+    if (r===cr||c===cc) v=MAX;
+    view.setUint16((r*cols+c)*2, v, true);
+  }
+  return buf;
+}
+
+// ─── DICOM builder ────────────────────────────────────────────────────────────
+
+function buildDICOM(cfg) {
+  const hasCustomImg = customImage !== null;
+  const sopClassUID    = '1.2.840.10008.5.1.4.1.1.7';
+  const transferSyntax = '1.2.840.10008.1.2.1';
+  const implClassUID   = '2.25.19191919191919191919';
+  const sopInstUID=genUID(), studyInstUID=genUID(), seriesInstUID=genUID();
+  const now=new Date(), pad=n=>String(n).padStart(2,'0');
+  const studyDate=`${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}`;
+  const studyTime=`${pad(now.getHours())}${pad(now.getMinutes())}${pad(now.getSeconds())}`;
+  const birthDate=cfg.dob.replace(/-/g,'');
+  const ROWS = hasCustomImg ? customImage.rows : 64;
+  const COLS = hasCustomImg ? customImage.cols : 64;
+
+  // ── File Meta ────────────────────────────────────────────────────────────────
+  const metaBody = concat(
+    elem (0x0002,0x0001,'OB', new Uint8Array([0x00,0x01])),
+    selem(0x0002,0x0002,'UI', sopClassUID),
+    selem(0x0002,0x0003,'UI', sopInstUID),
+    selem(0x0002,0x0010,'UI', transferSyntax),
+    selem(0x0002,0x0012,'UI', implClassUID),
+  );
+  const metaInfo = concat(elem(0x0002,0x0000,'UL', u32LE(metaBody.length)), metaBody);
+
+  // ── Procedure Code Sequence ──────────────────────────────────────────────────
+  let procCodeSQ = null;
+  if (cfg.procCodeValue && cfg.procCodeValue.trim()) {
+    const codeDs = concat(
+      selem(0x0008,0x0100,'SH', cfg.procCodeValue.trim()),
+      selem(0x0008,0x0102,'SH', cfg.procCodingScheme.trim() || 'DCM'),
+      cfg.procCodeMeaning ? selem(0x0008,0x0104,'LO', cfg.procCodeMeaning) : new Uint8Array(0),
+    );
+    procCodeSQ = { g:0x0008, e:0x1032, bytes: elem(0x0008,0x1032,'SQ', seqItem(codeDs)) };
+  }
+
+  // ── Collect dataset elements ─────────────────────────────────────────────────
+  const els = [];
+  const add  = (g,e,bytes) => { if (bytes.length) els.push({g,e,bytes}); };
+  const s    = (g,e,vr,v)  => add(g, e, selem(g, e, vr, v));
+  const so   = (g,e,vr,v)  => { if (v && String(v).trim()) s(g, e, vr, String(v).trim()); };
+  const us   = (g,e,v)     => add(g, e, uselem(g, e, v));
+
+  s (0x0008,0x0016,'UI', sopClassUID);
+  s (0x0008,0x0018,'UI', sopInstUID);
+  s (0x0008,0x0020,'DA', studyDate);
+  s (0x0008,0x0023,'DA', studyDate);
+  s (0x0008,0x0030,'TM', studyTime);
+  s (0x0008,0x0033,'TM', studyTime);
+  s (0x0008,0x0050,'SH', cfg.accessionNumber);
+  s (0x0008,0x0060,'CS', cfg.modality);
+  s (0x0008,0x0064,'CS', 'WSD');
+  so(0x0008,0x0080,'LO', cfg.institutionName);
+  so(0x0008,0x1040,'LO', cfg.departmentName);
+  so(0x0008,0x0090,'PN', cfg.referringPhysician);
+  so(0x0008,0x1030,'LO', cfg.studyDescription);
+  if (procCodeSQ) add(procCodeSQ.g, procCodeSQ.e, procCodeSQ.bytes);
+  so(0x0008,0x103E,'LO', cfg.seriesDescription);
+  s (0x0010,0x0010,'PN', cfg.patientName || 'Test^Patient');
+  s (0x0010,0x0020,'LO', cfg.patientID);
+  s (0x0010,0x0030,'DA', birthDate);
+  s (0x0010,0x0040,'CS', cfg.patientSex);
+  so(0x0018,0x0015,'CS', cfg.bodyPart ? cfg.bodyPart.trim().toUpperCase() : '');
+  so(0x0018,0x1030,'LO', cfg.protocolName);
+  s (0x0020,0x000D,'UI', studyInstUID);
+  s (0x0020,0x000E,'UI', seriesInstUID);
+  s (0x0020,0x0010,'SH', '1');
+  s (0x0020,0x0011,'IS', '1');
+  s (0x0020,0x0013,'IS', '1');
+  us(0x0028,0x0002,  1);
+  s (0x0028,0x0004,'CS', 'MONOCHROME2');
+  us(0x0028,0x0010,  ROWS);
+  us(0x0028,0x0011,  COLS);
+  us(0x0028,0x0100,  hasCustomImg ? 8  : 16);
+  us(0x0028,0x0101,  hasCustomImg ? 8  : 12);
+  us(0x0028,0x0102,  hasCustomImg ? 7  : 11);
+  us(0x0028,0x0103,  0);
+  so(0x0032,0x1060,'LO', cfg.procedureDescription);
+
+  // ── Custom tags (added before sort) ─────────────────────────────────────────
+  for (const tag of getCustomTagElements()) {
+    try { add(tag.group, tag.element, encodeCustomTag(tag)); }
+    catch(err) { console.warn('Skipping custom tag:', tag, err); }
+  }
+
+  // ── Sort by tag address & append pixel data last ─────────────────────────────
+  els.sort((a,b) => a.g !== b.g ? a.g - b.g : a.e - b.e);
+  const pixData = hasCustomImg ? customImage.pixels : makePixelData(ROWS, COLS);
+  const pixElem = elem(0x7FE0,0x0010, hasCustomImg ? 'OB' : 'OW', pixData);
+  const dataset = concat(...els.map(e=>e.bytes), pixElem);
+
+  return concat(new Uint8Array(128), strBytes('DICM'), metaInfo, dataset);
+}
+
+// ─── UI helpers ───────────────────────────────────────────────────────────────
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function showStatus(type, msg) {
+  const el = document.getElementById('status');
+  el.className = `status ${type}`; el.textContent = msg;
+}
+
+function renderPreview(cfg, byteLen) {
+  const canvas = document.getElementById('canvas'), ctx = canvas.getContext('2d');
+  let dispRows, dispCols, bitsLabel;
+
+  if (customImage) {
+    const S = Math.max(1, Math.floor(192/Math.max(customImage.rows, customImage.cols)));
+    dispRows=customImage.rows; dispCols=customImage.cols;
+    canvas.width=dispCols*S; canvas.height=dispRows*S;
+    const id=ctx.createImageData(canvas.width, canvas.height);
+    for (let r=0; r<dispRows; r++) for (let c=0; c<dispCols; c++) {
+      const v=customImage.pixels[r*dispCols+c];
+      for (let dr=0; dr<S; dr++) for (let dc=0; dc<S; dc++) {
+        const i=((r*S+dr)*canvas.width+(c*S+dc))*4;
+        id.data[i]=id.data[i+1]=id.data[i+2]=v; id.data[i+3]=255;
+      }
+    }
+    ctx.putImageData(id, 0, 0);
+    bitsLabel='8-bit grayscale';
+  } else {
+    dispRows=64; dispCols=64; const S=2;
+    canvas.width=dispCols*S; canvas.height=dispRows*S;
+    const id=ctx.createImageData(canvas.width, canvas.height);
+    for (let r=0; r<dispRows; r++) for (let c=0; c<dispCols; c++) {
+      let v=Math.round(((r+c)/(dispRows+dispCols-2))*255);
+      if (r===dispRows>>1||c===dispCols>>1) v=255;
+      for (let dr=0; dr<S; dr++) for (let dc=0; dc<S; dc++) {
+        const i=((r*S+dr)*dispCols*S+(c*S+dc))*4;
+        id.data[i]=id.data[i+1]=id.data[i+2]=v; id.data[i+3]=255;
+      }
+    }
+    ctx.putImageData(id, 0, 0);
+    bitsLabel='12-bit grayscale';
+  }
+
+  const bd = cfg.dob.replace(/-/g,'');
+  const stdRows = [
+    cfg.patientName        && ['(0010,0010)','PN', cfg.patientName],
+                              ['(0010,0020)','LO', cfg.patientID],
+                              ['(0010,0030)','DA', bd],
+                              ['(0010,0040)','CS', cfg.patientSex],
+                              ['(0008,0050)','SH', cfg.accessionNumber],
+    cfg.studyDescription   && ['(0008,1030)','LO', cfg.studyDescription],
+    cfg.referringPhysician && ['(0008,0090)','PN', cfg.referringPhysician],
+                              ['(0008,0060)','CS', cfg.modality],
+    cfg.seriesDescription  && ['(0008,103E)','LO', cfg.seriesDescription],
+    cfg.bodyPart           && ['(0018,0015)','CS', cfg.bodyPart.toUpperCase()],
+    cfg.protocolName       && ['(0018,1030)','LO', cfg.protocolName],
+    cfg.procedureDescription && ['(0032,1060)','LO', cfg.procedureDescription],
+    cfg.procCodeValue      && ['(0008,1032)','SQ', `[${cfg.procCodingScheme}] ${cfg.procCodeValue}${cfg.procCodeMeaning ? ' — '+cfg.procCodeMeaning : ''}`, 'sq'],
+    cfg.institutionName    && ['(0008,0080)','LO', cfg.institutionName],
+    cfg.departmentName     && ['(0008,1040)','LO', cfg.departmentName],
+                              ['(0028,0010)','US', String(dispRows)],
+                              ['(0028,0011)','US', String(dispCols)],
+                              ['(0028,0100)','US', customImage ? '8' : '16 (12 stored)'],
+  ].filter(Boolean);
+
+  const customTagsForSummary = getCustomTagElements().map(tag => {
+    const g = tag.group.toString(16).padStart(4,'0').toUpperCase();
+    const e = tag.element.toString(16).padStart(4,'0').toUpperCase();
+    return [`(${g},${e})`, tag.vr, tag.value, 'custom'];
+  });
+
+  const toRow = ([k, vr, v, style]) =>
+    `<div class="tag-row">
+      <span class="tag-key">${k}</span>
+      <span class="tag-vr-d">${vr}</span>
+      <span class="${style === 'sq' ? 'tag-sq' : style === 'custom' ? 'tag-custom' : 'tag-val'}">${esc(v)}</span>
+    </div>`;
+
+  let html = stdRows.map(toRow).join('');
+  if (customTagsForSummary.length) {
+    html += '<div class="tag-divider"></div>' + customTagsForSummary.map(toRow).join('');
+  }
+
+  document.getElementById('tagSummary').innerHTML = html;
+  document.getElementById('sizeBadge').textContent =
+    `${byteLen.toLocaleString()} bytes · ${dispCols}×${dispRows} · ${bitsLabel}`;
+  document.getElementById('previewSection').style.display = 'block';
+}
+
+// ─── Main action ──────────────────────────────────────────────────────────────
+
+function generateAndDownload() {
+  const g = id => document.getElementById(id).value;
+  const cfg = {
+    patientName:          g('patientName').trim(),
+    patientID:            g('patientId').trim(),
+    dob:                  g('dob'),
+    patientSex:           g('patientSex'),
+    accessionNumber:      g('accessionNumber').trim(),
+    studyDescription:     g('studyDescription').trim(),
+    referringPhysician:   g('referringPhysician').trim(),
+    modality:             g('modality'),
+    seriesDescription:    g('seriesDescription').trim(),
+    bodyPart:             g('bodyPart').trim(),
+    protocolName:         g('protocolName').trim(),
+    procedureDescription: g('procedureDescription').trim(),
+    procCodeValue:        g('procCodeValue').trim(),
+    procCodingScheme:     g('procCodingScheme').trim() || 'DCM',
+    procCodeMeaning:      g('procCodeMeaning').trim(),
+    institutionName:      g('institutionName').trim(),
+    departmentName:       g('departmentName').trim(),
+  };
+
+  if (!cfg.patientID || !cfg.accessionNumber || !cfg.dob) {
+    showStatus('error', 'Patient ID, Accession Number, and Date of Birth are required.'); return;
+  }
+
+  try {
+    const bytes    = buildDICOM(cfg);
+    const blob     = new Blob([bytes], { type:'application/dicom' });
+    const url      = URL.createObjectURL(blob);
+    const filename = `${cfg.patientID}_${cfg.accessionNumber}.dcm`;
+    const a = document.createElement('a');
+    a.href=url; a.download=filename; a.click();
+    URL.revokeObjectURL(url);
+    showStatus('success', `✓ ${filename} generated (${(bytes.length/1024).toFixed(1)} KB)`);
+    renderPreview(cfg, bytes.length);
+  } catch(err) {
+    showStatus('error', `Error: ${err.message}`);
+    console.error(err);
+  }
+}
+
+// ─── Event wiring (generator) ─────────────────────────────────────────────────
+
+document.getElementById('imgFile').addEventListener('change', e => {
+  if (e.target.files[0]) handleImageFile(e.target.files[0]);
+});
+const _dz = document.getElementById('dropZone');
+_dz.addEventListener('dragover',  e => { e.preventDefault(); _dz.classList.add('drag-over'); });
+_dz.addEventListener('dragleave', ()  => _dz.classList.remove('drag-over'));
+_dz.addEventListener('drop', e => {
+  e.preventDefault(); _dz.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) handleImageFile(e.dataTransfer.files[0]);
+});
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// ─── Tab switching ────────────────────────────────────────────────────────────
+
+function switchTab(tab) {
+  document.getElementById('pane-generator').style.display = tab === 'generator' ? 'block' : 'none';
+  document.getElementById('pane-reader').style.display    = tab === 'reader'    ? 'block' : 'none';
+  document.getElementById('tab-gen-btn').classList.toggle('active', tab === 'generator');
+  document.getElementById('tab-rdr-btn').classList.toggle('active', tab === 'reader');
+}
+
+// ─── DICOM tag name dictionary ────────────────────────────────────────────────
+
+const TAG_NAMES = {
+  // File Meta
+  '00020000': 'File Meta Information Group Length',
+  '00020001': 'File Meta Information Version',
+  '00020002': 'Media Storage SOP Class UID',
+  '00020003': 'Media Storage SOP Instance UID',
+  '00020010': 'Transfer Syntax UID',
+  '00020012': 'Implementation Class UID',
+  '00020013': 'Implementation Version Name',
+  '00020016': 'Source Application Entity Title',
+  '00020100': 'Private Information Creator UID',
+  // Identifying
+  '00080005': 'Specific Character Set',
+  '00080008': 'Image Type',
+  '00080012': 'Instance Creation Date',
+  '00080013': 'Instance Creation Time',
+  '00080016': 'SOP Class UID',
+  '00080018': 'SOP Instance UID',
+  '00080020': 'Study Date',
+  '00080021': 'Series Date',
+  '00080022': 'Acquisition Date',
+  '00080023': 'Content Date',
+  '00080030': 'Study Time',
+  '00080031': 'Series Time',
+  '00080032': 'Acquisition Time',
+  '00080033': 'Content Time',
+  '00080050': 'Accession Number',
+  '00080060': 'Modality',
+  '00080064': 'Conversion Type',
+  '00080070': 'Manufacturer',
+  '00080080': 'Institution Name',
+  '00080081': 'Institution Address',
+  '00080090': 'Referring Physician Name',
+  '00081010': 'Station Name',
+  '00081030': 'Study Description',
+  '00081032': 'Procedure Code Sequence',
+  '0008103E': 'Series Description',
+  '00081040': 'Institutional Department Name',
+  '00081048': 'Physician(s) of Record',
+  '00081050': 'Performing Physician Name',
+  '00081060': 'Name of Physician Reading Study',
+  '00081070': "Operators' Name",
+  '00081090': 'Manufacturer Model Name',
+  '00081110': 'Referenced Study Sequence',
+  '00081115': 'Referenced Series Sequence',
+  '00081140': 'Referenced Image Sequence',
+  '00082111': 'Derivation Description',
+  '00082112': 'Source Image Sequence',
+  // Procedure code items
+  '00080100': 'Code Value',
+  '00080102': 'Coding Scheme Designator',
+  '00080103': 'Coding Scheme Version',
+  '00080104': 'Code Meaning',
+  // Patient
+  '00100010': 'Patient Name',
+  '00100020': 'Patient ID',
+  '00100021': 'Issuer of Patient ID',
+  '00100030': 'Patient Birth Date',
+  '00100040': 'Patient Sex',
+  '00101000': 'Other Patient IDs',
+  '00101010': 'Patient Age',
+  '00101020': 'Patient Size',
+  '00101030': 'Patient Weight',
+  '001021B0': 'Additional Patient History',
+  '00104000': 'Patient Comments',
+  // Acquisition
+  '00180010': 'Contrast/Bolus Agent',
+  '00180015': 'Body Part Examined',
+  '00180022': 'Scan Options',
+  '00180050': 'Slice Thickness',
+  '00180060': 'KVP',
+  '00180088': 'Spacing Between Slices',
+  '00180090': 'Data Collection Diameter',
+  '00181000': 'Device Serial Number',
+  '00181020': 'Software Versions',
+  '00181030': 'Protocol Name',
+  '00181100': 'Reconstruction Diameter',
+  '00181150': 'Exposure Time',
+  '00181151': 'X-Ray Tube Current',
+  '00181152': 'Exposure',
+  '00185100': 'Patient Position',
+  // Study / Series / Instance
+  '0020000D': 'Study Instance UID',
+  '0020000E': 'Series Instance UID',
+  '00200010': 'Study ID',
+  '00200011': 'Series Number',
+  '00200012': 'Acquisition Number',
+  '00200013': 'Instance Number',
+  '00200020': 'Patient Orientation',
+  '00200032': 'Image Position Patient',
+  '00200037': 'Image Orientation Patient',
+  '00200052': 'Frame of Reference UID',
+  '00200060': 'Laterality',
+  '00201040': 'Position Reference Indicator',
+  '00201041': 'Slice Location',
+  // Image
+  '00280002': 'Samples Per Pixel',
+  '00280004': 'Photometric Interpretation',
+  '00280006': 'Planar Configuration',
+  '00280008': 'Number of Frames',
+  '00280010': 'Rows',
+  '00280011': 'Columns',
+  '00280030': 'Pixel Spacing',
+  '00280034': 'Pixel Aspect Ratio',
+  '00280100': 'Bits Allocated',
+  '00280101': 'Bits Stored',
+  '00280102': 'High Bit',
+  '00280103': 'Pixel Representation',
+  '00280106': 'Smallest Image Pixel Value',
+  '00280107': 'Largest Image Pixel Value',
+  '00281050': 'Window Center',
+  '00281051': 'Window Width',
+  '00281052': 'Rescale Intercept',
+  '00281053': 'Rescale Slope',
+  '00281054': 'Rescale Type',
+  '00281055': 'Window Center & Width Explanation',
+  // Procedure
+  '00321060': 'Requested Procedure Description',
+  '00321070': 'Requested Contrast Agent',
+  '00401001': 'Requested Procedure ID',
+  // Pixel data
+  '7FE00010': 'Pixel Data',
+  // Delimiter tags
+  'FFFEE000': 'Item',
+  'FFFEE00D': 'Item Delimitation Item',
+  'FFFEE0DD': 'Sequence Delimitation Item',
+};
+
+// ─── DICOM value decoder ──────────────────────────────────────────────────────
+
+function decodeDICOMValue(vr, bytes) {
+  if (!bytes || bytes.length === 0) return '';
+  const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const text = () => {
+    let s = '';
+    for (let i = 0; i < bytes.length; i++) {
+      const c = bytes[i];
+      if (c !== 0) s += String.fromCharCode(c);
+    }
+    return s.trim();
+  };
+  switch (vr) {
+    case 'US': {
+      const vals = [];
+      for (let i = 0; i + 1 < bytes.length; i += 2) vals.push(dv.getUint16(i, true));
+      return vals.join('\\');
+    }
+    case 'UL': {
+      const vals = [];
+      for (let i = 0; i + 3 < bytes.length; i += 4) vals.push(dv.getUint32(i, true));
+      return vals.join('\\');
+    }
+    case 'SS': return bytes.length >= 2 ? dv.getInt16(0, true).toString() : '';
+    case 'SL': return bytes.length >= 4 ? dv.getInt32(0, true).toString() : '';
+    case 'FL': {
+      const vals = [];
+      for (let i = 0; i + 3 < bytes.length; i += 4) vals.push(dv.getFloat32(i, true).toPrecision(6));
+      return vals.join('\\');
+    }
+    case 'FD': {
+      const vals = [];
+      for (let i = 0; i + 7 < bytes.length; i += 8) vals.push(dv.getFloat64(i, true).toPrecision(10));
+      return vals.join('\\');
+    }
+    case 'AT': {
+      const parts = [];
+      for (let i = 0; i + 3 < bytes.length; i += 4) {
+        const g = dv.getUint16(i, true), e = dv.getUint16(i+2, true);
+        parts.push(`(${g.toString(16).padStart(4,'0').toUpperCase()},${e.toString(16).padStart(4,'0').toUpperCase()})`);
+      }
+      return parts.join(' ');
+    }
+    case 'OB': case 'OW': case 'UN': case 'OD': case 'OF': case 'OL': case 'OV': {
+      const shown = Math.min(16, bytes.length);
+      const hex = Array.from(bytes.slice(0, shown)).map(b => b.toString(16).padStart(2,'0')).join(' ');
+      return bytes.length > shown ? `${hex} … [${bytes.length} bytes]` : hex;
+    }
+    default: return text();
+  }
+}
+
+// ─── DICOM parser ─────────────────────────────────────────────────────────────
+
+function parseDICOM(buffer) {
+  const u8 = new Uint8Array(buffer);
+  const dv = new DataView(buffer);
+  let off  = 0;
+
+  if (u8.length < 132) throw new Error('File too small to be a valid DICOM file');
+  const magic = String.fromCharCode(u8[128], u8[129], u8[130], u8[131]);
+  if (magic !== 'DICM') {
+    throw new Error(
+      'Missing "DICM" magic bytes at offset 128. ' +
+      'This may be an ACR-NEMA file (no file meta) or not a DICOM file at all.'
+    );
+  }
+
+  off = 132;
+  const rows = [];
+
+  function r16() { const v = dv.getUint16(off, true); off += 2; return v; }
+  function r32() { const v = dv.getUint32(off, true); off += 4; return v; }
+
+  function parseRange(end, depth) {
+    while (off < end && off + 4 <= buffer.byteLength) {
+      const grp = r16();
+      const el  = r16();
+      const tagStr = grp.toString(16).padStart(4,'0').toUpperCase()
+                   + el.toString(16).padStart(4,'0').toUpperCase();
+
+      // ── Delimiter / item tags (FFFE,xxxx) — no VR field ──
+      if (grp === 0xFFFE) {
+        const len = r32();
+        if (el === 0xE000) {
+          // Item begin
+          const itemEnd = (len === 0xFFFFFFFF) ? end : Math.min(off + len, buffer.byteLength);
+          rows.push({ tag: tagStr, vr: null, length: len, depth, isItem: true });
+          parseRange(itemEnd, depth + 1);
+        } else {
+          // Item Delimitation (E00D) or Sequence Delimitation (E0DD)
+          rows.push({ tag: tagStr, vr: null, length: 0, depth, isDelimiter: true });
+          return; // end this recursion level
+        }
+        continue;
+      }
+
+      // ── Read VR ──
+      if (off + 2 > buffer.byteLength) break;
+      const vr = String.fromCharCode(u8[off], u8[off+1]); off += 2;
+
+      // ── Read length ──
+      let length;
+      if (LONG_VRS.has(vr)) {
+        if (off + 2 > buffer.byteLength) break;
+        off += 2; // reserved bytes
+        if (off + 4 > buffer.byteLength) break;
+        length = r32();
+      } else {
+        if (off + 2 > buffer.byteLength) break;
+        length = r16();
+      }
+
+      const isUndef = (length === 0xFFFFFFFF);
+
+      // ── Sequence ──
+      if (vr === 'SQ') {
+        const seqEnd = isUndef ? end : Math.min(off + length, buffer.byteLength);
+        rows.push({ tag: tagStr, vr, length, depth, isSQ: true });
+        parseRange(seqEnd, depth + 1);
+        continue;
+      }
+
+      // ── Pixel data ──
+      if (tagStr === '7FE00010') {
+        const pixLen = isUndef
+          ? (buffer.byteLength - off)
+          : Math.min(length, buffer.byteLength - off);
+        rows.push({ tag: tagStr, vr, length: pixLen, depth, isPixel: true });
+        return; // pixel data is always the last meaningful element
+      }
+
+      // ── Regular element ──
+      const actualLen = isUndef ? 0 : Math.min(length, buffer.byteLength - off);
+      const bytes = u8.slice(off, off + actualLen);
+      off += actualLen;
+      const value = decodeDICOMValue(vr, bytes);
+      // Mark group 0002 elements as meta for styling
+      const isMeta = (grp === 0x0002);
+      rows.push({ tag: tagStr, vr, length: actualLen, depth, value, isMeta });
+    }
+  }
+
+  parseRange(buffer.byteLength, 0);
+  return rows;
+}
+
+// ─── Reader UI ────────────────────────────────────────────────────────────────
+
+function clearReader() {
+  document.getElementById('readerResults').style.display = 'none';
+  document.getElementById('readerStatus').style.display  = 'none';
+  document.getElementById('readerDrop').style.display    = 'block';
+  document.getElementById('readerFile').value = '';
+  document.getElementById('readerTbody').innerHTML = '';
+}
+
+function showReaderError(msg) {
+  const el = document.getElementById('readerStatus');
+  el.className = 'reader-status error';
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function renderReaderTable(rows) {
+  const frags = [];
+
+  for (const row of rows) {
+    const tag    = row.tag;
+    const tagFmt = `(${tag.slice(0,4)},${tag.slice(4)})`;
+    const name   = TAG_NAMES[tag] || '';
+    const indent = '\u00a0\u00a0\u00a0\u00a0'.repeat(row.depth); // non-breaking spaces for indent
+
+    if (row.isDelimiter) {
+      frags.push(
+        `<tr class="row-delim">` +
+        `<td class="td-tag">${esc(indent + tagFmt)}</td>` +
+        `<td class="td-name">${esc(name)}</td>` +
+        `<td class="td-vr">—</td><td class="td-len">—</td><td class="td-val"></td></tr>`
+      );
+      continue;
+    }
+
+    if (row.isItem) {
+      const lenStr = row.length === 0xFFFFFFFF ? 'undef' : row.length.toLocaleString();
+      frags.push(
+        `<tr class="row-item">` +
+        `<td class="td-tag">${esc(indent + tagFmt)}</td>` +
+        `<td class="td-name" style="color:var(--cyan)">▸ Item</td>` +
+        `<td class="td-vr">—</td><td class="td-len">${lenStr}</td><td class="td-val"></td></tr>`
+      );
+      continue;
+    }
+
+    if (row.isSQ) {
+      const lenStr = row.length === 0xFFFFFFFF ? 'undef' : row.length.toLocaleString();
+      frags.push(
+        `<tr class="row-sq-hdr">` +
+        `<td class="td-tag">${esc(indent + tagFmt)}</td>` +
+        `<td class="td-name">${esc(name)}</td>` +
+        `<td class="td-vr" style="color:var(--yellow)">${esc(row.vr)}</td>` +
+        `<td class="td-len">${lenStr}</td>` +
+        `<td class="td-val v-sq">▾ Sequence</td></tr>`
+      );
+      continue;
+    }
+
+    if (row.isPixel) {
+      frags.push(
+        `<tr class="row-pixel">` +
+        `<td class="td-tag">${esc(indent + tagFmt)}</td>` +
+        `<td class="td-name">Pixel Data</td>` +
+        `<td class="td-vr">${esc(row.vr)}</td>` +
+        `<td class="td-len">${row.length.toLocaleString()}</td>` +
+        `<td class="td-val v-pixel">[binary — ${row.length.toLocaleString()} bytes]</td></tr>`
+      );
+      continue;
+    }
+
+    // Regular element
+    const vrIsUID   = row.vr === 'UI';
+    const valClass  = vrIsUID ? 'td-val v-uid' : row.isMeta ? 'td-val v-meta' : 'td-val';
+    const rowClass  = row.isMeta ? ' class="row-meta"' : '';
+    frags.push(
+      `<tr${rowClass}>` +
+      `<td class="td-tag">${esc(indent + tagFmt)}</td>` +
+      `<td class="td-name">${esc(name)}</td>` +
+      `<td class="td-vr">${esc(row.vr || '')}</td>` +
+      `<td class="td-len">${row.length}</td>` +
+      `<td class="${valClass}">${esc(row.value || '')}</td></tr>`
+    );
+  }
+
+  document.getElementById('readerTbody').innerHTML = frags.join('');
+}
+
+function handleDICOMFile(file) {
+  if (!file) return;
+  clearReader();
+  document.getElementById('readerDrop').style.display = 'none';
+
+  const fr = new FileReader();
+  fr.onload = e => {
+    try {
+      const rows = parseDICOM(e.target.result);
+
+      // Count element types for summary
+      const nMeta   = rows.filter(r => r.tag && r.tag.startsWith('0002') && !r.isDelimiter && !r.isItem).length;
+      const nPixel  = rows.filter(r => r.isPixel).length;
+      const nSQ     = rows.filter(r => r.isSQ).length;
+      const nOther  = rows.filter(r => !r.isDelimiter && !r.isItem && !r.isSQ && !r.isPixel).length;
+
+      document.getElementById('readerFileName').textContent = file.name;
+      document.getElementById('readerSummary').innerHTML =
+        `<span>${(file.size / 1024).toFixed(1)} KB</span>` +
+        `<span>${rows.filter(r=>!r.isDelimiter && !r.isItem).length} elements</span>` +
+        (nSQ  ? `<span>${nSQ} sequence${nSQ>1?'s':''}</span>` : '') +
+        (nPixel ? `<span>has pixel data</span>` : '');
+
+      renderReaderTable(rows);
+      document.getElementById('readerResults').style.display = 'block';
+    } catch (err) {
+      showReaderError(`Parse error: ${err.message}`);
+      document.getElementById('readerDrop').style.display = 'block';
+    }
+  };
+  fr.readAsArrayBuffer(file);
+}
+
+// ─── Event wiring (reader) ────────────────────────────────────────────────────
+
+document.getElementById('readerFile').addEventListener('change', e => {
+  if (e.target.files[0]) handleDICOMFile(e.target.files[0]);
+});
+
+const _rdz = document.getElementById('readerDrop');
+_rdz.addEventListener('dragover',  e => { e.preventDefault(); _rdz.classList.add('drag-over'); });
+_rdz.addEventListener('dragleave', ()  => _rdz.classList.remove('drag-over'));
+_rdz.addEventListener('drop', e => {
+  e.preventDefault(); _rdz.classList.remove('drag-over');
+  if (e.dataTransfer.files[0]) handleDICOMFile(e.dataTransfer.files[0]);
+});
+</script>
+</body>
+</html>
