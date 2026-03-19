@@ -34,8 +34,8 @@
 .tools-section h2 {
   font-size: 1.4rem;
   margin-bottom: 24px;
-  color: #24292e;
-  border-bottom: 2px solid #e1e4e8;
+  color: #c9d1d9;
+  border-bottom: 2px solid #30363d;
   padding-bottom: 8px;
 }
 
@@ -49,8 +49,8 @@
 }
 
 .tool-card {
-  background: #ffffff;
-  border: 1px solid #e1e4e8;
+  background: #161b22;
+  border: 1px solid #30363d;
   border-radius: 8px;
   padding: 24px;
   display: flex;
@@ -59,8 +59,9 @@
 }
 
 .tool-card:hover {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.10);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
   transform: translateY(-3px);
+  border-color: #58a6ff;
 }
 
 .tool-card-icon {
@@ -72,7 +73,7 @@
 .tool-card h3 {
   margin: 0 0 4px;
   font-size: 1.1rem;
-  color: #24292e;
+  color: #e6edf3;
 }
 
 .tool-card .tool-subtitle {
@@ -80,12 +81,12 @@
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.05em;
-  color: #0366d6;
+  color: #58a6ff;
   margin: 0 0 10px;
 }
 
 .tool-card p {
-  color: #586069;
+  color: #8b949e;
   font-size: 0.9rem;
   line-height: 1.55;
   margin: 0 0 20px;
@@ -94,7 +95,7 @@
 
 .btn-launch {
   display: inline-block;
-  background: #0366d6;
+  background: #1f6feb;
   color: #ffffff !important;
   padding: 9px 18px;
   border-radius: 5px;
@@ -107,7 +108,7 @@
 }
 
 .btn-launch:hover {
-  background: #0256b5;
+  background: #388bfd;
   color: #ffffff !important;
   text-decoration: none !important;
 }
@@ -117,8 +118,8 @@
    ============================================================ */
 
 .about-section {
-  background: #f6f8fa;
-  border: 1px solid #e1e4e8;
+  background: #161b22;
+  border: 1px solid #30363d;
   border-radius: 8px;
   padding: 24px 28px;
   margin: 40px 0 0;
@@ -127,11 +128,11 @@
 .about-section h2 {
   font-size: 1.1rem;
   margin: 0 0 10px;
-  color: #24292e;
+  color: #e6edf3;
 }
 
 .about-section p {
-  color: #586069;
+  color: #8b949e;
   font-size: 0.9rem;
   line-height: 1.6;
   margin: 0 0 8px;
@@ -145,9 +146,9 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #e6f4ea;
-  color: #276749;
-  border: 1px solid #c3e6cb;
+  background: #0d1f17;
+  color: #3fb950;
+  border: 1px solid #238636;
   border-radius: 4px;
   padding: 4px 10px;
   font-size: 0.78rem;
@@ -162,79 +163,22 @@
 .site-footer {
   margin-top: 60px;
   padding: 24px 0;
-  border-top: 1px solid #e1e4e8;
+  border-top: 1px solid #30363d;
   text-align: center;
 }
 
 .site-footer p {
-  color: #6a737d;
+  color: #6e7681;
   font-size: 0.82rem;
   margin: 4px 0;
 }
 
 .footer-links a {
-  color: #6a737d;
+  color: #6e7681;
   text-decoration: none;
 }
 
 .footer-links a:hover {
-  color: #0366d6;
+  color: #58a6ff;
   text-decoration: underline;
-}
-
-/* ============================================================
-   Dark mode overrides
-   ============================================================ */
-
-body.dark-mode .tools-section h2 {
-  color: var(--text-color);
-  border-bottom-color: var(--border-color);
-}
-
-body.dark-mode .tool-card {
-  background: #2d2d2d;
-  border-color: var(--border-color);
-}
-
-body.dark-mode .tool-card h3 {
-  color: var(--text-color);
-}
-
-body.dark-mode .tool-card .tool-subtitle {
-  color: #64b5f6;
-}
-
-body.dark-mode .tool-card p {
-  color: #b0bec5;
-}
-
-body.dark-mode .btn-launch {
-  background: #1565c0;
-}
-
-body.dark-mode .btn-launch:hover {
-  background: #0d47a1;
-}
-
-body.dark-mode .about-section {
-  background: #2d2d2d;
-  border-color: var(--border-color);
-}
-
-body.dark-mode .about-section h2 {
-  color: var(--text-color);
-}
-
-body.dark-mode .about-section p {
-  color: #b0bec5;
-}
-
-body.dark-mode .privacy-badge {
-  background: #1b3a2a;
-  color: #81c784;
-  border-color: #2e5c3e;
-}
-
-body.dark-mode .site-footer {
-  border-top-color: var(--border-color);
 }
