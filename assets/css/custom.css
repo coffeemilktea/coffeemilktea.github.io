@@ -1,139 +1,204 @@
 /* ============================================================
-   Site-wide overrides & enhancements
+   Monokai landing page — mirrors tools/theme.css palette
    ============================================================ */
 
-/* Header tweaks */
+:root {
+  --bg:       #272822;
+  --surface:  #1e1f1a;
+  --surface2: #3e3d32;
+  --border:   #49483e;
+  --accent:   #66d9ef;
+  --green:    #a6e22e;
+  --text:     #f8f8f2;
+  --muted:    #75715e;
+  --radius:   8px;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+  --font-sans: system-ui, -apple-system, sans-serif;
+}
+
+/* ── Reset & base ── */
+*, *::before, *::after { box-sizing: border-box; }
+
+html { font-size: 16px; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  line-height: 1.6;
+}
+
+a { color: var(--accent); }
+a:visited { color: var(--accent); }
+
+/* ── Container ── */
+.container {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+/* ── Header ── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 28px 0;
+}
+
 .site-title-link {
   text-decoration: none;
   color: inherit;
 }
 
 .site-title-link h1 {
-  margin-bottom: 4px;
+  margin: 0 0 6px;
+  font-size: 1.5rem;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-weight: 700;
+  letter-spacing: -0.3px;
 }
 
 .site-tagline {
   margin: 0 0 16px;
-  opacity: 0.85;
-  font-size: 1rem;
-  font-weight: 400;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
-.site-nav {
-  margin-top: 8px;
+.site-nav a.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-decoration: none;
+  transition: color .15s, border-color .15s;
 }
 
-/* ============================================================
-   Tool cards grid
-   ============================================================ */
+.site-nav a.btn:hover {
+  color: var(--text);
+  border-color: var(--accent);
+}
 
+/* ── Main content wrapper ── */
+#main_content {
+  padding: 40px 0 80px;
+}
+
+/* ── Tool cards section ── */
 .tools-section {
-  margin: 40px 0;
+  margin: 0 0 40px;
 }
 
 .tools-section h2 {
-  font-size: 1.4rem;
-  margin-bottom: 24px;
-  color: #c9d1d9;
-  border-bottom: 2px solid #30363d;
-  padding-bottom: 8px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
+  margin: 0 0 20px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--border);
 }
 
 .tools-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 20px;
+  gap: 16px;
   margin: 0;
   padding: 0;
   list-style: none;
 }
 
 .tool-card {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 8px;
-  padding: 24px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px;
   display: flex;
   flex-direction: column;
-  transition: box-shadow 0.2s ease, transform 0.2s ease;
+  transition: border-color .2s, box-shadow .2s;
 }
 
 .tool-card:hover {
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
-  transform: translateY(-3px);
-  border-color: #58a6ff;
+  border-color: var(--accent);
+  box-shadow: 0 8px 28px rgba(0, 0, 0, .4);
 }
 
 .tool-card-icon {
-  font-size: 2rem;
+  font-size: 1.5rem;
   margin-bottom: 12px;
   line-height: 1;
 }
 
 .tool-card h3 {
-  margin: 0 0 4px;
-  font-size: 1.1rem;
-  color: #e6edf3;
+  margin: 0 0 3px;
+  font-size: 1rem;
+  color: var(--text);
 }
 
 .tool-card .tool-subtitle {
-  font-size: 0.78rem;
-  font-weight: 600;
+  font-size: 0.7rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: #58a6ff;
+  letter-spacing: 0.1em;
+  color: var(--accent);
   margin: 0 0 10px;
 }
 
 .tool-card p {
-  color: #8b949e;
-  font-size: 0.9rem;
-  line-height: 1.55;
-  margin: 0 0 20px;
+  color: var(--muted);
+  font-size: 0.875rem;
+  line-height: 1.6;
+  margin: 0 0 18px;
   flex: 1;
 }
 
 .btn-launch {
   display: inline-block;
-  background: #1f6feb;
-  color: #ffffff !important;
-  padding: 9px 18px;
-  border-radius: 5px;
+  background: transparent;
+  color: var(--green) !important;
+  border: 1px solid var(--green);
+  padding: 7px 16px;
+  border-radius: var(--radius);
   text-decoration: none !important;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   font-weight: 600;
-  text-align: center;
-  transition: background 0.15s ease;
   align-self: flex-start;
+  transition: background .15s, color .15s;
 }
 
 .btn-launch:hover {
-  background: #388bfd;
-  color: #ffffff !important;
+  background: var(--green);
+  color: var(--bg) !important;
   text-decoration: none !important;
 }
 
-/* ============================================================
-   About section
-   ============================================================ */
-
+/* ── About section ── */
 .about-section {
-  background: #161b22;
-  border: 1px solid #30363d;
-  border-radius: 8px;
-  padding: 24px 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 22px 26px;
   margin: 40px 0 0;
 }
 
 .about-section h2 {
-  font-size: 1.1rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--muted);
   margin: 0 0 10px;
-  color: #e6edf3;
 }
 
 .about-section p {
-  color: #8b949e;
-  font-size: 0.9rem;
+  color: var(--muted);
+  font-size: 0.875rem;
   line-height: 1.6;
   margin: 0 0 8px;
 }
@@ -146,39 +211,36 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: #0d1f17;
-  color: #3fb950;
-  border: 1px solid #238636;
+  color: var(--green);
+  border: 1px solid var(--green);
   border-radius: 4px;
   padding: 4px 10px;
-  font-size: 0.78rem;
+  font-size: 0.75rem;
   font-weight: 600;
   margin-top: 12px;
+  opacity: 0.85;
 }
 
-/* ============================================================
-   Footer
-   ============================================================ */
-
+/* ── Footer ── */
 .site-footer {
-  margin-top: 60px;
-  padding: 24px 0;
-  border-top: 1px solid #30363d;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 20px 0;
   text-align: center;
 }
 
 .site-footer p {
-  color: #6e7681;
-  font-size: 0.82rem;
+  color: var(--muted);
+  font-size: 0.8rem;
   margin: 4px 0;
 }
 
 .footer-links a {
-  color: #6e7681;
+  color: var(--muted);
   text-decoration: none;
 }
 
 .footer-links a:hover {
-  color: #58a6ff;
+  color: var(--accent);
   text-decoration: underline;
 }
