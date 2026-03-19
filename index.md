@@ -27,7 +27,7 @@ layout: default
       <h3>HL7 Diff Checker</h3>
       <p class="tool-subtitle">Data Validation</p>
       <p>Compare HL7 messages side-by-side at the segment level. Quickly identify differences for data validation and integration troubleshooting.</p>
-      <a href="tools/index.html" class="btn-launch">Launch &rarr;</a>
+      <a href="tools/diff-checker.html" class="btn-launch">Launch &rarr;</a>
     </li>
 
   </ul>
