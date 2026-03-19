@@ -1,3 +1,7 @@
 remote_theme: pages-themes/architect@v0.2.0
 plugins:
-- jekyll-remote-theme # add this line to the plugins list if you already have one
+- jekyll-remote-theme
+- jekyll-seo-tag
+
+title: Healthcare Data Tools
+description: Browser-based tools for DICOM and HL7 medical data standards — no data leaves your browser.
