@@ -21,7 +21,10 @@
     .ae-row label { color: var(--text-dim); white-space: nowrap; }
     .ae-row input { background: var(--surface2); border: 1px solid var(--border); color: var(--text); padding: 4px 7px; border-radius: 4px; font-family: var(--mono); font-size: 12px; width: 120px; }
     .ae-arrow { color: var(--text-dim); }
-    .mode-toggle { margin-left: auto; display: flex; border: 1px solid var(--border); border-radius: 5px; overflow: hidden; font-size: 11px; font-weight: 700; }
+    .nav-links { display: flex; gap: 6px; margin-left: auto; }
+    .nav-links a { color: var(--text-dim); font-size: 11px; text-decoration: none; padding: 4px 9px; border: 1px solid var(--border); border-radius: 5px; transition: color .15s, border-color .15s; white-space: nowrap; }
+    .nav-links a:hover { color: var(--text); border-color: var(--accent); }
+    .mode-toggle { display: flex; border: 1px solid var(--border); border-radius: 5px; overflow: hidden; font-size: 11px; font-weight: 700; }
     .mode-btn { padding: 5px 12px; cursor: pointer; color: var(--text-dim); background: var(--surface2); border: none; letter-spacing: 0.04em; transition: all 0.15s; }
     .mode-btn.active-local { background: var(--accent-dim); color: #a0b8ff; }
     .mode-btn.active-ext { background: #1a3020; color: var(--green); }
@@ -222,6 +225,12 @@
     <span class="ae-arrow">→</span>
     <label>SCP AE:</label>
     <input id="scpAE" value="MWL_SCP" maxlength="16" oninput="buildExtUrl()">
+  </div>
+  <div class="nav-links">
+    <a href="msgparser.html">HL7 Parser</a>
+    <a href="hl7-diff.html">Diff Checker</a>
+    <a href="dicom-generator.html">DICOM Gen</a>
+    <a href="dicom-hl7-order.html">DICOM→HL7</a>
   </div>
   <div class="mode-toggle">
     <button class="mode-btn active-local" id="btn-local" onclick="setMode('local')">◉ SIMULATED</button>

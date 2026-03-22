@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DICOM → HL7 Order Generator</title>
+  <link rel="stylesheet" href="theme.css" />
+  <script src="theme.js"></script>
+  <style>
+    /* ── Light mode ── */
+    [data-theme="light"] input, [data-theme="light"] select, [data-theme="light"] textarea {
+      background: var(--input-bg); color: var(--text); border-color: var(--border);
+    }
+    [data-theme="light"] input:focus, [data-theme="light"] select:focus {
+      border-color: var(--purple); box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+    }
+    [data-theme="light"] .panel-title { color: var(--purple); }
+    [data-theme="light"] .tag-table tr:hover td { background: rgba(0,0,0,0.02); }
+    [data-theme="light"] .tag-table th { background: var(--surface2); }
+    [data-theme="light"] .seg-MSH .seg-label { background: rgba(5,151,167,0.08); }
+    [data-theme="light"] .seg-PID .seg-label { background: rgba(92,132,0,0.08); }
+    [data-theme="light"] .seg-PV1 .seg-label { background: rgba(201,105,0,0.08); }
+    [data-theme="light"] .seg-ORC .seg-label { background: rgba(212,0,110,0.08); }
+    [data-theme="light"] .seg-OBR .seg-label { background: rgba(124,58,237,0.08); }
+    [data-theme="light"] .seg-ZDS .seg-label { background: rgba(5,151,167,0.06); }
+    [data-theme="light"] .seg-line:hover { background: rgba(0,0,0,0.02); }
+    [data-theme="light"] .field-row > div { border-color: var(--border); }
+    [data-theme="light"] .badge-mapped { background: rgba(212,0,110,0.1); color: var(--red); border-color: rgba(212,0,110,0.3); }
+    [data-theme="light"] .upload-zone { background: var(--surface); }
+    [data-theme="light"] .upload-zone.drag-over { background: rgba(5,151,167,0.04); }
+    [data-theme="light"] .config-bar { background: var(--surface); }
+    [data-theme="light"] .map-row:nth-child(even) { background: rgba(0,0,0,0.015); }
+    [data-theme="light"] .fields-bar { background: var(--surface); }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Main layout ── */
+    .main-content {
+      max-width: 1700px;
+      margin: 0 auto;
+      padding: 20px 24px;
+      flex: 1;
+      width: 100%;
+    }
+
+    /* ── Config bar ── */
+    .config-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px 16px;
+    }
+    .config-field { display: flex; flex-direction: column; gap: 4px; }
+    .config-label {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted);
+    }
+    .config-input {
+      font-family: var(--font-mono); font-size: 12px;
+      background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); padding: 5px 8px;
+      border-radius: 5px; outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .config-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(102,217,239,0.1); }
+
+    /* ── Upload zone ── */
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 36px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.2s, background 0.2s;
+      background: var(--surface);
+      margin-bottom: 16px;
+      user-select: none;
+    }
+    .upload-zone:hover { border-color: var(--accent); background: rgba(102,217,239,0.03); }
+    .upload-zone.drag-over { border-color: var(--accent); background: rgba(102,217,239,0.05); border-style: solid; }
+    .upload-zone.has-file { border-style: solid; border-color: var(--green); padding: 14px 20px; cursor: default; }
+    .upload-icon { font-size: 2.5rem; margin-bottom: 10px; line-height: 1; }
+    .upload-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+    .upload-sub { font-size: 12px; color: var(--muted); }
+    .upload-file-info { display: flex; align-items: center; gap: 14px; }
+    .upload-filename { font-family: var(--font-mono); font-size: 13px; color: var(--green); font-weight: 600; }
+    .upload-meta { font-size: 12px; color: var(--muted); }
+
+    /* ── Split view ── */
+    .split-view {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+
+    /* ── Panel ── */
+    .panel {
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      background: var(--surface);
+      display: flex;
+      flex-direction: column;
+    }
+    .panel-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      flex-shrink: 0;
+      background: var(--surface);
+    }
+    .panel-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--accent);
+    }
+    .panel-body {
+      overflow-y: auto;
+      max-height: calc(100vh - 340px);
+      flex: 1;
+    }
+
+    /* ── Stats bar ── */
+    .stats-bar {
+      display: flex; gap: 16px; padding: 6px 14px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg); flex-shrink: 0;
+    }
+    .stat { font-size: 11px; display: flex; align-items: center; gap: 4px; }
+    .stat-label { color: var(--muted); }
+    .stat-value { font-family: var(--font-mono); font-weight: 700; color: var(--text); }
+
+    /* ── Tag table ── */
+    .tag-table {
+      width: 100%; border-collapse: collapse;
+      font-family: var(--font-mono); font-size: 11.5px;
+    }
+    .tag-table th {
+      padding: 6px 10px; text-align: left;
+      background: var(--bg); border-bottom: 1px solid var(--border);
+      font-weight: 600; color: var(--muted); font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.05em;
+      position: sticky; top: 0; z-index: 1;
+    }
+    .tag-table td {
+      padding: 4px 10px; border-bottom: 1px solid rgba(73,72,62,0.5);
+      vertical-align: middle; line-height: 1.4;
+    }
+    .tag-table tr:hover td { background: rgba(255,255,255,0.03); }
+    .td-addr { color: var(--yellow); white-space: nowrap; }
+    .td-vr { color: var(--cyan); }
+    .td-kw { color: var(--green); }
+    .td-val { color: var(--text); word-break: break-all; max-width: 200px; }
+    .td-val.dim { opacity: 0.4; font-style: italic; }
+
+    /* Row categories */
+    .row-meta td { background: rgba(174,129,255,0.04); }
+    .row-patient td { background: rgba(166,226,46,0.05); }
+    .row-study td { background: rgba(102,217,239,0.04); }
+    .row-series td { background: rgba(253,151,31,0.04); }
+    .row-pixel td { opacity: 0.35; }
+    .row-mapped td { background: rgba(249,38,114,0.07) !important; }
+    .row-mapped .td-addr { color: var(--red); }
+
+    /* ── Badge ── */
+    .badge-mapped {
+      font-size: 9px; font-weight: 700; padding: 1px 5px;
+      border-radius: 3px; text-transform: uppercase; letter-spacing: 0.04em;
+      background: rgba(249,38,114,0.18); color: var(--red);
+      border: 1px solid rgba(249,38,114,0.35); white-space: nowrap;
+    }
+
+    /* ── Tag search ── */
+    .tag-search {
+      font-family: var(--font-mono); font-size: 11px;
+      background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); padding: 4px 8px; border-radius: 4px; outline: none;
+      width: 160px; transition: border-color 0.15s;
+    }
+    .tag-search:focus { border-color: var(--accent); }
+
+    /* ── HL7 ORM display ── */
+    .orm-body { padding: 8px 4px; }
+    .seg-block { cursor: pointer; }
+    .seg-line {
+      display: flex; align-items: stretch;
+      font-family: var(--font-mono); font-size: 12px; line-height: 1.6;
+      transition: background 0.1s;
+    }
+    .seg-line:hover { background: rgba(255,255,255,0.03); }
+    .seg-label {
+      flex-shrink: 0; width: 38px; padding: 2px 6px;
+      font-weight: 700; font-size: 11px; text-align: center;
+      border-right: 2px solid transparent; display: flex;
+      align-items: center; justify-content: center;
+    }
+    .seg-content {
+      padding: 2px 8px; flex: 1; word-break: break-all; color: var(--text); opacity: 0.88;
+    }
+
+    /* Segment colors */
+    .seg-MSH .seg-label { color: var(--cyan);   border-color: var(--cyan);   background: rgba(102,217,239,0.08); }
+    .seg-PID .seg-label { color: var(--green);  border-color: var(--green);  background: rgba(166,226,46,0.08); }
+    .seg-PV1 .seg-label { color: var(--orange); border-color: var(--orange); background: rgba(253,151,31,0.08); }
+    .seg-ORC .seg-label { color: var(--red);    border-color: var(--red);    background: rgba(249,38,114,0.08); }
+    .seg-OBR .seg-label { color: var(--purple); border-color: var(--purple); background: rgba(174,129,255,0.08); }
+    .seg-ZDS .seg-label { color: var(--cyan);   border-color: var(--muted);  background: rgba(102,217,239,0.04); }
+
+    .hl7-sep { opacity: 0.35; color: var(--yellow); }
+    .hl7-rep { opacity: 0.45; color: var(--orange); }
+    .hl7-comp { opacity: 0.4; color: var(--cyan); }
+
+    /* ── Field breakdown ── */
+    .seg-detail {
+      font-size: 11.5px; border-top: 1px solid var(--border);
+      margin: 0; background: var(--bg);
+    }
+    .seg-detail-hdr {
+      padding: 5px 10px; font-weight: 700; font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+    .field-row {
+      display: grid; grid-template-columns: 40px 160px 1fr;
+      border-bottom: 1px solid rgba(73,72,62,0.35);
+    }
+    .field-row:last-child { border-bottom: none; }
+    .field-row > div { padding: 3px 10px; }
+    .fi-idx { opacity: 0.4; font-family: var(--font-mono); color: var(--muted); border-right: 1px solid rgba(73,72,62,0.4); }
+    .fi-name { color: var(--muted); font-size: 11px; border-right: 1px solid rgba(73,72,62,0.2); }
+    .fi-val { font-family: var(--font-mono); color: var(--text); word-break: break-all; }
+    .fi-val.has-val { color: var(--accent); font-weight: 500; }
+
+    /* ── Action bar ── */
+    .action-bar {
+      padding: 8px 12px; border-top: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+      background: var(--surface); flex-shrink: 0;
+    }
+    .orm-status { flex: 1; font-size: 11px; color: var(--muted); }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 5px 12px; border-radius: 5px; border: none;
+      cursor: pointer; font-size: 12px; font-weight: 600;
+      transition: all 0.15s; font-family: var(--font-sans);
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary { background: var(--accent); color: #1a1a1a; }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-ghost {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--text); opacity: 0.8;
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); opacity: 1; }
+    .btn-danger { background: transparent; border: 1px solid rgba(249,38,114,0.4); color: var(--red); }
+    .btn-danger:hover { background: rgba(249,38,114,0.08); }
+
+    /* ── Mapping panel ── */
+    .map-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .map-table th {
+      padding: 6px 10px; text-align: left; background: var(--bg);
+      border-bottom: 1px solid var(--border); font-weight: 600; color: var(--muted);
+      font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em;
+      position: sticky; top: 0; z-index: 1;
+    }
+    .map-table td { padding: 5px 10px; border-bottom: 1px solid rgba(73,72,62,0.35); vertical-align: middle; }
+    .map-row:last-child td { border-bottom: none; }
+    .map-row:nth-child(even) td { background: rgba(255,255,255,0.015); }
+    .map-tag { font-family: var(--font-mono); color: var(--yellow); }
+    .map-kw { font-family: var(--font-mono); color: var(--green); font-size: 11px; }
+    .map-src { font-family: var(--font-mono); font-size: 11px; max-width: 180px; word-break: break-all; }
+    .map-dest { font-family: var(--font-mono); color: var(--red); font-size: 11px; }
+    .map-out { font-family: var(--font-mono); color: var(--accent); font-size: 11px; font-weight: 600; max-width: 200px; word-break: break-all; }
+    .map-empty { opacity: 0.3; font-style: italic; }
+
+    /* ── Empty state ── */
+    .empty-state { padding: 40px 20px; text-align: center; opacity: 0.45; }
+    .empty-icon { font-size: 2.2rem; margin-bottom: 8px; }
+    .empty-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .empty-sub { font-size: 12px; }
+
+    /* ── Raw modal ── */
+    .modal-overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.72); z-index: 50;
+      align-items: center; justify-content: center;
+    }
+    .modal-overlay.open { display: flex; }
+    .modal-box {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); width: min(820px, 95vw);
+      max-height: 82vh; overflow: hidden;
+      display: flex; flex-direction: column;
+    }
+    .modal-hdr {
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      font-weight: 700; font-size: 14px;
+    }
+    .modal-body { flex: 1; overflow: hidden; }
+    .modal-body textarea {
+      width: 100%; height: 100%; padding: 14px;
+      background: var(--bg); color: var(--text);
+      font-family: var(--font-mono); font-size: 12px;
+      border: none; outline: none; resize: none;
+      line-height: 1.65;
+    }
+    .modal-ftr {
+      padding: 10px 14px; border-top: 1px solid var(--border);
+      display: flex; justify-content: flex-end; gap: 8px;
+    }
+
+    /* ── Toast ── */
+    .toast {
+      position: fixed; bottom: 20px; right: 20px;
+      background: var(--green); color: #1a1a1a;
+      padding: 7px 16px; border-radius: 6px;
+      font-weight: 700; font-size: 13px;
+      opacity: 0; pointer-events: none; z-index: 200;
+      transition: opacity 0.2s;
+    }
+    .toast.show { opacity: 1; }
+
+    /* ── Patient & Study fields bar ── */
+    .fields-bar {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 18px;
+      margin-bottom: 16px;
+    }
+    .fields-bar-hdr {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .fields-bar-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.08em; color: var(--accent);
+    }
+    .fields-grid {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 12px 16px;
+    }
+    .ov-field { display: flex; flex-direction: column; gap: 4px; }
+    .ov-label {
+      font-size: 10px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.07em; color: var(--muted);
+    }
+    .ov-input {
+      font-family: var(--font-mono); font-size: 12px;
+      background: var(--bg); border: 1px solid var(--border);
+      color: var(--text); padding: 5px 8px;
+      border-radius: 5px; outline: none; width: 100%;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .ov-input::placeholder { opacity: 0.35; }
+    .ov-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(102,217,239,0.1); }
+
+    /* ── Responsive ── */
+    @media (max-width: 960px) {
+      .split-view { grid-template-columns: 1fr; }
+      .config-bar { grid-template-columns: 1fr 1fr; }
+      .fields-grid { grid-template-columns: 1fr 1fr 1fr; }
+      .field-row { grid-template-columns: 36px 120px 1fr; }
+    }
+    @media (max-width: 560px) {
+      .config-bar { grid-template-columns: 1fr; }
+      .fields-grid { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header class="app-header">
+  <div>
+    <h1 style="font-size:17px;font-weight:700;letter-spacing:-0.3px;color:var(--text);">DICOM → HL7 Order</h1>
+    <p style="font-size:12px;color:var(--muted);margin-top:2px;">Read DICOM tags and generate an HL7 ORM^O01 radiology order — no server, no uploads</p>
+  </div>
+  <div class="nav-links" style="margin-left:auto;">
+    <a href="msgparser.html">HL7 Parser</a>
+    <a href="hl7-diff.html">Diff Checker</a>
+    <a href="dicom-generator.html">DICOM Gen</a>
+    <a href="mwl-simulator.html">MWL Sim</a>
+  </div>
+  <button class="btn-theme" id="btn-theme">
+    <span class="theme-icon">☀️</span>
+    <span class="theme-label">Light</span>
+  </button>
+</header>
+
+<div class="main-content">
+
+  <!-- Config bar -->
+  <div class="config-bar">
+    <div class="config-field">
+      <span class="config-label">Sending Application</span>
+      <input class="config-input" id="cfgSendApp" value="DICOM_READER" placeholder="e.g. PACS">
+    </div>
+    <div class="config-field">
+      <span class="config-label">Sending Facility</span>
+      <input class="config-input" id="cfgSendFac" value="RADIOLOGY" placeholder="e.g. HOSP_RAD">
+    </div>
+    <div class="config-field">
+      <span class="config-label">Receiving Application</span>
+      <input class="config-input" id="cfgRecvApp" value="RIS" placeholder="e.g. RIS">
+    </div>
+    <div class="config-field">
+      <span class="config-label">Receiving Facility</span>
+      <input class="config-input" id="cfgRecvFac" value="HOSPITAL" placeholder="e.g. HOSPITAL">
+    </div>
+    <div class="config-field">
+      <span class="config-label">Order Control</span>
+      <select class="config-input" id="cfgOrderCtrl">
+        <option value="NW">NW — New Order</option>
+        <option value="CA">CA — Cancel</option>
+        <option value="DC">DC — Discontinue</option>
+        <option value="RP">RP — Replace</option>
+        <option value="SC">SC — Status Changed</option>
+      </select>
+    </div>
+    <div class="config-field">
+      <span class="config-label">Patient Class</span>
+      <select class="config-input" id="cfgPatClass">
+        <option value="O">O — Outpatient</option>
+        <option value="I">I — Inpatient</option>
+        <option value="E">E — Emergency</option>
+        <option value="P">P — Pre-Admit</option>
+        <option value="R">R — Recurring</option>
+      </select>
+    </div>
+    <div class="config-field">
+      <span class="config-label">Default Ordering Provider</span>
+      <input class="config-input" id="cfgProvider" value="SYSTEM^AUTO" placeholder="Last^First">
+    </div>
+    <div class="config-field">
+      <span class="config-label">HL7 Version</span>
+      <select class="config-input" id="cfgVersion">
+        <option value="2.5" selected>2.5</option>
+        <option value="2.4">2.4</option>
+        <option value="2.3.1">2.3.1</option>
+        <option value="2.6">2.6</option>
+        <option value="2.7">2.7</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- Patient & Study fields -->
+  <div class="fields-bar">
+    <div class="fields-bar-hdr">
+      <span class="fields-bar-title">Patient &amp; Study Fields</span>
+      <button class="btn btn-ghost" style="font-size:11px;padding:3px 10px" onclick="refillFromDICOM()">↺ Refill from DICOM</button>
+    </div>
+    <div class="fields-grid">
+
+      <div class="ov-field">
+        <span class="ov-label">Medical Record № (MRN)</span>
+        <input class="ov-input" id="ovMRN" placeholder="Patient ID"
+               oninput="if(parsedTags.length)regenerate()">
+      </div>
+
+      <div class="ov-field">
+        <span class="ov-label">Patient Name</span>
+        <input class="ov-input" id="ovPatName" placeholder="Last^First^Middle"
+               oninput="if(parsedTags.length)regenerate()">
+      </div>
+
+      <div class="ov-field">
+        <span class="ov-label">Accession Number</span>
+        <input class="ov-input" id="ovAccession" placeholder="Accession №"
+               oninput="if(parsedTags.length)regenerate()">
+      </div>
+
+      <div class="ov-field">
+        <span class="ov-label">Date of Birth</span>
+        <input class="ov-input" id="ovDOB" placeholder="YYYYMMDD"
+               oninput="if(parsedTags.length)regenerate()">
+      </div>
+
+      <div class="ov-field">
+        <span class="ov-label">Patient Location</span>
+        <input class="ov-input" id="ovLocation" placeholder="Ward^Room^Bed"
+               oninput="if(parsedTags.length)regenerate()">
+      </div>
+
+      <div class="ov-field">
+        <span class="ov-label">Modality</span>
+        <select class="ov-input" id="ovModality"
+                onchange="if(parsedTags.length)regenerate()">
+          <option value="">— From DICOM —</option>
+          <option value="CT">CT — Computed Tomography</option>
+          <option value="MR">MR — Magnetic Resonance</option>
+          <option value="CR">CR — Computed Radiography</option>
+          <option value="DX">DX — Digital Radiography</option>
+          <option value="US">US — Ultrasound</option>
+          <option value="NM">NM — Nuclear Medicine</option>
+          <option value="PT">PT — PET</option>
+          <option value="XA">XA — X-Ray Angiography</option>
+          <option value="MG">MG — Mammography</option>
+          <option value="RF">RF — Radio Fluoroscopy</option>
+          <option value="ES">ES — Endoscopy</option>
+          <option value="OT">OT — Other</option>
+        </select>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Upload zone -->
+  <div class="upload-zone" id="uploadZone"
+       onclick="document.getElementById('fileInput').click()"
+       ondragover="onDragOver(event)" ondrop="onDrop(event)" ondragleave="onDragLeave(event)">
+    <div class="upload-icon">🏥</div>
+    <div class="upload-title">Drop a DICOM file here</div>
+    <div class="upload-sub">Click to browse · accepts .dcm / .dicom or any DICOM file</div>
+    <input type="file" id="fileInput" style="display:none" onchange="handleFile(this.files[0])">
+  </div>
+
+  <!-- Split view (hidden until file loaded) -->
+  <div class="split-view" id="splitView" style="display:none">
+
+    <!-- Left: DICOM Tags -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">DICOM Tags</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <input class="tag-search" id="tagSearch" placeholder="Filter tags…" oninput="filterTags(this.value)">
+          <span id="tagCounter" style="font-size:11px;color:var(--muted);white-space:nowrap"></span>
+        </div>
+      </div>
+      <div class="stats-bar" id="tagStats"></div>
+      <div class="panel-body">
+        <table class="tag-table">
+          <thead>
+            <tr>
+              <th>Tag</th><th>VR</th><th>Keyword</th><th>Value</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="tagBody">
+            <tr><td colspan="5">
+              <div class="empty-state">
+                <div class="empty-icon">📂</div>
+                <div class="empty-title">No file loaded</div>
+                <div class="empty-sub">Upload a DICOM file above</div>
+              </div>
+            </td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Right: HL7 ORM -->
+    <div class="panel">
+      <div class="panel-header">
+        <span class="panel-title">HL7 ORM^O01 Message</span>
+        <div style="display:flex;gap:6px">
+          <button class="btn btn-ghost" onclick="regenerate()">↻ Regenerate</button>
+          <button class="btn btn-ghost" onclick="showRaw()">⊞ Raw</button>
+          <button class="btn btn-primary" onclick="copyORM()">⎘ Copy</button>
+        </div>
+      </div>
+      <div class="panel-body" id="ormPanel">
+        <div class="empty-state">
+          <div class="empty-icon">📋</div>
+          <div class="empty-title">No message yet</div>
+          <div class="empty-sub">Load a DICOM file to generate ORM</div>
+        </div>
+      </div>
+      <div class="action-bar">
+        <span class="orm-status" id="ormStatus"></span>
+        <button class="btn btn-danger" onclick="resetFile()">✕ Clear</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Field mapping panel (hidden until file loaded) -->
+  <div class="panel" id="mapPanel" style="display:none;margin-bottom:16px">
+    <div class="panel-header">
+      <span class="panel-title">DICOM → HL7 Field Mapping</span>
+      <span style="font-size:11px;color:var(--muted)">Tags highlighted in red above are mapped to the ORM message</span>
+    </div>
+    <div class="panel-body" style="max-height:340px">
+      <table class="map-table">
+        <thead>
+          <tr>
+            <th>DICOM Tag</th><th>Keyword</th><th>Raw DICOM Value</th>
+            <th>HL7 Destination</th><th>Description</th><th>Mapped Value</th>
+          </tr>
+        </thead>
+        <tbody id="mapBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div><!-- /main-content -->
+
+<!-- Raw ORM modal -->
+<div class="modal-overlay" id="rawModal" onclick="if(event.target===this)closeRaw()">
+  <div class="modal-box">
+    <div class="modal-hdr">
+      <span>Raw HL7 ORM^O01</span>
+      <button class="btn btn-ghost" onclick="closeRaw()">✕</button>
+    </div>
+    <div class="modal-body" style="height:400px">
+      <textarea id="rawText" readonly spellcheck="false"></textarea>
+    </div>
+    <div class="modal-ftr">
+      <button class="btn btn-ghost" onclick="copyRaw()">Copy</button>
+      <button class="btn btn-ghost" onclick="closeRaw()">Close</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════════
+   DICOM TAG DICTIONARY
+   ════════════════════════════════════════════════════ */
+const DICT = {
+  // File Meta (0002)
+  '00020001':{ kw:'FileMetaInformationVersion',    vr:'OB' },
+  '00020002':{ kw:'MediaStorageSOPClassUID',        vr:'UI' },
+  '00020003':{ kw:'MediaStorageSOPInstanceUID',     vr:'UI' },
+  '00020010':{ kw:'TransferSyntaxUID',              vr:'UI' },
+  '00020012':{ kw:'ImplementationClassUID',         vr:'UI' },
+  '00020013':{ kw:'ImplementationVersionName',      vr:'SH' },
+  '00020016':{ kw:'SourceApplicationEntityTitle',   vr:'AE' },
+  // Identifying (0008)
+  '00080005':{ kw:'SpecificCharacterSet',           vr:'CS' },
+  '00080008':{ kw:'ImageType',                      vr:'CS' },
+  '00080016':{ kw:'SOPClassUID',                    vr:'UI' },
+  '00080018':{ kw:'SOPInstanceUID',                 vr:'UI' },
+  '00080020':{ kw:'StudyDate',                      vr:'DA' },
+  '00080021':{ kw:'SeriesDate',                     vr:'DA' },
+  '00080022':{ kw:'AcquisitionDate',                vr:'DA' },
+  '00080023':{ kw:'ContentDate',                    vr:'DA' },
+  '00080030':{ kw:'StudyTime',                      vr:'TM' },
+  '00080031':{ kw:'SeriesTime',                     vr:'TM' },
+  '00080032':{ kw:'AcquisitionTime',                vr:'TM' },
+  '00080033':{ kw:'ContentTime',                    vr:'TM' },
+  '00080050':{ kw:'AccessionNumber',                vr:'SH' },
+  '00080060':{ kw:'Modality',                       vr:'CS' },
+  '00080061':{ kw:'ModalitiesInStudy',              vr:'CS' },
+  '00080070':{ kw:'Manufacturer',                   vr:'LO' },
+  '00080080':{ kw:'InstitutionName',                vr:'LO' },
+  '00080081':{ kw:'InstitutionAddress',             vr:'ST' },
+  '00080090':{ kw:'ReferringPhysicianName',         vr:'PN' },
+  '00081010':{ kw:'StationName',                    vr:'SH' },
+  '00081030':{ kw:'StudyDescription',               vr:'LO' },
+  '0008103e':{ kw:'SeriesDescription',              vr:'LO' },
+  '00081048':{ kw:'PhysiciansOfRecord',             vr:'PN' },
+  '00081050':{ kw:'PerformingPhysicianName',        vr:'PN' },
+  '00081070':{ kw:'OperatorsName',                  vr:'PN' },
+  '00081090':{ kw:'ManufacturerModelName',          vr:'LO' },
+  '00082111':{ kw:'DerivationDescription',          vr:'ST' },
+  // Patient (0010)
+  '00100010':{ kw:'PatientName',                    vr:'PN' },
+  '00100020':{ kw:'PatientID',                      vr:'LO' },
+  '00100021':{ kw:'IssuerOfPatientID',              vr:'LO' },
+  '00100030':{ kw:'PatientBirthDate',               vr:'DA' },
+  '00100040':{ kw:'PatientSex',                     vr:'CS' },
+  '00101010':{ kw:'PatientAge',                     vr:'AS' },
+  '00101020':{ kw:'PatientSize',                    vr:'DS' },
+  '00101030':{ kw:'PatientWeight',                  vr:'DS' },
+  '00102110':{ kw:'Allergies',                      vr:'LO' },
+  // Acquisition (0018)
+  '00180010':{ kw:'ContrastBolusAgent',             vr:'LO' },
+  '00180015':{ kw:'BodyPartExamined',               vr:'CS' },
+  '00181030':{ kw:'ProtocolName',                   vr:'LO' },
+  // Study/Series (0020)
+  '0020000d':{ kw:'StudyInstanceUID',               vr:'UI' },
+  '0020000e':{ kw:'SeriesInstanceUID',              vr:'UI' },
+  '00200010':{ kw:'StudyID',                        vr:'SH' },
+  '00200011':{ kw:'SeriesNumber',                   vr:'IS' },
+  '00200013':{ kw:'InstanceNumber',                 vr:'IS' },
+  '00200052':{ kw:'FrameOfReferenceUID',            vr:'UI' },
+  // Image (0028)
+  '00280002':{ kw:'SamplesPerPixel',                vr:'US' },
+  '00280004':{ kw:'PhotometricInterpretation',      vr:'CS' },
+  '00280010':{ kw:'Rows',                           vr:'US' },
+  '00280011':{ kw:'Columns',                        vr:'US' },
+  '00280030':{ kw:'PixelSpacing',                   vr:'DS' },
+  '00280100':{ kw:'BitsAllocated',                  vr:'US' },
+  '00280101':{ kw:'BitsStored',                     vr:'US' },
+  '00280102':{ kw:'HighBit',                        vr:'US' },
+  '00280103':{ kw:'PixelRepresentation',            vr:'US' },
+  '00281050':{ kw:'WindowCenter',                   vr:'DS' },
+  '00281051':{ kw:'WindowWidth',                    vr:'DS' },
+  '00281052':{ kw:'RescaleIntercept',               vr:'DS' },
+  '00281053':{ kw:'RescaleSlope',                   vr:'DS' },
+  // Procedure (0040)
+  '00400244':{ kw:'PerformedProcedureStepStartDate',vr:'DA' },
+  '00400245':{ kw:'PerformedProcedureStepStartTime',vr:'TM' },
+  '00400253':{ kw:'PerformedProcedureStepID',       vr:'SH' },
+  '00400254':{ kw:'PerformedProcedureStepDescription',vr:'LO'},
+  // Pixel data
+  '7fe00010':{ kw:'PixelData',                      vr:'OW' },
+};
+
+/* ════════════════════════════════════════════════════
+   HL7 MAPPING  (dicom_tagKey → { seg, field, desc })
+   ════════════════════════════════════════════════════ */
+const MAPPING = [
+  { tag:'00100010', seg:'PID', field:5,  desc:'Patient Name',                  xform:'name'     },
+  { tag:'00100020', seg:'PID', field:3,  desc:'Patient Identifier List'                          },
+  { tag:'00100021', seg:'PID', field:3,  desc:'Patient ID Issuer (CX suffix)'                    },
+  { tag:'00100030', seg:'PID', field:7,  desc:'Date/Time of Birth',             xform:'date'     },
+  { tag:'00100040', seg:'PID', field:8,  desc:'Administrative Sex'                               },
+  { tag:'00080050', seg:'OBR', field:18, desc:'Filler Field 1 (Accession №)'                     },
+  { tag:'00080020', seg:'OBR', field:7,  desc:'Observation Date/Time',          xform:'datetime' },
+  { tag:'00080060', seg:'OBR', field:24, desc:'Diagnostic Service Section ID'                    },
+  { tag:'00081030', seg:'OBR', field:4,  desc:'Universal Service ID (Study)'                     },
+  { tag:'0008103e', seg:'OBR', field:4,  desc:'Universal Service ID (Series)'                    },
+  { tag:'00080090', seg:'OBR', field:16, desc:'Ordering Provider',              xform:'name'     },
+  { tag:'00080080', seg:'MSH', field:4,  desc:'Sending Facility'                                 },
+  { tag:'00081010', seg:'OBR', field:21, desc:'Filler Field 2 (Station Name)'                    },
+  { tag:'00180015', seg:'OBR', field:15, desc:'Specimen Source (Body Part)'                      },
+  { tag:'0020000d', seg:'ZDS', field:1,  desc:'Study Instance UID'                               },
+  { tag:'00200010', seg:'OBR', field:20, desc:'Filler Field 1 Study ID'                          },
+  { tag:'00081050', seg:'OBR', field:34, desc:'Technician (Performing Phys)',   xform:'name'     },
+  { tag:'00181030', seg:'OBR', field:44, desc:'Procedure Code (Protocol)'                        },
+];
+const MAPPED_TAGS = new Set(MAPPING.map(m => m.tag));
+
+/* ════════════════════════════════════════════════════
+   STATE
+   ════════════════════════════════════════════════════ */
+let parsedTags = [];
+let currentORM = '';
+let rowIndex   = [];   // parallel array to tbody rows for filtering
+
+/* ════════════════════════════════════════════════════
+   DICOM PARSER
+   ════════════════════════════════════════════════════ */
+function parseDICOM(buf) {
+  const view  = new DataView(buf);
+  const bytes = new Uint8Array(buf);
+  const tags  = [];
+
+  // ── Locate start ──────────────────────────────────
+  let offset = 0;
+  if (buf.byteLength > 132) {
+    const magic = String.fromCharCode(bytes[128],bytes[129],bytes[130],bytes[131]);
+    if (magic === 'DICM') offset = 132;
+  }
+
+  // Transfer syntax defaults (Explicit Little Endian is most common)
+  let explicit = true;
+  let le       = true;
+
+  // ── Helpers ───────────────────────────────────────
+  function u16(o) { return le ? view.getUint16(o, true) : view.getUint16(o, false); }
+  function u32(o) { return le ? view.getUint32(o, true) : view.getUint32(o, false); }
+  function i16(o) { return le ? view.getInt16(o, true)  : view.getInt16(o, false);  }
+  function f32(o) { return le ? view.getFloat32(o,true) : view.getFloat32(o,false); }
+  function f64(o) { return le ? view.getFloat64(o,true) : view.getFloat64(o,false); }
+
+  const LONG_VRS = new Set(['OB','OD','OF','OL','OV','OW','SQ','UC','UN','UR','UT']);
+  const STR_VRS  = new Set(['AE','AS','CS','DA','DS','DT','IS','LO','LT','PN','SH','ST','TM','UC','UI','UR','UT']);
+
+  function readStr(off, len) {
+    if (len <= 0 || off + len > bytes.length) return '';
+    let s = '';
+    for (let i = 0; i < Math.min(len, 4096); i++) s += String.fromCharCode(bytes[off + i]);
+    return s.replace(/\x00/g,'').trim();
+  }
+
+  function readExplicit(off) {
+    if (off + 8 > buf.byteLength) return null;
+    const g  = u16(off);
+    const e  = u16(off + 2);
+    const vr = String.fromCharCode(bytes[off+4], bytes[off+5]);
+    let len, dOff;
+    if (LONG_VRS.has(vr)) {
+      if (off + 12 > buf.byteLength) return null;
+      len  = view.getUint32(off + 8, true);   // always LE for length
+      dOff = off + 12;
+    } else {
+      len  = view.getUint16(off + 6, true);
+      dOff = off + 8;
+    }
+    return { g, e, vr, len, dOff, next: dOff + (len === 0xFFFFFFFF ? 0 : len) };
+  }
+
+  function readImplicit(off) {
+    if (off + 8 > buf.byteLength) return null;
+    const g   = u16(off);
+    const e   = u16(off + 2);
+    const len = view.getUint32(off + 4, true);
+    const key = hex4(g) + hex4(e);
+    const vr  = DICT[key]?.vr || 'UN';
+    return { g, e, vr, len, dOff: off + 8, next: off + 8 + (len === 0xFFFFFFFF ? 0 : len) };
+  }
+
+  function hex4(n) { return n.toString(16).padStart(4,'0'); }
+  function tagStr(g,e) { return `(${hex4(g).toUpperCase()},${hex4(e).toUpperCase()})`; }
+  function tagKey(g,e) { return hex4(g) + hex4(e); }
+
+  function getValue(item) {
+    const { vr, dOff, len } = item;
+    if (len === 0 || len === 0xFFFFFFFF) return '';
+    if (vr === 'SQ') return '[Sequence]';
+    if (STR_VRS.has(vr)) return readStr(dOff, len);
+    if (vr === 'US') {
+      const vals = []; for (let i=0;i+1<len&&i<20;i+=2) vals.push(u16(dOff+i)); return vals.join('\\');
+    }
+    if (vr === 'UL') return String(u32(dOff));
+    if (vr === 'SS') return String(i16(dOff));
+    if (vr === 'FL') return String(f32(dOff).toFixed(4));
+    if (vr === 'FD') return String(f64(dOff).toFixed(6));
+    if (vr === 'AT') {
+      if (len >= 4) { const g2=u16(dOff); const e2=u16(dOff+2); return `(${hex4(g2)},${hex4(e2)})`; }
+      return '';
+    }
+    return `[${len} bytes]`;
+  }
+
+  // ── Parse meta group first (always explicit LE) ──
+  let cur = offset;
+  while (cur < buf.byteLength - 8) {
+    if (u16(cur) !== 0x0002) break;    // meta group ended
+    const it = readExplicit(cur);
+    if (!it) break;
+    const k = tagKey(it.g, it.e);
+    const d = DICT[k] || {};
+    const v = getValue(it);
+    tags.push({ tag: tagStr(it.g,it.e), key:k, vr:it.vr, kw:d.kw||'', val:v, len:it.len, meta:true, pixel:false });
+    // Detect transfer syntax
+    if (k === '00020010') {
+      const ts = v.replace(/\x00/g,'').trim();
+      if (ts === '1.2.840.10008.1.2')   { explicit=false; le=true;  }
+      else if (ts === '1.2.840.10008.1.2.2') { explicit=true;  le=false; }
+      else                                   { explicit=true;  le=true;  }
+    }
+    if (it.next <= cur) break;
+    cur = it.next;
+  }
+
+  // ── Parse dataset ────────────────────────────────
+  let count = 0;
+  const MAX  = 600;
+  while (cur < buf.byteLength - 8 && count < MAX) {
+    let it;
+    try { it = explicit ? readExplicit(cur) : readImplicit(cur); }
+    catch(_) { break; }
+    if (!it) break;
+
+    const k   = tagKey(it.g, it.e);
+    const d   = DICT[k] || {};
+    const isPx = (it.g === 0x7FE0 && it.e === 0x0010);
+    const val  = isPx ? `[Pixel Data: ${it.len===0xFFFFFFFF?'compressed':it.len+' bytes'}]` : getValue(it);
+
+    tags.push({ tag:tagStr(it.g,it.e), key:k, vr:it.vr, kw:d.kw||'', val, len:it.len, meta:false, pixel:isPx });
+    count++;
+
+    // Skip sequences (scan for delimiter FFFE,E0DD)
+    if (it.vr === 'SQ' || it.len === 0xFFFFFFFF) {
+      let s = it.dOff; let depth = 1;
+      while (s < buf.byteLength - 4 && depth > 0) {
+        const sg = view.getUint16(s,true); const se = view.getUint16(s+2,true);
+        if      (sg===0xFFFE && se===0xE0DD) { depth--; s+=8; }
+        else if (sg===0xFFFE && se===0xE000) { s+=8; }
+        else if (sg===0xFFFE && se===0xE00D) { s+=8; }
+        else s += 2;
+      }
+      cur = s; continue;
+    }
+
+    if (it.next <= cur) { cur += 4; break; }
+    cur = it.next;
+  }
+
+  return tags;
+}
+
+/* ════════════════════════════════════════════════════
+   HL7 HELPERS
+   ════════════════════════════════════════════════════ */
+function pad2(n)    { return String(n).padStart(2,'0'); }
+function nowHL7()   { const d=new Date(); return `${d.getFullYear()}${pad2(d.getMonth()+1)}${pad2(d.getDate())}${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`; }
+function uid36()    { return 'MSG'+Date.now().toString(36).toUpperCase(); }
+function uid36ord() { return 'ORD'+Date.now().toString(36).toUpperCase(); }
+
+// DICOM PN (^-separated) → HL7 XPN (Last^First^Mid^Suffix^Prefix)
+// DICOM order: FamilyName^Given^Middle^NamePrefix^NameSuffix
+// HL7 order:   FamilyName^Given^Middle^Suffix^Prefix
+function xformName(v) {
+  if (!v) return '';
+  const p = v.split('^');
+  return [p[0]||'',p[1]||'',p[2]||'',p[4]||'',p[3]||''].join('^').replace(/\^+$/,'');
+}
+
+function xformDate(v)     { return (v||'').replace(/\D/g,'').substring(0,8); }
+function xformDateTime(d,t) {
+  const dd = (d||'').replace(/\D/g,'').substring(0,8);
+  const tt = (t||'').replace(/[^\d.]/g,'').substring(0,6);
+  return dd ? dd + (tt||'') : '';
+}
+
+function getVal(key) { return (parsedTags.find(t=>t.key===key)||{}).val||''; }
+
+function applyXform(val, xform, tag) {
+  if (!xform) return val;
+  if (xform === 'name')     return xformName(val);
+  if (xform === 'date')     return xformDate(val);
+  if (xform === 'datetime') return xformDateTime(val, getVal('00080030'));
+  return val;
+}
+
+/* ════════════════════════════════════════════════════
+   ORM GENERATOR
+   ════════════════════════════════════════════════════ */
+function generateORM() {
+  const sendApp  = v('cfgSendApp')  || 'DICOM_READER';
+  const sendFac  = v('cfgSendFac')  || 'RADIOLOGY';
+  const recvApp  = v('cfgRecvApp')  || 'RIS';
+  const recvFac  = v('cfgRecvFac')  || 'HOSPITAL';
+  const ctrl     = v('cfgOrderCtrl')|| 'NW';
+  const patCls   = v('cfgPatClass') || 'O';
+  const dfltProv = v('cfgProvider') || '';
+  const ver      = v('cfgVersion')  || '2.5';
+
+  const now    = nowHL7();
+  const msgID  = uid36();
+  const ordNum = uid36ord();
+
+  // Pull DICOM values (override fields take priority when non-empty)
+  const ov = id => v(id).trim();
+
+  const patName  = ov('ovPatName')   || xformName(getVal('00100010'));
+  const patID    = ov('ovMRN')       || getVal('00100020');
+  const patIssuer= getVal('00100021');
+  const patDOB   = ov('ovDOB')       || xformDate(getVal('00100030'));
+  const patSex   = getVal('00100040');
+  const accession= ov('ovAccession') || getVal('00080050');
+  const location = ov('ovLocation');
+  const studyDate= getVal('00080020');
+  const studyTime= getVal('00080030');
+  const modality = ov('ovModality')  || getVal('00080060');
+  const studyDesc= getVal('00081030');
+  const serDesc  = getVal('0008103e');
+  const refPhys  = xformName(getVal('00080090'));
+  const instName = getVal('00080080');
+  const station  = getVal('00081010');
+  const body     = getVal('00180015');
+  const studyUID = getVal('0020000d');
+  const studyID  = getVal('00200010');
+  const perfPhys = xformName(getVal('00081050'));
+  const protocol = getVal('00181030');
+
+  const obsDT    = xformDateTime(studyDate, studyTime);
+  const facility = instName || sendFac;
+  const provider = refPhys  || dfltProv;
+  const svcDesc  = studyDesc || serDesc || modality || 'RADIOLOGY_STUDY';
+  const pid3     = patIssuer ? `${patID}^^^${patIssuer}` : patID;
+
+  // ── Segments ─────────────────────────────────────
+  const MSH = `MSH|^~\\&|${sendApp}|${facility}|${recvApp}|${recvFac}|${now}||ORM^O01^ORM_O01|${msgID}|P|${ver}|||AL|NE`;
+
+  const PID = `PID|1||${pid3}||${patName}||${patDOB}|${patSex}|||||||||||`;
+
+  const PV1 = `PV1|1|${patCls}|${location}||||${provider}|||||||||||${ordNum}`;
+
+  const ORC = `ORC|${ctrl}|${ordNum}||||||||||${provider}|||${now}`;
+
+  // OBR fields:
+  //   .4  = Universal Service ID (accession^desc^LN or desc^LN)
+  //   .7  = Observation Date/Time
+  //   .15 = Specimen Source (body part)
+  //   .16 = Ordering Provider
+  //   .18 = Filler Field 1 (accession)
+  //   .20 = Filler Field 1 (study ID)
+  //   .21 = Filler Field 2 (station name)
+  //   .24 = Diagnostic Service Section ID (modality)
+  //   .34 = Technician (performing physician)
+  //   .44 = Procedure Code (protocol)
+  const svcID = `${accession ? accession+'^' : ''}${svcDesc}^LN`;
+  const OBR   = [
+    'OBR',        // 0 - segment name
+    '1',          // 1 - Set ID
+    ordNum,       // 2 - Placer Order Number
+    accession,    // 3 - Filler Order Number (accession)
+    svcID,        // 4 - Universal Service ID
+    '',           // 5 - Priority
+    '',           // 6 - Requested Date/Time
+    obsDT,        // 7 - Observation Date/Time
+    '',           // 8 - Observation End Date/Time
+    '',           // 9 - Collection Volume
+    '',           // 10
+    '',           // 11
+    '',           // 12
+    '',           // 13
+    '',           // 14
+    body,         // 15 - Specimen Source (body part)
+    provider,     // 16 - Ordering Provider
+    '',           // 17
+    accession,    // 18 - Filler Field 1 (accession)
+    '',           // 19
+    studyID,      // 20 - Filler Field 1 (Study ID)
+    station,      // 21 - Filler Field 2 (Station)
+    '',           // 22
+    '',           // 23
+    modality,     // 24 - Diagnostic Service Section ID
+    '',           // 25
+    '',           // 26
+    '',           // 27
+    '',           // 28
+    '',           // 29
+    '',           // 30
+    '',           // 31
+    '',           // 32
+    '',           // 33
+    perfPhys,     // 34 - Technician
+    '',           // 35
+    '',           // 36
+    '',           // 37
+    '',           // 38
+    '',           // 39
+    '',           // 40
+    '',           // 41
+    '',           // 42
+    '',           // 43
+    `${protocol ? protocol+'^'^'^' : ''}`,  // 44 - Procedure Code (trimmed below)
+  ].join('|').replace(/\|+$/, '');          // strip trailing pipes
+
+  const segs = [MSH, PID, PV1, ORC, OBR];
+
+  // ZDS — custom Z-segment carrying Study UID
+  if (studyUID) segs.push(`ZDS|${studyUID}^Application^DICOM`);
+
+  return segs.join('\r\n');
+}
+
+function v(id) { return document.getElementById(id)?.value||''; }
+
+/* ════════════════════════════════════════════════════
+   PATIENT & STUDY FIELD MANAGEMENT
+   ════════════════════════════════════════════════════ */
+
+// Fill fields from DICOM tags after a file is loaded
+function populateOverrides() {
+  document.getElementById('ovMRN').value       = getVal('00100020');
+  document.getElementById('ovPatName').value   = xformName(getVal('00100010'));
+  document.getElementById('ovAccession').value = getVal('00080050');
+  document.getElementById('ovDOB').value       = xformDate(getVal('00100030'));
+  // ovLocation has no DICOM source — leave as-is
+  // Modality: try to match the select options, else leave on "— From DICOM —"
+  const dcmMod = getVal('00080060').trim().toUpperCase();
+  const modSel = document.getElementById('ovModality');
+  const opt = [...modSel.options].find(o => o.value === dcmMod);
+  modSel.value = opt ? dcmMod : '';
+}
+
+// Re-populate fields from DICOM (button handler)
+function refillFromDICOM() {
+  if (parsedTags.length) { populateOverrides(); regenerate(); }
+}
+
+// Clear all fields when file is reset
+function clearOverrides() {
+  ['ovMRN','ovPatName','ovAccession','ovDOB','ovLocation','ovModality'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+}
+
+/* ════════════════════════════════════════════════════
+   RENDER — DICOM TAG TABLE
+   ════════════════════════════════════════════════════ */
+function renderTagTable(tags) {
+  const tbody = document.getElementById('tagBody');
+  rowIndex = [];
+
+  if (!tags.length) {
+    tbody.innerHTML = '<tr><td colspan="5"><div class="empty-state"><div class="empty-icon">❌</div><div class="empty-title">Parse failed or no tags found</div><div class="empty-sub">File may not be a valid DICOM object</div></div></td></tr>';
+    return;
+  }
+
+  function catClass(t) {
+    if (MAPPED_TAGS.has(t.key)) return 'row-mapped';
+    if (t.meta)                 return 'row-meta';
+    if (t.pixel)                return 'row-pixel';
+    const g = parseInt(t.key.substring(0,4),16);
+    if (g===0x0010) return 'row-patient';
+    if (g===0x0008 || g===0x0020) return 'row-study';
+    if (g===0x0018) return 'row-series';
+    return '';
+  }
+
+  let html = '';
+  for (const t of tags) {
+    const cls    = catClass(t);
+    const mapped = MAPPED_TAGS.has(t.key);
+    const trunc  = t.val.length > 90;
+    const disp   = trunc ? t.val.substring(0,90)+'…' : t.val;
+    html += `<tr class="${cls}" data-key="${t.key}">`;
+    html += `<td class="td-addr">${esc(t.tag)}</td>`;
+    html += `<td class="td-vr">${esc(t.vr)}</td>`;
+    html += `<td class="td-kw">${esc(t.kw)}</td>`;
+    html += `<td class="td-val${trunc?' dim':''}" title="${esc(t.val)}">${esc(disp)}</td>`;
+    html += `<td style="white-space:nowrap">${mapped?'<span class="badge-mapped">→HL7</span>':''}</td>`;
+    html += `</tr>`;
+    rowIndex.push({ key:t.key, kw:t.kw.toLowerCase(), val:t.val.toLowerCase() });
+  }
+  tbody.innerHTML = html;
+
+  // Stats
+  const nMeta   = tags.filter(t=>t.meta).length;
+  const nMapped = tags.filter(t=>MAPPED_TAGS.has(t.key)).length;
+  const nPx     = tags.filter(t=>t.pixel).length;
+  document.getElementById('tagStats').innerHTML =
+    `<span class="stat"><span class="stat-label">Total</span><span class="stat-value">${tags.length}</span></span>`+
+    `<span class="stat"><span class="stat-label">Meta</span><span class="stat-value">${nMeta}</span></span>`+
+    `<span class="stat"><span class="stat-label">→HL7 mapped</span><span class="stat-value" style="color:var(--red)">${nMapped}</span></span>`+
+    (nPx?`<span class="stat"><span class="stat-label">Pixel data</span><span class="stat-value">${nPx}</span></span>`:'');
+  document.getElementById('tagCounter').textContent = tags.length + ' tags';
+}
+
+function filterTags(q) {
+  q = q.toLowerCase().trim();
+  const rows = document.querySelectorAll('#tagBody tr');
+  let vis = 0;
+  rows.forEach((row,i) => {
+    if (!rowIndex[i]) { row.style.display=''; return; }
+    const r = rowIndex[i];
+    const ok = !q || r.key.includes(q) || r.kw.includes(q) || r.val.includes(q)
+                  || row.querySelector('.td-addr')?.textContent.toLowerCase().includes(q);
+    row.style.display = ok ? '' : 'none';
+    if (ok) vis++;
+  });
+  document.getElementById('tagCounter').textContent =
+    q ? `${vis} / ${rowIndex.length} tags` : `${rowIndex.length} tags`;
+}
+
+/* ════════════════════════════════════════════════════
+   RENDER — HL7 ORM
+   ════════════════════════════════════════════════════ */
+const SEG_FIELDS = {
+  MSH:{ 1:'Field Separator',2:'Encoding Characters',3:'Sending Application',4:'Sending Facility',5:'Receiving Application',6:'Receiving Facility',7:'Date/Time of Message',8:'Security',9:'Message Type',10:'Message Control ID',11:'Processing ID',12:'Version ID',15:'Accept Acknowledgment Type',16:'Application Acknowledgment Type' },
+  PID:{ 1:'Set ID',3:'Patient Identifier List',5:'Patient Name',7:'Date/Time of Birth',8:'Admin Sex',11:'Patient Address',13:'Phone Number - Home',18:'Patient Account Number' },
+  PV1:{ 1:'Set ID',2:'Patient Class',3:'Assigned Patient Location',7:'Attending Doctor',8:'Referring Doctor',17:'Admitting Doctor',19:'Visit Number',20:'Financial Class' },
+  ORC:{ 1:'Order Control',2:'Placer Order Number',3:'Filler Order Number',5:'Order Status',9:'Date/Time of Transaction',12:'Ordering Provider',15:'Order Effective Date/Time' },
+  OBR:{ 1:'Set ID',2:'Placer Order Number',3:'Filler Order Number',4:'Universal Service ID',7:'Observation Date/Time',15:'Specimen Source',16:'Ordering Provider',18:'Filler Field 1 (Accession)',20:'Filler Field 1 (Study ID)',21:'Filler Field 2 (Station)',24:'Diagnostic Service Section ID (Modality)',34:'Technician',44:'Procedure Code' },
+  ZDS:{ 1:'Study Instance UID' },
+};
+
+function colorFields(content) {
+  return content
+    .replace(/\|/g, '<span class="hl7-sep">|</span>')
+    .replace(/\^/g, '<span class="hl7-comp">^</span>')
+    .replace(/~/g,  '<span class="hl7-rep">~</span>');
+}
+
+function renderORM(orm) {
+  currentORM = orm;
+  const lines = orm.split(/\r?\n/).filter(Boolean);
+  let html = '<div class="orm-body">';
+  for (const line of lines) {
+    const seg = line.substring(0,3);
+    const clz = 'seg-' + seg;
+    html += `<div class="seg-block ${clz}">`;
+    html += `<div class="seg-line" onclick="toggleDetail(this,${JSON.stringify(line)},${JSON.stringify(seg)})">`;
+    html += `<span class="seg-label">${esc(seg)}</span>`;
+    html += `<span class="seg-content">${colorFields(esc(line.substring(3)))}</span>`;
+    html += `</div></div>`;
+  }
+  html += '</div>';
+  document.getElementById('ormPanel').innerHTML = html;
+  document.getElementById('ormStatus').textContent =
+    `${lines.length} segments · ${new Date().toLocaleTimeString()}`;
+  document.getElementById('rawText').value = orm.replace(/\r\n/g,'\n');
+}
+
+function toggleDetail(lineEl, rawLine, seg) {
+  const block  = lineEl.parentElement;
+  const exists = block.nextElementSibling;
+  if (exists && exists.classList.contains('seg-detail')) { exists.remove(); return; }
+
+  const fnames  = SEG_FIELDS[seg] || {};
+  const fields  = rawLine.split('|');
+  // fields[0] = segment name; fields[1..] = field .1, .2, …
+  let html = `<div class="seg-detail"><div class="seg-detail-hdr">${esc(seg)} — click fields to expand</div>`;
+  for (let i = 1; i < fields.length; i++) {
+    const name = fnames[i];
+    const val  = fields[i];
+    if (!val && !name) continue;
+    const hasV = val && val.trim().length > 0;
+    html += `<div class="field-row">`;
+    html += `<div class="fi-idx">.${i}</div>`;
+    html += `<div class="fi-name">${esc(name||'')}</div>`;
+    html += `<div class="fi-val${hasV?' has-val':''}">${esc(val||'—')}</div>`;
+    html += `</div>`;
+  }
+  html += '</div>';
+
+  const div = document.createElement('div');
+  div.innerHTML = html;
+  block.insertAdjacentElement('afterend', div.firstChild);
+}
+
+/* ════════════════════════════════════════════════════
+   RENDER — MAPPING TABLE
+   ════════════════════════════════════════════════════ */
+function renderMapping() {
+  let html = '';
+  for (const m of MAPPING) {
+    const raw    = getVal(m.tag);
+    const mapped = applyXform(raw, m.xform, m.tag);
+    const fmtTag = `(${m.tag.substring(0,4).toUpperCase()},${m.tag.substring(4).toUpperCase()})`;
+    const kw     = DICT[m.tag]?.kw || '';
+    const hasVal = raw.length > 0;
+    html += `<tr class="map-row">`;
+    html += `<td class="map-tag">${fmtTag}</td>`;
+    html += `<td class="map-kw">${esc(kw)}</td>`;
+    html += `<td class="map-src${hasVal?'':' map-empty'}">${esc(raw||'—')}</td>`;
+    html += `<td class="map-dest">${m.seg}.${m.field}</td>`;
+    html += `<td style="color:var(--muted);font-size:11px">${esc(m.desc)}</td>`;
+    html += `<td class="map-out${mapped?'':' map-empty'}">${esc(mapped||'—')}</td>`;
+    html += `</tr>`;
+  }
+  document.getElementById('mapBody').innerHTML = html;
+}
+
+/* ════════════════════════════════════════════════════
+   FILE HANDLING
+   ════════════════════════════════════════════════════ */
+function handleFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      parsedTags = parseDICOM(e.target.result);
+    } catch(err) {
+      alert('DICOM parse error: ' + err.message);
+      console.error(err);
+      return;
+    }
+
+    // Update upload zone
+    const zone = document.getElementById('uploadZone');
+    zone.classList.add('has-file');
+    zone.onclick = null;
+    zone.innerHTML = `
+      <div class="upload-file-info">
+        <span style="font-size:1.8rem">✅</span>
+        <div>
+          <div class="upload-filename">${esc(file.name)}</div>
+          <div class="upload-meta">${(file.size/1024).toFixed(1)} KB · ${parsedTags.length} tags parsed</div>
+        </div>
+        <button class="btn btn-ghost" style="margin-left:auto" onclick="resetFile()">✕ Clear</button>
+      </div>`;
+
+    document.getElementById('splitView').style.display = 'grid';
+    document.getElementById('mapPanel').style.display  = 'block';
+
+    renderTagTable(parsedTags);
+    populateOverrides();
+    const orm = generateORM();
+    renderORM(orm);
+    renderMapping();
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function resetFile() {
+  parsedTags = []; currentORM = ''; rowIndex = [];
+  clearOverrides();
+  document.getElementById('splitView').style.display = 'none';
+  document.getElementById('mapPanel').style.display  = 'none';
+  const zone = document.getElementById('uploadZone');
+  zone.classList.remove('has-file');
+  zone.onclick = () => document.getElementById('fileInput').click();
+  zone.innerHTML = `
+    <div class="upload-icon">🏥</div>
+    <div class="upload-title">Drop a DICOM file here</div>
+    <div class="upload-sub">Click to browse · accepts .dcm / .dicom or any DICOM file</div>
+    <input type="file" id="fileInput" style="display:none" onchange="handleFile(this.files[0])">`;
+}
+
+function regenerate() {
+  if (!parsedTags.length) return;
+  const orm = generateORM();
+  renderORM(orm);
+  renderMapping();
+}
+
+function onDragOver(e)  { e.preventDefault(); document.getElementById('uploadZone').classList.add('drag-over'); }
+function onDragLeave()  { document.getElementById('uploadZone').classList.remove('drag-over'); }
+function onDrop(e) {
+  e.preventDefault();
+  document.getElementById('uploadZone').classList.remove('drag-over');
+  const f = e.dataTransfer.files[0];
+  if (f) handleFile(f);
+}
+
+/* ════════════════════════════════════════════════════
+   COPY / MODAL
+   ════════════════════════════════════════════════════ */
+function copyORM()  { if (currentORM) nav_copy(currentORM.replace(/\r\n/g,'\n')); }
+function copyRaw()  { nav_copy(document.getElementById('rawText').value); }
+function showRaw()  { document.getElementById('rawModal').classList.add('open'); }
+function closeRaw() { document.getElementById('rawModal').classList.remove('open'); }
+
+function nav_copy(text) {
+  navigator.clipboard.writeText(text).then(()=>showToast('Copied!')).catch(()=>{
+    // fallback
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta);
+    ta.select(); document.execCommand('copy');
+    document.body.removeChild(ta); showToast('Copied!');
+  });
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'), 2000);
+}
+
+/* ════════════════════════════════════════════════════
+   UTILITIES
+   ════════════════════════════════════════════════════ */
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// Regenerate ORM when any config field changes
+document.querySelectorAll('.config-input').forEach(el => {
+  el.addEventListener('change', () => { if (parsedTags.length) regenerate(); });
+});
+</script>
+</body>
+</html>
