@@ -30,6 +30,22 @@ layout: default
       <a href="tools/diff-checker.html" class="btn-launch">Launch &rarr;</a>
     </li>
 
+    <li class="tool-card">
+      <div class="tool-card-icon">📡</div>
+      <h3>MWL Simulator</h3>
+      <p class="tool-subtitle">Modality Worklist</p>
+      <p>Simulate or query a DICOM Modality Worklist (C-FIND SCU). Test worklist integrations with a built-in dataset or connect to a real SCP.</p>
+      <a href="tools/mwl-simulator.html" class="btn-launch">Launch &rarr;</a>
+    </li>
+
+    <li class="tool-card">
+      <div class="tool-card-icon">🔗</div>
+      <h3>DICOM &rarr; HL7 Order</h3>
+      <p class="tool-subtitle">Workflow Integration</p>
+      <p>Read DICOM tags from a file and generate an HL7 ORM^O01 radiology order message. Bridge imaging and clinical messaging workflows.</p>
+      <a href="tools/dicom-hl7-order.html" class="btn-launch">Launch &rarr;</a>
+    </li>
+
   </ul>
 </section>
 
