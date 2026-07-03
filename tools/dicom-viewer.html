@@ -1,0 +1,2805 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>DICOM Viewer &amp; Tag Morph</title>
+<link rel="stylesheet" href="theme.css" />
+<script src="theme.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-sans);
+    font-size: 13px;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .app-header h1 { font-size: 15px; margin: 0; font-family: var(--font-mono); font-weight: 600; }
+  .app-header h1 .hl { color: var(--accent); }
+  .app-header .spacer { flex: 1; }
+
+  /* ── Toolbar ── */
+  .toolbar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 10px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+  }
+  .toolbar .sep { width: 1px; height: 22px; background: var(--border); margin: 0 4px; }
+  .tbtn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 6px;
+    padding: 4px 9px;
+    font-size: 12px;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    white-space: nowrap;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    transition: border-color .12s, background .12s, color .12s;
+  }
+  .tbtn:hover { border-color: var(--accent); }
+  .tbtn.active { border-color: var(--accent); color: var(--accent); background: rgba(102,217,239,0.08); }
+  [data-theme="light"] .tbtn.active { background: rgba(5,151,167,0.08); }
+  .tbtn:disabled { opacity: .4; cursor: default; }
+  .tbtn:disabled:hover { border-color: var(--border); }
+  .toolbar select, .toolbar input[type="number"] {
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 4px 6px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+  }
+  .toolbar input[type="number"] { width: 54px; }
+  .toolbar label { color: var(--muted); font-size: 11px; }
+
+  /* ── Main layout ── */
+  .main {
+    flex: 1;
+    display: flex;
+    min-height: 0;
+  }
+
+  /* ── Sidebar: series browser ── */
+  .sidebar {
+    width: 208px;
+    min-width: 208px;
+    background: var(--surface);
+    border-right: 1px solid var(--border);
+    overflow-y: auto;
+    padding: 8px;
+  }
+  .sidebar h3 {
+    margin: 4px 2px 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+  .series-card {
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 6px;
+    margin-bottom: 8px;
+    cursor: pointer;
+    background: var(--surface2);
+    transition: border-color .12s;
+  }
+  .series-card:hover { border-color: var(--muted); }
+  .series-card.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+  .series-card canvas {
+    width: 100%;
+    background: #000;
+    border-radius: 4px;
+    display: block;
+  }
+  .series-card .s-title {
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 5px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  .series-card .s-sub { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .series-card .s-badge {
+    display: inline-block;
+    font-size: 9px;
+    font-family: var(--font-mono);
+    padding: 1px 5px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    color: var(--accent);
+    margin-top: 4px;
+  }
+  .sidebar .empty-note { color: var(--muted); font-size: 11px; padding: 6px 2px; line-height: 1.5; }
+
+  /* ── Viewport ── */
+  .viewport-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    background: #000;
+    position: relative;
+  }
+  #viewport {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+    cursor: crosshair;
+    min-height: 0;
+  }
+  #vcanvas { position: absolute; top: 0; left: 0; }
+  #anno-canvas { position: absolute; top: 0; left: 0; pointer-events: none; }
+  .vp-overlay {
+    position: absolute;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: #e8e8e0;
+    text-shadow: 0 1px 2px #000, 0 0 4px #000;
+    pointer-events: none;
+    line-height: 1.5;
+    white-space: pre;
+    z-index: 5;
+  }
+  .vp-tl { top: 8px; left: 10px; }
+  .vp-tr { top: 8px; right: 10px; text-align: right; }
+  .vp-bl { bottom: 8px; left: 10px; }
+  .vp-br { bottom: 8px; right: 10px; text-align: right; }
+  .vp-msg {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%,-50%);
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+    line-height: 1.7;
+    max-width: 480px;
+    z-index: 4;
+    pointer-events: none;
+  }
+  .vp-msg .big { font-size: 34px; display: block; margin-bottom: 8px; }
+  .vp-msg kbd {
+    font-family: var(--font-mono);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1px 5px;
+    font-size: 11px;
+  }
+  #pdf-frame { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: #fff; z-index: 6; }
+  #video-el { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 6; background: #000; }
+
+  /* ── Frame bar / cine ── */
+  .framebar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 10px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+  .framebar input[type="range"] { flex: 1; accent-color: var(--accent); }
+  .framebar .f-label { font-family: var(--font-mono); font-size: 11px; color: var(--muted); min-width: 90px; text-align: right; }
+  .framebar input[type="number"] {
+    width: 52px;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 5px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+  }
+
+  /* ── Right panel ── */
+  .rpanel {
+    width: 430px;
+    min-width: 430px;
+    background: var(--surface);
+    border-left: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .rpanel.collapsed { display: none; }
+  .rtabs {
+    display: flex;
+    border-bottom: 1px solid var(--border);
+  }
+  .rtab {
+    flex: 1;
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    color: var(--muted);
+    padding: 9px 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: var(--font-sans);
+  }
+  .rtab.active { color: var(--accent); border-bottom-color: var(--accent); }
+  .rtab:hover:not(.active) { color: var(--text); }
+  .rbody { flex: 1; overflow-y: auto; min-height: 0; }
+
+  /* ── Tag table ── */
+  .tag-toolbar {
+    display: flex;
+    gap: 6px;
+    padding: 8px;
+    border-bottom: 1px solid var(--border);
+    align-items: center;
+  }
+  .tag-toolbar input[type="text"] {
+    flex: 1;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 12px;
+    font-family: var(--font-mono);
+  }
+  .tag-toolbar input:focus { outline: none; border-color: var(--accent); }
+  table.tagtbl { width: 100%; border-collapse: collapse; font-family: var(--font-mono); font-size: 11px; }
+  table.tagtbl td { padding: 3px 6px; border-bottom: 1px solid var(--border); vertical-align: top; word-break: break-all; }
+  table.tagtbl tr:hover td { background: rgba(255,255,255,0.03); }
+  [data-theme="light"] table.tagtbl tr:hover td { background: rgba(0,0,0,0.03); }
+  .t-tag { color: var(--accent); white-space: nowrap; }
+  .t-vr { color: var(--red); }
+  .t-name { color: var(--muted); font-family: var(--font-sans); font-size: 10.5px; }
+  .t-val { color: var(--text); }
+  .t-val.t-mod { color: var(--orange); }
+  .t-seq { color: var(--accent2); }
+  .t-edit {
+    cursor: pointer;
+    opacity: 0;
+    color: var(--muted);
+    padding: 0 2px;
+    user-select: none;
+  }
+  tr:hover .t-edit { opacity: 1; }
+  .t-edit:hover { color: var(--accent); }
+  .t-del:hover { color: var(--red); }
+  .tag-edit-input {
+    width: 100%;
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--accent);
+    border-radius: 4px;
+    padding: 2px 5px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+  }
+
+  /* ── Morph panel ── */
+  .morph-sec { padding: 10px; border-bottom: 1px solid var(--border); }
+  .morph-sec h4 {
+    margin: 0 0 8px;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: .8px;
+    color: var(--muted);
+  }
+  .morph-row { display: flex; gap: 5px; margin-bottom: 6px; align-items: center; flex-wrap: wrap; }
+  .morph-row input[type="text"], .morph-row select {
+    background: var(--input-bg);
+    color: var(--text);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 5px 7px;
+    font-size: 11px;
+    font-family: var(--font-mono);
+  }
+  .morph-row input:focus, .morph-row select:focus { outline: none; border-color: var(--accent); }
+  .m-tag { width: 92px; }
+  .m-val { flex: 1; min-width: 100px; }
+  .rule-list { font-family: var(--font-mono); font-size: 11px; }
+  .rule-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 6px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    margin-bottom: 5px;
+    background: var(--surface2);
+  }
+  .rule-item .r-act { font-weight: 700; }
+  .rule-item .r-act.set { color: var(--green); }
+  .rule-item .r-act.del { color: var(--red); }
+  .rule-item .r-act.uid { color: var(--accent2); }
+  .rule-item .r-tag { color: var(--accent); }
+  .rule-item .r-val { flex: 1; word-break: break-all; color: var(--text); }
+  .rule-item .r-x { cursor: pointer; color: var(--muted); }
+  .rule-item .r-x:hover { color: var(--red); }
+  .btn-primary {
+    background: var(--green);
+    color: #1e1f1a;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: var(--font-sans);
+  }
+  [data-theme="light"] .btn-primary { color: #fff; }
+  .btn-primary:hover { filter: brightness(1.1); }
+  .btn-primary:disabled { opacity: .4; cursor: default; }
+  .hint { color: var(--muted); font-size: 10.5px; line-height: 1.5; }
+  .morph-log {
+    font-family: var(--font-mono);
+    font-size: 10.5px;
+    color: var(--muted);
+    max-height: 110px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    margin-top: 6px;
+  }
+  .morph-log .ok { color: var(--green); }
+  .morph-log .err { color: var(--red); }
+  .chk { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text); margin: 4px 0; cursor: pointer; }
+  .chk input { accent-color: var(--accent); }
+
+  /* ── SOP modal ── */
+  .modal-back {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 200;
+    display: none;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-back.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    width: min(760px, 92vw);
+    max-height: 84vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+  }
+  .modal header {
+    display: flex;
+    align-items: center;
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+  }
+  .modal header h3 { margin: 0; font-size: 14px; flex: 1; }
+  .modal .mbody { overflow-y: auto; padding: 4px 16px 16px; }
+  .modal table { width: 100%; border-collapse: collapse; font-size: 11.5px; }
+  .modal td, .modal th { padding: 4px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+  .modal th { color: var(--muted); font-size: 10.5px; text-transform: uppercase; letter-spacing: .6px; position: sticky; top: 0; background: var(--surface); }
+  .modal .uid-cell { font-family: var(--font-mono); font-size: 10px; color: var(--muted); }
+  .cat-pill {
+    font-size: 9.5px;
+    padding: 1px 7px;
+    border-radius: 8px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .cat-image { background: rgba(166,226,46,0.15); color: var(--green); }
+  .cat-video { background: rgba(174,129,255,0.15); color: var(--accent2); }
+  .cat-pdf   { background: rgba(253,151,31,0.15); color: var(--orange); }
+  .cat-other { background: rgba(117,113,94,0.2); color: var(--muted); }
+  .x-close { background: none; border: none; color: var(--muted); font-size: 18px; cursor: pointer; }
+  .x-close:hover { color: var(--text); }
+
+  /* ── Drop hint ── */
+  body.dragging::after {
+    content: "Drop DICOM files to load";
+    position: fixed; inset: 10px;
+    border: 2px dashed var(--accent);
+    border-radius: 12px;
+    background: rgba(102,217,239,0.06);
+    color: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    font-weight: 600;
+    z-index: 500;
+    pointer-events: none;
+  }
+
+  ::-webkit-scrollbar { width: 10px; height: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--surface2); border-radius: 5px; border: 2px solid var(--surface); }
+  ::-webkit-scrollbar-track { background: transparent; }
+
+  @media (max-width: 1100px) {
+    .rpanel { width: 340px; min-width: 340px; }
+    .sidebar { width: 160px; min-width: 160px; }
+  }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <h1>🩻 DICOM <span class="hl">Viewer</span> &amp; Tag Morph</h1>
+  <span class="spacer"></span>
+  <nav class="nav-links">
+    <a href="../index.html">← All Tools</a>
+    <a href="dicom-generator.html">DICOM Toolbox</a>
+    <a href="dicom-hl7-order.html">DICOM → HL7</a>
+  </nav>
+  <button id="btn-theme" class="btn-theme"><span class="theme-icon">☀️</span> <span class="theme-label">Light</span></button>
+</header>
+
+<div class="toolbar">
+  <button class="tbtn" id="btn-open">📂 Open Files</button>
+  <button class="tbtn" id="btn-open-dir">🗂 Open Folder</button>
+  <input type="file" id="file-input" multiple hidden />
+  <input type="file" id="dir-input" webkitdirectory hidden />
+  <span class="sep"></span>
+  <button class="tbtn tool-btn active" data-tool="wl" title="Left-drag: adjust window / level (W)">🌓 W/L</button>
+  <button class="tbtn tool-btn" data-tool="pan" title="Left-drag: pan (P)">✋ Pan</button>
+  <button class="tbtn tool-btn" data-tool="zoom" title="Left-drag: zoom (Z)">🔍 Zoom</button>
+  <button class="tbtn tool-btn" data-tool="measure" title="Drag to measure distance (M)">📏 Measure</button>
+  <span class="sep"></span>
+  <select id="wl-preset" title="Window presets">
+    <option value="auto">W/L: Auto</option>
+    <option value="file" selected>W/L: From file</option>
+    <option value="full">Full range</option>
+    <option value="40,80">CT Brain 40/80</option>
+    <option value="50,350">CT Abdomen 50/350</option>
+    <option value="50,400">CT Mediastinum 50/400</option>
+    <option value="-600,1500">CT Lung −600/1500</option>
+    <option value="300,1500">CT Bone 300/1500</option>
+  </select>
+  <button class="tbtn" id="btn-invert" title="Invert grayscale (I)">◐ Invert</button>
+  <span class="sep"></span>
+  <button class="tbtn" id="btn-rot" title="Rotate 90° clockwise (R)">↻ Rotate</button>
+  <button class="tbtn" id="btn-fliph" title="Flip horizontal (H)">⇋ Flip H</button>
+  <button class="tbtn" id="btn-flipv" title="Flip vertical (V)">⇅ Flip V</button>
+  <button class="tbtn" id="btn-reset" title="Reset view (double-click viewport)">⟲ Reset</button>
+  <span class="sep"></span>
+  <button class="tbtn" id="btn-overlays" title="Toggle DICOM overlay planes (group 60xx)">▦ Overlays</button>
+  <button class="tbtn" id="btn-text" title="Toggle corner annotations (T)">🅃 Text</button>
+  <button class="tbtn" id="btn-png" title="Save current view as PNG">🖼 PNG</button>
+  <span class="sep"></span>
+  <button class="tbtn" id="btn-sop" title="List of supported SOP classes">ℹ SOP Classes</button>
+  <span class="spacer" style="flex:1"></span>
+  <button class="tbtn" id="btn-rpanel" title="Toggle tag panel">☰ Tags</button>
+</div>
+
+<div class="main">
+
+  <aside class="sidebar" id="sidebar">
+    <h3>Series</h3>
+    <div id="series-list">
+      <div class="empty-note">No files loaded.<br><br>Open DICOM files or drop them anywhere on this page. Everything is processed locally — no data leaves your browser.</div>
+    </div>
+  </aside>
+
+  <div class="viewport-wrap">
+    <div id="viewport">
+      <canvas id="vcanvas"></canvas>
+      <canvas id="anno-canvas"></canvas>
+      <div class="vp-overlay vp-tl" id="ov-tl"></div>
+      <div class="vp-overlay vp-tr" id="ov-tr"></div>
+      <div class="vp-overlay vp-bl" id="ov-bl"></div>
+      <div class="vp-overlay vp-br" id="ov-br"></div>
+      <div class="vp-msg" id="vp-msg">
+        <span class="big">🩻</span>
+        Open DICOM files to begin<br>
+        <span style="font-size:11px">
+          Wheel: scroll frames / instances &nbsp;·&nbsp; <kbd>Ctrl</kbd>+wheel: zoom<br>
+          Left-drag: active tool &nbsp;·&nbsp; Middle-drag: pan &nbsp;·&nbsp; Right-drag: W/L
+        </span>
+      </div>
+    </div>
+    <div class="framebar" id="framebar" style="display:none">
+      <button class="tbtn" id="btn-play" title="Play / pause cine (Space)">▶</button>
+      <label style="font-size:11px;color:var(--muted)">fps</label>
+      <input type="number" id="fps-input" min="1" max="120" value="15" />
+      <input type="range" id="frame-slider" min="0" max="0" value="0" />
+      <span class="f-label" id="frame-label">–</span>
+    </div>
+  </div>
+
+  <aside class="rpanel" id="rpanel">
+    <div class="rtabs">
+      <button class="rtab active" data-rtab="tags">Tags</button>
+      <button class="rtab" data-rtab="morph">Tag Morph</button>
+    </div>
+
+    <div class="rbody" id="rtab-tags">
+      <div class="tag-toolbar">
+        <input type="text" id="tag-search" placeholder="Filter tags — name, tag, or value…" />
+      </div>
+      <div style="padding:4px 8px" class="hint">Click ✎ to edit a value in place, ✕ to delete the element. Edits apply to the current file and are included on export.</div>
+      <table class="tagtbl"><tbody id="tag-tbody">
+        <tr><td class="t-name" style="padding:14px">No file selected.</td></tr>
+      </tbody></table>
+    </div>
+
+    <div class="rbody" id="rtab-morph" style="display:none">
+      <div class="morph-sec">
+        <h4>Morph rules</h4>
+        <div class="hint" style="margin-bottom:8px">Rules are applied in order to top-level tags. <b>set</b> creates the tag if missing; <b>remove</b> deletes it; <b>new&nbsp;UID</b> regenerates the UID consistently across all files (identical old UIDs map to identical new UIDs, preserving study/series linkage).</div>
+        <div class="morph-row">
+          <input type="text" class="m-tag" id="mr-tag" placeholder="0010,0010" list="tag-datalist" />
+          <select id="mr-action">
+            <option value="set">set</option>
+            <option value="remove">remove</option>
+            <option value="uid">new UID</option>
+          </select>
+          <input type="text" class="m-val" id="mr-value" placeholder="value" />
+          <button class="tbtn" id="mr-add">+ Add</button>
+        </div>
+        <datalist id="tag-datalist"></datalist>
+        <div class="rule-list" id="rule-list"></div>
+        <div class="morph-row" style="margin-top:8px">
+          <button class="tbtn" id="btn-anon">🕶 Add anonymize preset</button>
+          <button class="tbtn" id="btn-clear-rules">Clear rules</button>
+        </div>
+      </div>
+      <div class="morph-sec">
+        <h4>Apply &amp; export</h4>
+        <label class="chk"><input type="radio" name="m-scope" value="current" checked /> Current file only</label>
+        <label class="chk"><input type="radio" name="m-scope" value="series" /> Current series (<span id="scope-series-n">0</span> files)</label>
+        <label class="chk"><input type="radio" name="m-scope" value="all" /> All loaded files (<span id="scope-all-n">0</span> files)</label>
+        <div class="morph-row" style="margin-top:10px">
+          <button class="btn-primary" id="btn-apply-rules">Apply rules</button>
+          <button class="btn-primary" id="btn-export">⬇ Export DICOM</button>
+        </div>
+        <div class="hint">Export serializes the in-memory dataset (inline edits + applied rules). Multiple files download as a ZIP. Compressed pixel data is preserved as-is; the transfer syntax is never transcoded.</div>
+        <div class="morph-log" id="morph-log"></div>
+      </div>
+    </div>
+  </aside>
+
+</div>
+
+<div class="modal-back" id="sop-modal">
+  <div class="modal">
+    <header>
+      <h3>Supported SOP Classes</h3>
+      <button class="x-close" id="sop-close">✕</button>
+    </header>
+    <div class="mbody">
+      <p class="hint" style="margin:10px 2px">Coverage of the storage SOP classes supported by the RadiAnt DICOM viewer. <b>image</b> renders through the pixel pipeline (any other storage SOP class carrying standard Image Pixel module data will also render), <b>video</b> plays via the browser's media engine, <b>pdf</b> displays the encapsulated document, <b>tags</b> opens in the tag browser / morph editor only.</p>
+      <table id="sop-table"></table>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+
+/* ═══════════════════════ DICOM data dictionary ═══════════════════════ */
+/* tag (ggggeeee, uppercase hex) → [VR, name]. Subset covering the
+   attributes encountered in the supported storage IODs. Unknown tags
+   fall back to UN/private handling. */
+const DICT = {
+  '00020000':['UL','File Meta Information Group Length'],
+  '00020001':['OB','File Meta Information Version'],
+  '00020002':['UI','Media Storage SOP Class UID'],
+  '00020003':['UI','Media Storage SOP Instance UID'],
+  '00020010':['UI','Transfer Syntax UID'],
+  '00020012':['UI','Implementation Class UID'],
+  '00020013':['SH','Implementation Version Name'],
+  '00020016':['AE','Source Application Entity Title'],
+  '00080005':['CS','Specific Character Set'],
+  '00080008':['CS','Image Type'],
+  '00080012':['DA','Instance Creation Date'],
+  '00080013':['TM','Instance Creation Time'],
+  '00080014':['UI','Instance Creator UID'],
+  '00080016':['UI','SOP Class UID'],
+  '00080018':['UI','SOP Instance UID'],
+  '00080020':['DA','Study Date'],
+  '00080021':['DA','Series Date'],
+  '00080022':['DA','Acquisition Date'],
+  '00080023':['DA','Content Date'],
+  '0008002A':['DT','Acquisition DateTime'],
+  '00080030':['TM','Study Time'],
+  '00080031':['TM','Series Time'],
+  '00080032':['TM','Acquisition Time'],
+  '00080033':['TM','Content Time'],
+  '00080050':['SH','Accession Number'],
+  '00080060':['CS','Modality'],
+  '00080064':['CS','Conversion Type'],
+  '00080068':['CS','Presentation Intent Type'],
+  '00080070':['LO','Manufacturer'],
+  '00080080':['LO','Institution Name'],
+  '00080081':['ST','Institution Address'],
+  '00080090':['PN','Referring Physician Name'],
+  '00081010':['SH','Station Name'],
+  '00081030':['LO','Study Description'],
+  '0008103E':['LO','Series Description'],
+  '00081040':['LO','Institutional Department Name'],
+  '00081048':['PN','Physician(s) of Record'],
+  '00081050':['PN','Performing Physician Name'],
+  '00081060':['PN','Name of Physician(s) Reading Study'],
+  '00081070':['PN','Operators Name'],
+  '00081080':['LO','Admitting Diagnoses Description'],
+  '00081090':['LO','Manufacturer Model Name'],
+  '00081110':['SQ','Referenced Study Sequence'],
+  '00081111':['SQ','Referenced Performed Procedure Step Sequence'],
+  '00081115':['SQ','Referenced Series Sequence'],
+  '00081120':['SQ','Referenced Patient Sequence'],
+  '00081140':['SQ','Referenced Image Sequence'],
+  '00081150':['UI','Referenced SOP Class UID'],
+  '00081155':['UI','Referenced SOP Instance UID'],
+  '00082111':['ST','Derivation Description'],
+  '00082112':['SQ','Source Image Sequence'],
+  '00082144':['IS','Recommended Display Frame Rate'],
+  '00089205':['CS','Pixel Presentation'],
+  '00089206':['CS','Volumetric Properties'],
+  '00089207':['CS','Volume Based Calculation Technique'],
+  '00100010':['PN','Patient Name'],
+  '00100020':['LO','Patient ID'],
+  '00100021':['LO','Issuer of Patient ID'],
+  '00100030':['DA','Patient Birth Date'],
+  '00100032':['TM','Patient Birth Time'],
+  '00100040':['CS','Patient Sex'],
+  '00101000':['LO','Other Patient IDs'],
+  '00101001':['PN','Other Patient Names'],
+  '00101010':['AS','Patient Age'],
+  '00101020':['DS','Patient Size'],
+  '00101030':['DS','Patient Weight'],
+  '00101040':['LO','Patient Address'],
+  '00102150':['LO','Country of Residence'],
+  '00102152':['LO','Region of Residence'],
+  '00102154':['SH','Patient Telephone Numbers'],
+  '001021B0':['LT','Additional Patient History'],
+  '00104000':['LT','Patient Comments'],
+  '00120062':['CS','Patient Identity Removed'],
+  '00120063':['LO','De-identification Method'],
+  '00180010':['LO','Contrast/Bolus Agent'],
+  '00180015':['CS','Body Part Examined'],
+  '00180020':['CS','Scanning Sequence'],
+  '00180021':['CS','Sequence Variant'],
+  '00180022':['CS','Scan Options'],
+  '00180023':['CS','MR Acquisition Type'],
+  '00180050':['DS','Slice Thickness'],
+  '00180060':['DS','KVP'],
+  '00180088':['DS','Spacing Between Slices'],
+  '00180090':['DS','Data Collection Diameter'],
+  '00181000':['LO','Device Serial Number'],
+  '00181020':['LO','Software Versions'],
+  '00181030':['LO','Protocol Name'],
+  '00181050':['DS','Spatial Resolution'],
+  '00181063':['DS','Frame Time'],
+  '00181065':['DS','Frame Time Vector'],
+  '00181088':['IS','Heart Rate'],
+  '00181100':['DS','Reconstruction Diameter'],
+  '00181110':['DS','Distance Source to Detector'],
+  '00181111':['DS','Distance Source to Patient'],
+  '00181120':['DS','Gantry/Detector Tilt'],
+  '00181130':['DS','Table Height'],
+  '00181140':['CS','Rotation Direction'],
+  '00181150':['IS','Exposure Time'],
+  '00181151':['IS','X-Ray Tube Current'],
+  '00181152':['IS','Exposure'],
+  '00181160':['SH','Filter Type'],
+  '00181164':['DS','Imager Pixel Spacing'],
+  '00181170':['IS','Generator Power'],
+  '00181190':['DS','Focal Spot(s)'],
+  '00181210':['SH','Convolution Kernel'],
+  '00185100':['CS','Patient Position'],
+  '00185101':['CS','View Position'],
+  '00186011':['SQ','Sequence of Ultrasound Regions'],
+  '00186024':['US','Physical Units X Direction'],
+  '00186026':['US','Physical Units Y Direction'],
+  '0018602C':['FD','Physical Delta X'],
+  '0018602E':['FD','Physical Delta Y'],
+  '00189004':['CS','Content Qualification'],
+  '00200010':['SH','Study ID'],
+  '00200011':['IS','Series Number'],
+  '00200012':['IS','Acquisition Number'],
+  '00200013':['IS','Instance Number'],
+  '00200020':['CS','Patient Orientation'],
+  '00200032':['DS','Image Position (Patient)'],
+  '00200037':['DS','Image Orientation (Patient)'],
+  '00200052':['UI','Frame of Reference UID'],
+  '00200060':['CS','Laterality'],
+  '00201002':['IS','Images in Acquisition'],
+  '00201040':['LO','Position Reference Indicator'],
+  '00201041':['DS','Slice Location'],
+  '00204000':['LT','Image Comments'],
+  '00209056':['SH','Stack ID'],
+  '00209057':['UL','In-Stack Position Number'],
+  '00209113':['SQ','Plane Position Sequence'],
+  '00209116':['SQ','Plane Orientation Sequence'],
+  '00209157':['UL','Dimension Index Values'],
+  '0020000D':['UI','Study Instance UID'],
+  '0020000E':['UI','Series Instance UID'],
+  '00280002':['US','Samples per Pixel'],
+  '00280004':['CS','Photometric Interpretation'],
+  '00280006':['US','Planar Configuration'],
+  '00280008':['IS','Number of Frames'],
+  '00280009':['AT','Frame Increment Pointer'],
+  '00280010':['US','Rows'],
+  '00280011':['US','Columns'],
+  '00280030':['DS','Pixel Spacing'],
+  '00280034':['IS','Pixel Aspect Ratio'],
+  '00280100':['US','Bits Allocated'],
+  '00280101':['US','Bits Stored'],
+  '00280102':['US','High Bit'],
+  '00280103':['US','Pixel Representation'],
+  '00280106':['US','Smallest Image Pixel Value'],
+  '00280107':['US','Largest Image Pixel Value'],
+  '00280120':['US','Pixel Padding Value'],
+  '00280121':['US','Pixel Padding Range Limit'],
+  '00281040':['CS','Pixel Intensity Relationship'],
+  '00281041':['SS','Pixel Intensity Relationship Sign'],
+  '00281050':['DS','Window Center'],
+  '00281051':['DS','Window Width'],
+  '00281052':['DS','Rescale Intercept'],
+  '00281053':['DS','Rescale Slope'],
+  '00281054':['LO','Rescale Type'],
+  '00281055':['LO','Window Center & Width Explanation'],
+  '00281101':['US','Red Palette Color LUT Descriptor'],
+  '00281102':['US','Green Palette Color LUT Descriptor'],
+  '00281103':['US','Blue Palette Color LUT Descriptor'],
+  '00281201':['OW','Red Palette Color LUT Data'],
+  '00281202':['OW','Green Palette Color LUT Data'],
+  '00281203':['OW','Blue Palette Color LUT Data'],
+  '00282110':['CS','Lossy Image Compression'],
+  '00282112':['DS','Lossy Image Compression Ratio'],
+  '00282114':['CS','Lossy Image Compression Method'],
+  '00283000':['SQ','Modality LUT Sequence'],
+  '00283002':['US','LUT Descriptor'],
+  '00283003':['LO','LUT Explanation'],
+  '00283004':['LO','Modality LUT Type'],
+  '00283006':['OW','LUT Data'],
+  '00283010':['SQ','VOI LUT Sequence'],
+  '00286010':['US','Representative Frame Number'],
+  '00300020':['SQ',''],
+  '00321032':['PN','Requesting Physician'],
+  '00321060':['LO','Requested Procedure Description'],
+  '00400002':['DA','Scheduled Procedure Step Start Date'],
+  '00400244':['DA','Performed Procedure Step Start Date'],
+  '00400245':['TM','Performed Procedure Step Start Time'],
+  '00400253':['SH','Performed Procedure Step ID'],
+  '00400254':['LO','Performed Procedure Step Description'],
+  '00400275':['SQ','Request Attributes Sequence'],
+  '00400555':['SQ','Acquisition Context Sequence'],
+  '00409096':['SQ','Real World Value Mapping Sequence'],
+  '00420010':['ST','Document Title'],
+  '00420011':['OB','Encapsulated Document'],
+  '00420012':['LO','MIME Type of Encapsulated Document'],
+  '00540011':['US','Number of Energy Windows'],
+  '00540016':['SQ','Radiopharmaceutical Information Sequence'],
+  '00540081':['US','Number of Slices'],
+  '00540400':['SH','Image ID'],
+  '00541001':['CS','Units'],
+  '00541002':['CS','Counts Source'],
+  '00541102':['CS','Decay Correction'],
+  '00541300':['DS','Frame Reference Time'],
+  '00541330':['US','Image Index'],
+  '20500020':['CS','Presentation LUT Shape'],
+  '30040002':['CS','Dose Units'],
+  '30040004':['CS','Dose Type'],
+  '3004000A':['CS','Dose Summation Type'],
+  '3004000C':['DS','Grid Frame Offset Vector'],
+  '3004000E':['DS','Dose Grid Scaling'],
+  '30020011':['DS','Image Plane Pixel Spacing'],
+  '30020020':['SH','Radiation Machine Name'],
+  '30020022':['DS','Radiation Machine SAD'],
+  '30020026':['DS','RT Image SID'],
+  '52009229':['SQ','Shared Functional Groups Sequence'],
+  '52009230':['SQ','Per-Frame Functional Groups Sequence'],
+  '00289110':['SQ','Pixel Measures Sequence'],
+  '00289132':['SQ','Frame VOI LUT Sequence'],
+  '00289145':['SQ','Pixel Value Transformation Sequence'],
+  '00289253':['SQ','?'],
+  '7FE00008':['OF','Float Pixel Data'],
+  '7FE00009':['OD','Double Float Pixel Data'],
+  '7FE00010':['OW','Pixel Data'],
+  'FFFEE000':['','Item'],
+  'FFFEE00D':['','Item Delimitation Item'],
+  'FFFEE0DD':['','Sequence Delimitation Item'],
+};
+
+/* Overlay plane attributes (repeating group 6000-601E) resolved dynamically */
+function dictLookup(tag){
+  if (DICT[tag]) return DICT[tag];
+  const g = parseInt(tag.slice(0,4),16);
+  if (g >= 0x6000 && g <= 0x601E && (g & 1) === 0){
+    const e = tag.slice(4);
+    const m = {'0010':['US','Overlay Rows'],'0011':['US','Overlay Columns'],'0015':['IS','Number of Frames in Overlay'],
+      '0022':['LO','Overlay Description'],'0040':['CS','Overlay Type'],'0050':['SS','Overlay Origin'],
+      '0051':['US','Image Frame Origin'],'0100':['US','Overlay Bits Allocated'],'0102':['US','Overlay Bit Position'],
+      '3000':['OW','Overlay Data'],'1500':['LO','Overlay Label']}[e];
+    if (m) return m;
+  }
+  if ((g & 1) === 1) return ['UN','Private tag'];
+  if (tag.endsWith('0000')) return ['UL','Group Length'];
+  return null;
+}
+
+/* ═══════════════════ Transfer syntaxes ═══════════════════ */
+const TS = {
+  '1.2.840.10008.1.2':      {name:'Implicit VR Little Endian', explicit:false, big:false},
+  '1.2.840.10008.1.2.1':    {name:'Explicit VR Little Endian', explicit:true,  big:false},
+  '1.2.840.10008.1.2.1.99': {name:'Deflated Explicit VR LE',   explicit:true,  big:false, deflated:true},
+  '1.2.840.10008.1.2.2':    {name:'Explicit VR Big Endian',    explicit:true,  big:true},
+  '1.2.840.10008.1.2.5':    {name:'RLE Lossless',              explicit:true,  big:false, encap:'rle'},
+  '1.2.840.10008.1.2.4.50': {name:'JPEG Baseline (Process 1)', explicit:true,  big:false, encap:'jpeg'},
+  '1.2.840.10008.1.2.4.51': {name:'JPEG Extended (Process 2 & 4)', explicit:true, big:false, encap:'jpeg'},
+  '1.2.840.10008.1.2.4.57': {name:'JPEG Lossless (Process 14)',explicit:true,  big:false, encap:'jll'},
+  '1.2.840.10008.1.2.4.70': {name:'JPEG Lossless SV1 (Process 14)', explicit:true, big:false, encap:'jll'},
+  '1.2.840.10008.1.2.4.80': {name:'JPEG-LS Lossless',          explicit:true,  big:false, encap:'unsupported'},
+  '1.2.840.10008.1.2.4.81': {name:'JPEG-LS Near-Lossless',     explicit:true,  big:false, encap:'unsupported'},
+  '1.2.840.10008.1.2.4.90': {name:'JPEG 2000 Lossless',        explicit:true,  big:false, encap:'unsupported'},
+  '1.2.840.10008.1.2.4.91': {name:'JPEG 2000',                 explicit:true,  big:false, encap:'unsupported'},
+  '1.2.840.10008.1.2.4.100':{name:'MPEG2 Main Profile',        explicit:true,  big:false, encap:'video', mime:'video/mpeg'},
+  '1.2.840.10008.1.2.4.101':{name:'MPEG2 High Level',          explicit:true,  big:false, encap:'video', mime:'video/mpeg'},
+  '1.2.840.10008.1.2.4.102':{name:'MPEG-4 AVC/H.264 High Profile', explicit:true, big:false, encap:'video', mime:'video/mp4'},
+  '1.2.840.10008.1.2.4.103':{name:'MPEG-4 AVC/H.264 BD-compatible', explicit:true, big:false, encap:'video', mime:'video/mp4'},
+  '1.2.840.10008.1.2.4.104':{name:'MPEG-4 AVC/H.264 2D Video', explicit:true, big:false, encap:'video', mime:'video/mp4'},
+  '1.2.840.10008.1.2.4.105':{name:'MPEG-4 AVC/H.264 3D Video', explicit:true, big:false, encap:'video', mime:'video/mp4'},
+  '1.2.840.10008.1.2.4.106':{name:'MPEG-4 AVC/H.264 Stereo',   explicit:true, big:false, encap:'video', mime:'video/mp4'},
+  '1.2.840.10008.1.2.4.107':{name:'HEVC/H.265 Main Profile',   explicit:true, big:false, encap:'video', mime:'video/mp4'},
+  '1.2.840.10008.1.2.4.108':{name:'HEVC/H.265 Main 10 Profile',explicit:true, big:false, encap:'video', mime:'video/mp4'},
+};
+
+/* ═══════════════════ SOP classes (RadiAnt-supported set) ═══════════════════ */
+const SOP_CLASSES = {
+  '1.2.840.10008.5.1.4.1.1.1':        {name:'Computed Radiography (CR) Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.1.1':      {name:'Digital X-Ray (DX) Image Storage — For Presentation', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.1.1.1':    {name:'Digital X-Ray (DX) Image Storage — For Processing', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.1.2':      {name:'Digital Mammography (MG) Image Storage — For Presentation', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.1.2.1':    {name:'Digital Mammography (MG) Image Storage — For Processing', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.1.3':      {name:'Digital Intra-Oral X-Ray Image Storage — For Presentation', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.1.3.1':    {name:'Digital Intra-Oral X-Ray Image Storage — For Processing', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.2':        {name:'CT Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.2.1':      {name:'Enhanced CT Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.2.2':      {name:'Legacy Converted Enhanced CT Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.3':        {name:'Ultrasound Multi-frame Image Storage (Retired)', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.3.1':      {name:'Ultrasound Multi-frame Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.4':        {name:'MR Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.4.1':      {name:'Enhanced MR Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.4.2':      {name:'MR Spectroscopy Storage', cat:'other'},
+  '1.2.840.10008.5.1.4.1.1.4.3':      {name:'Enhanced MR Color Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.4.4':      {name:'Legacy Converted Enhanced MR Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.5':        {name:'Nuclear Medicine Image Storage (Retired)', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.6':        {name:'Ultrasound Image Storage (Retired)', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.6.1':      {name:'Ultrasound Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.6.2':      {name:'Enhanced US Volume Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.7':        {name:'Secondary Capture (SC) Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.7.1':      {name:'Multi-frame Single Bit SC Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.7.2':      {name:'Multi-frame Grayscale Byte SC Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.7.3':      {name:'Multi-frame Grayscale Word SC Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.7.4':      {name:'Multi-frame True Color SC Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.12.1':     {name:'X-Ray Angiographic (XA) Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.12.1.1':   {name:'Enhanced XA Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.12.2':     {name:'X-Ray Radiofluoroscopic (RF) Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.12.2.1':   {name:'Enhanced XRF Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.12.3':     {name:'X-Ray Angiographic Bi-Plane Image Storage (Retired)', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.13.1.3':   {name:'Breast Tomosynthesis Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.14.1':     {name:'Intravascular OCT Image Storage — For Presentation', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.14.2':     {name:'Intravascular OCT Image Storage — For Processing', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.20':       {name:'Nuclear Medicine (NM) Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.66':       {name:'Raw Data Storage', cat:'other'},
+  '1.2.840.10008.5.1.4.1.1.77.1.1':   {name:'VL Endoscopic Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.77.1.1.1': {name:'Video Endoscopic Image Storage', cat:'video'},
+  '1.2.840.10008.5.1.4.1.1.77.1.2':   {name:'VL Microscopic Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.77.1.2.1': {name:'Video Microscopic Image Storage', cat:'video'},
+  '1.2.840.10008.5.1.4.1.1.77.1.3':   {name:'VL Slide-Coordinates Microscopic Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.77.1.4':   {name:'VL Photographic Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.77.1.4.1': {name:'Video Photographic Image Storage', cat:'video'},
+  '1.2.840.10008.5.1.4.1.1.77.1.5.1': {name:'Ophthalmic Photography 8 Bit Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.77.1.5.2': {name:'Ophthalmic Photography 16 Bit Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.77.1.5.4': {name:'Ophthalmic Tomography Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.104.1':    {name:'Encapsulated PDF Storage', cat:'pdf'},
+  '1.2.840.10008.5.1.4.1.1.128':      {name:'Positron Emission Tomography (PET) Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.128.1':    {name:'Legacy Converted Enhanced PET Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.130':      {name:'Enhanced PET Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.481.1':    {name:'RT Image Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.481.2':    {name:'RT Dose Storage', cat:'image'},
+  '1.2.840.10008.5.1.4.1.1.481.3':    {name:'RT Structure Set Storage', cat:'other'},
+  '1.2.840.10008.5.1.4.1.1.481.5':    {name:'RT Plan Storage', cat:'other'},
+  '1.2.840.10008.5.1.4.1.1.9.1.1':    {name:'12-lead ECG Waveform Storage', cat:'other'},
+  '1.2.840.10008.5.1.4.1.1.11.1':     {name:'Grayscale Softcopy Presentation State Storage', cat:'other'},
+  '1.2.840.10008.5.1.4.1.1.88.11':    {name:'Basic Text SR Storage', cat:'other'},
+  '1.2.840.10008.5.1.4.1.1.88.22':    {name:'Enhanced SR Storage', cat:'other'},
+  '1.2.840.10008.5.1.4.1.1.88.33':    {name:'Comprehensive SR Storage', cat:'other'},
+  '1.2.840.10008.5.1.4.1.1.88.59':    {name:'Key Object Selection Document Storage', cat:'other'},
+  '1.2.840.10008.1.3.10':             {name:'Media Storage Directory Storage (DICOMDIR)', cat:'other'},
+};
+
+const LONG_VRS = new Set(['OB','OW','OF','OD','OL','OV','SQ','UC','UR','UT','UN']);
+const STRING_VRS = new Set(['AE','AS','CS','DA','DS','DT','IS','LO','LT','PN','SH','ST','TM','UC','UI','UR','UT']);
+const BINARY_NUM_VRS = { US:2, SS:2, UL:4, SL:4, FL:4, FD:8, OW:2, OL:4, OF:4, OD:8, AT:2, UV:8, SV:8, OV:8 };
+
+
+/* ═══════════════════════ Parser ═══════════════════════ */
+/* Element model:
+   { tag:'GGGGEEEE', vr, val:Uint8Array|null,  — value bytes, normalized to little-endian
+     sq:[Map,...]|null,                        — sequence items (each a dataset Map)
+     encaps:{bot:number[], frags:Uint8Array[]}|null }  — encapsulated pixel data      */
+
+function newEl(tag, vr, val){ return {tag, vr, val: val||null, sq:null, encaps:null}; }
+
+function tagStr(g,e){ return (g<<16|e).toString(16).toUpperCase().padStart(8,'0'); }
+
+function swapBytes(u8, width){
+  const out = new Uint8Array(u8.length);
+  for (let i=0; i+width<=u8.length; i+=width)
+    for (let j=0;j<width;j++) out[i+j]=u8[i+width-1-j];
+  return out;
+}
+
+class DReader {
+  constructor(u8, pos, little){ this.u8=u8; this.dv=new DataView(u8.buffer,u8.byteOffset,u8.byteLength); this.pos=pos||0; this.little=little!==false; }
+  get remaining(){ return this.u8.length - this.pos; }
+  u16(){ const v=this.dv.getUint16(this.pos,this.little); this.pos+=2; return v; }
+  u32(){ const v=this.dv.getUint32(this.pos,this.little); this.pos+=4; return v; }
+  bytes(n){ const b=this.u8.subarray(this.pos,this.pos+n); this.pos+=n; return b; }
+  peekU16(off){ return this.dv.getUint16(this.pos+(off||0),this.little); }
+}
+
+function isVRChars(a,b){
+  return a>=65 && a<=90 && b>=65 && b<=90;
+}
+
+/* Parse one dataset until `end` (byte offset) or an item/sequence delimiter.
+   ctx = {explicit, big}. Returns Map tag→element. */
+function parseDataset(r, ctx, end, insideItem){
+  const ds = new Map();
+  while (r.pos < end && r.remaining >= 8){
+    const g = r.u16(), e = r.u16();
+    const tag = tagStr(g,e);
+    if (g === 0xFFFE){
+      const len = r.u32();
+      if (e === 0xE00D || e === 0xE0DD){ return ds; }      // delimiter — caller consumed
+      // stray item outside SQ: skip
+      if (len !== 0xFFFFFFFF) r.pos += len;
+      continue;
+    }
+    let vr, len;
+    if (ctx.explicit){
+      const c1=r.u8c(), c2=r.u8c();
+      vr = String.fromCharCode(c1,c2);
+      if (LONG_VRS.has(vr)){ r.pos+=2; len=r.u32(); }
+      else { len = r.u16(); }
+    } else {
+      len = r.u32();
+      const d = dictLookup(tag);
+      vr = d ? d[0] : (len===0xFFFFFFFF ? 'SQ' : 'UN');
+      if (!vr) vr='UN';
+    }
+    const el = newEl(tag, vr);
+
+    if (tag === '7FE00010' && len === 0xFFFFFFFF){
+      // Encapsulated pixel data: BOT item + fragments
+      el.encaps = {bot:[], frags:[]};
+      let first = true, fragOffset = 0;
+      while (r.remaining >= 8){
+        const ig=r.u16(), ie=r.u16(), il=r.u32();
+        if (ig===0xFFFE && ie===0xE0DD) break;
+        if (ig!==0xFFFE || ie!==0xE000) throw new Error('Malformed encapsulated pixel data');
+        const data = r.bytes(il);
+        if (first){
+          first=false;
+          // Basic Offset Table (may be empty)
+          const dv=new DataView(data.buffer,data.byteOffset,data.byteLength);
+          for (let i=0;i+4<=data.length;i+=4) el.encaps.bot.push(dv.getUint32(i,true));
+        } else {
+          el.encaps.fragOffsets = el.encaps.fragOffsets||[];
+          el.encaps.fragOffsets.push(fragOffset);
+          el.encaps.frags.push(data);
+          fragOffset += 8 + il;
+        }
+      }
+      ds.set(tag, el);
+      continue;
+    }
+
+    if (vr === 'SQ' || (vr==='UN' && len===0xFFFFFFFF)){
+      el.vr = 'SQ';
+      el.sq = [];
+      const sqEnd = (len===0xFFFFFFFF) ? r.u8.length : r.pos + len;
+      const itemCtx = (vr==='UN') ? {explicit:false, big:false} : ctx;  // undefined-length UN = implicit LE
+      while (r.pos < sqEnd && r.remaining >= 8){
+        const ig=r.u16(), ie=r.u16(), il=r.u32();
+        if (ig===0xFFFE && ie===0xE0DD) break;                    // sequence delimiter
+        if (ig!==0xFFFE || ie!==0xE000){ r.pos = sqEnd; break; }  // malformed: bail
+        const itemEnd = (il===0xFFFFFFFF) ? sqEnd : r.pos + il;
+        el.sq.push(parseDataset(r, itemCtx, itemEnd, true));
+        if (il!==0xFFFFFFFF && r.pos < itemEnd) r.pos = itemEnd;
+      }
+      if (len!==0xFFFFFFFF && r.pos < sqEnd) r.pos = sqEnd;
+      ds.set(tag, el);
+      continue;
+    }
+
+    if (len === 0xFFFFFFFF) throw new Error('Undefined length on non-SQ element '+tag);
+    let val = r.bytes(Math.min(len, r.remaining));
+    // Normalize big-endian binary values to little-endian at parse time
+    if (ctx.big){
+      const w = BINARY_NUM_VRS[vr];
+      if (w && w>1) val = swapBytes(val, w);
+    }
+    el.val = val;
+    ds.set(tag, el);
+  }
+  return ds;
+}
+
+DReader.prototype.u8c = function(){ return this.u8[this.pos++]; };
+
+async function inflateRaw(u8){
+  const stream = new Blob([u8]).stream().pipeThrough(new DecompressionStream('deflate-raw'));
+  return new Uint8Array(await new Response(stream).arrayBuffer());
+}
+
+/* Top-level: parse a whole file (async because of deflate). */
+async function parseDicomFile(buffer, name){
+  let u8 = new Uint8Array(buffer);
+  const f = { name, size:u8.length, meta:new Map(), ds:new Map(), tsUID:'1.2.840.10008.1.2.1', modified:false };
+
+  let pos = 0;
+  const hasPreamble = u8.length>132 && u8[128]===0x44 && u8[129]===0x49 && u8[130]===0x43 && u8[131]===0x4D;
+  if (hasPreamble){
+    // File meta group: always explicit VR little endian
+    const r = new DReader(u8, 132, true);
+    while (r.remaining>=8 && r.peekU16(0)===0x0002){
+      const g=r.u16(), e=r.u16();
+      const vr=String.fromCharCode(r.u8c(),r.u8c());
+      let len; if (LONG_VRS.has(vr)){ r.pos+=2; len=r.u32(); } else len=r.u16();
+      f.meta.set(tagStr(g,e), newEl(tagStr(g,e), vr, r.bytes(len)));
+    }
+    pos = r.pos;
+    const tsEl = f.meta.get('00020010');
+    if (tsEl) f.tsUID = str(tsEl.val).trim();
+  } else {
+    // Headerless: sniff explicit vs implicit little endian
+    if (u8.length < 8) throw new Error('Not a DICOM file (too short)');
+    const expl = isVRChars(u8[4],u8[5]);
+    f.tsUID = expl ? '1.2.840.10008.1.2.1' : '1.2.840.10008.1.2';
+  }
+
+  let ts = TS[f.tsUID] || {name:'Unknown ('+f.tsUID+')', explicit:true, big:false};
+  f.tsInfo = ts;
+
+  let body = u8.subarray(pos);
+  if (ts.deflated){
+    body = await inflateRaw(body);
+  }
+  const r2 = new DReader(body, 0, !ts.big);
+  f.ds = parseDataset(r2, {explicit:ts.explicit, big:ts.big}, body.length, false);
+
+  f.sopClassUID = dsStr(f.ds,'00080016');
+  f.sopInfo = SOP_CLASSES[f.sopClassUID] || null;
+  return f;
+}
+
+/* ═══════════════════ Dataset value helpers ═══════════════════ */
+const utf8dec = new TextDecoder('utf-8', {fatal:false});
+function str(u8){ if(!u8) return ''; let end=u8.length; while(end>0 && (u8[end-1]===0||u8[end-1]===32)) end--; return utf8dec.decode(u8.subarray(0,end)); }
+function dsEl(ds,tag){ return ds.get(tag)||null; }
+function dsStr(ds,tag){ const el=ds.get(tag); return el&&el.val ? str(el.val).trim() : ''; }
+function dsInt(ds,tag,dflt){
+  const el=ds.get(tag); if(!el||!el.val||!el.val.length) return dflt;
+  const dv=new DataView(el.val.buffer,el.val.byteOffset,el.val.byteLength);
+  if (el.vr==='US') return dv.getUint16(0,true);
+  if (el.vr==='SS') return dv.getInt16(0,true);
+  if (el.vr==='UL') return dv.getUint32(0,true);
+  if (el.vr==='SL') return dv.getInt32(0,true);
+  const n = parseInt(str(el.val),10);
+  return isNaN(n)?dflt:n;
+}
+function dsFloats(ds,tag){
+  const el=ds.get(tag); if(!el||!el.val||!el.val.length) return [];
+  const dv=new DataView(el.val.buffer,el.val.byteOffset,el.val.byteLength);
+  if (el.vr==='FL'){ const a=[];for(let i=0;i+4<=el.val.length;i+=4)a.push(dv.getFloat32(i,true));return a; }
+  if (el.vr==='FD'){ const a=[];for(let i=0;i+8<=el.val.length;i+=8)a.push(dv.getFloat64(i,true));return a; }
+  if (el.vr==='US'){ const a=[];for(let i=0;i+2<=el.val.length;i+=2)a.push(dv.getUint16(i,true));return a; }
+  if (el.vr==='SS'){ const a=[];for(let i=0;i+2<=el.val.length;i+=2)a.push(dv.getInt16(i,true));return a; }
+  return str(el.val).split('\\').map(s=>parseFloat(s)).filter(n=>!isNaN(n));
+}
+function dsFloat(ds,tag,dflt){ const a=dsFloats(ds,tag); return a.length?a[0]:dflt; }
+
+/* Display a value for the tag table */
+function displayValue(el){
+  if (el.sq) return '⧉ sequence · '+el.sq.length+' item'+(el.sq.length===1?'':'s');
+  if (el.encaps) return '⧉ encapsulated · '+el.encaps.frags.length+' fragment'+(el.encaps.frags.length===1?'':'s');
+  if (!el.val) return '';
+  const vr=el.vr;
+  if (STRING_VRS.has(vr)) {
+    const s = str(el.val);
+    return s.length>160 ? s.slice(0,160)+'…' : s;
+  }
+  const dv=new DataView(el.val.buffer,el.val.byteOffset,el.val.byteLength);
+  const n=el.val.length;
+  const join=(cnt,w,fn)=>{ const a=[]; const m=Math.min(cnt, 12); for(let i=0;i<m;i++)a.push(fn(i*w)); return a.join('\\')+(cnt>12?' …('+cnt+' values)':''); };
+  if (vr==='US') return join(n>>1,2,o=>dv.getUint16(o,true));
+  if (vr==='SS') return join(n>>1,2,o=>dv.getInt16(o,true));
+  if (vr==='UL') return join(n>>2,4,o=>dv.getUint32(o,true));
+  if (vr==='SL') return join(n>>2,4,o=>dv.getInt32(o,true));
+  if (vr==='FL') return join(n>>2,4,o=>+dv.getFloat32(o,true).toPrecision(7));
+  if (vr==='FD') return join(n>>3,8,o=>+dv.getFloat64(o,true).toPrecision(10));
+  if (vr==='AT') { const a=[]; for(let i=0;i+4<=n;i+=4) a.push('('+dv.getUint16(i,true).toString(16).padStart(4,'0')+','+dv.getUint16(i+2,true).toString(16).padStart(4,'0')+')'); return a.join(' '); }
+  // OB/OW/UN etc: hex preview
+  let hex=''; for(let i=0;i<Math.min(n,16);i++) hex+=el.val[i].toString(16).padStart(2,'0')+' ';
+  return hex+(n>16?'… ('+fmtBytes(n)+')':'');
+}
+function fmtBytes(n){ return n>1048576 ? (n/1048576).toFixed(1)+' MB' : n>1024 ? (n/1024).toFixed(1)+' KB' : n+' B'; }
+
+/* Encode a user-entered string into value bytes for a VR. Throws on bad input. */
+const utf8enc = new TextEncoder();
+function encodeValue(vr, text){
+  if (STRING_VRS.has(vr)){
+    let b = utf8enc.encode(text);
+    if (b.length & 1){
+      const pad = vr==='UI' ? 0 : 32;
+      const nb = new Uint8Array(b.length+1); nb.set(b); nb[b.length]=pad; b=nb;
+    }
+    return b;
+  }
+  const parts = text.trim()===''?[]:text.trim().split('\\').map(s=>s.trim());
+  const num = parts.map(s=>{ const v=parseFloat(s); if(isNaN(v)) throw new Error('"'+s+'" is not a number'); return v; });
+  let buf, dv;
+  switch(vr){
+    case 'US': buf=new ArrayBuffer(num.length*2); dv=new DataView(buf); num.forEach((v,i)=>dv.setUint16(i*2,v,true)); break;
+    case 'SS': buf=new ArrayBuffer(num.length*2); dv=new DataView(buf); num.forEach((v,i)=>dv.setInt16(i*2,v,true)); break;
+    case 'UL': buf=new ArrayBuffer(num.length*4); dv=new DataView(buf); num.forEach((v,i)=>dv.setUint32(i*4,v,true)); break;
+    case 'SL': buf=new ArrayBuffer(num.length*4); dv=new DataView(buf); num.forEach((v,i)=>dv.setInt32(i*4,v,true)); break;
+    case 'FL': buf=new ArrayBuffer(num.length*4); dv=new DataView(buf); num.forEach((v,i)=>dv.setFloat32(i*4,v,true)); break;
+    case 'FD': buf=new ArrayBuffer(num.length*8); dv=new DataView(buf); num.forEach((v,i)=>dv.setFloat64(i*8,v,true)); break;
+    case 'AT': {
+      buf=new ArrayBuffer(parts.length*4); dv=new DataView(buf);
+      parts.forEach((p,i)=>{
+        const m=p.replace(/[(),]/g,'').match(/^([0-9a-fA-F]{4})[,\s]?([0-9a-fA-F]{4})$/) || p.match(/^([0-9a-fA-F]{4})([0-9a-fA-F]{4})$/);
+        if(!m) throw new Error('AT expects gggg,eeee');
+        dv.setUint16(i*4,parseInt(m[1],16),true); dv.setUint16(i*4+2,parseInt(m[2],16),true);
+      });
+      break;
+    }
+    case 'OB': case 'OW': case 'UN': {
+      const hex=text.replace(/[^0-9a-fA-F]/g,'');
+      if(hex.length&1) throw new Error('Odd number of hex digits');
+      const b=new Uint8Array(hex.length/2);
+      for(let i=0;i<b.length;i++)b[i]=parseInt(hex.substr(i*2,2),16);
+      return b;
+    }
+    default: throw new Error('VR '+vr+' is not editable');
+  }
+  return new Uint8Array(buf);
+}
+
+/* ═══════════════════════ Writer ═══════════════════════ */
+/* Serialize in-memory dataset back to a Part-10 file. Non-encapsulated implicit-VR
+   sources are written implicit; everything else explicit LE. Big-endian and deflated
+   sources are rewritten as Explicit VR Little Endian (values were normalized at parse). */
+const IMPLEMENTATION_UID = '2.25.842399621293581442759084237480129159';
+
+class DWriter {
+  constructor(){ this.chunks=[]; this.len=0; }
+  push(u8){ this.chunks.push(u8); this.len+=u8.length; }
+  u16(v){ const b=new Uint8Array(2); new DataView(b.buffer).setUint16(0,v,true); this.push(b); }
+  u32(v){ const b=new Uint8Array(4); new DataView(b.buffer).setUint32(0,v,true); this.push(b); }
+  tag(t){ this.u16(parseInt(t.slice(0,4),16)); this.u16(parseInt(t.slice(4),16)); }
+  ascii(s){ this.push(utf8enc.encode(s)); }
+  concat(){ const out=new Uint8Array(this.len); let o=0; for(const c of this.chunks){out.set(c,o);o+=c.length;} return out; }
+}
+
+function writeElement(w, el, explicit){
+  if (el.tag.endsWith('0000')) return;                     // drop group lengths
+  if (el.encaps){
+    w.tag(el.tag);
+    if (explicit){ w.ascii('OB'); w.u16(0); }
+    w.u32(0xFFFFFFFF);
+    w.tag('FFFEE000'); w.u32(0);                           // empty BOT
+    for (const frag of el.encaps.frags){
+      w.tag('FFFEE000'); w.u32(frag.length + (frag.length&1)); w.push(frag);
+      if (frag.length&1) w.push(new Uint8Array(1));
+    }
+    w.tag('FFFEE0DD'); w.u32(0);
+    return;
+  }
+  if (el.sq){
+    w.tag(el.tag);
+    if (explicit){ w.ascii('SQ'); w.u16(0); }
+    w.u32(0xFFFFFFFF);
+    for (const item of el.sq){
+      w.tag('FFFEE000'); w.u32(0xFFFFFFFF);
+      for (const child of item.values()) writeElement(w, child, explicit);
+      w.tag('FFFEE00D'); w.u32(0);
+    }
+    w.tag('FFFEE0DD'); w.u32(0);
+    return;
+  }
+  let val = el.val || new Uint8Array(0);
+  if (val.length & 1){                                      // ensure even length
+    const nb=new Uint8Array(val.length+1);
+    nb.set(val); nb[val.length] = STRING_VRS.has(el.vr) && el.vr!=='UI' ? 32 : 0;
+    val = nb;
+  }
+  w.tag(el.tag);
+  if (explicit){
+    let vr = el.vr && /^[A-Z]{2}$/.test(el.vr) ? el.vr : 'UN';
+    w.ascii(vr);
+    if (LONG_VRS.has(vr)){ w.u16(0); w.u32(val.length); }
+    else {
+      if (val.length > 0xFFFF){ // too long for short form: force UN long form
+        w.chunks.pop(); w.len-=2; w.ascii('UN'); w.u16(0); w.u32(val.length);
+      } else w.u16(val.length);
+    }
+  } else {
+    w.u32(val.length);
+  }
+  w.push(val);
+}
+
+function serializeFile(f){
+  const tsIn = TS[f.tsUID] || {explicit:true, big:false};
+  let outTS = f.tsUID, explicit = true;
+  if (tsIn.big || tsIn.deflated) outTS = '1.2.840.10008.1.2.1';
+  else if (!tsIn.explicit){ explicit = false; outTS = f.tsUID; }
+
+  // meta group
+  const mw = new DWriter();
+  const metaEls = [
+    newEl('00020001','OB', new Uint8Array([0,1])),
+    newEl('00020002','UI', encodeValue('UI', dsStr(f.ds,'00080016'))),
+    newEl('00020003','UI', encodeValue('UI', dsStr(f.ds,'00080018'))),
+    newEl('00020010','UI', encodeValue('UI', outTS)),
+    newEl('00020012','UI', encodeValue('UI', IMPLEMENTATION_UID)),
+    newEl('00020013','SH', encodeValue('SH','DCMVIEW_10')),
+  ];
+  for (const el of metaEls) writeElement(mw, el, true);
+  const metaBody = mw.concat();
+
+  const w = new DWriter();
+  w.push(new Uint8Array(128));
+  w.ascii('DICM');
+  // group length for meta
+  w.tag('00020000'); w.ascii('UL'); w.u16(4); w.u32(metaBody.length);
+  w.push(metaBody);
+  for (const el of f.ds.values()) writeElement(w, el, explicit);
+  return w.concat();
+}
+
+/* ═══════════════════ ZIP (store, no compression) ═══════════════════ */
+const CRC_TABLE = (()=>{ const t=new Uint32Array(256);
+  for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c = (c&1)?(0xEDB88320^(c>>>1)):(c>>>1); t[n]=c; } return t; })();
+function crc32(u8){ let c=0xFFFFFFFF; for(let i=0;i<u8.length;i++) c=CRC_TABLE[(c^u8[i])&0xFF]^(c>>>8); return (c^0xFFFFFFFF)>>>0; }
+
+function makeZip(files){ // files: [{name, data:Uint8Array}]
+  const w = new DWriter();
+  const central = [];
+  for (const file of files){
+    const nameB = utf8enc.encode(file.name);
+    const crc = crc32(file.data);
+    const off = w.len;
+    w.u32(0x04034b50); w.u16(20); w.u16(0x0800); w.u16(0); w.u16(0); w.u16(0);
+    w.u32(crc); w.u32(file.data.length); w.u32(file.data.length);
+    w.u16(nameB.length); w.u16(0);
+    w.push(nameB); w.push(file.data);
+    central.push({nameB, crc, size:file.data.length, off});
+  }
+  const cdStart = w.len;
+  for (const c of central){
+    w.u32(0x02014b50); w.u16(20); w.u16(20); w.u16(0x0800); w.u16(0); w.u16(0); w.u16(0);
+    w.u32(c.crc); w.u32(c.size); w.u32(c.size);
+    w.u16(c.nameB.length); w.u16(0); w.u16(0); w.u16(0); w.u16(0); w.u32(0); w.u32(c.off);
+    w.push(c.nameB);
+  }
+  const cdSize = w.len - cdStart;
+  w.u32(0x06054b50); w.u16(0); w.u16(0); w.u16(central.length); w.u16(central.length);
+  w.u32(cdSize); w.u32(cdStart); w.u16(0);
+  return w.concat();
+}
+
+/* ═══════════════════ UID generation ═══════════════════ */
+function genUID(){
+  // 2.25.<decimal of 128 random bits>
+  const bytes = crypto.getRandomValues(new Uint8Array(16));
+  let n = 0n;
+  for (const b of bytes) n = (n<<8n) | BigInt(b);
+  return '2.25.' + n.toString();
+}
+
+
+/* ═══════════════════════ Pixel decoders ═══════════════════════ */
+
+/* ── RLE Lossless (PackBits segments, DICOM PS3.5 Annex G) ── */
+function rleDecodeFrame(frag, rows, cols, samples, bytesPerSample){
+  const dv = new DataView(frag.buffer, frag.byteOffset, frag.byteLength);
+  const nseg = dv.getUint32(0, true);
+  const offsets = [];
+  for (let i=0;i<15;i++) offsets.push(dv.getUint32(4+i*4, true));
+  const segLen = rows*cols;
+  const segs = [];
+  for (let s=0;s<nseg;s++){
+    const start = offsets[s];
+    const end = (s+1<nseg && offsets[s+1]>0) ? offsets[s+1] : frag.length;
+    const seg = new Uint8Array(segLen);
+    let ip = start, op = 0;
+    while (ip < end && op < segLen){
+      let n = frag[ip++];
+      if (n > 127) n -= 256;
+      if (n >= 0){ for(let k=0;k<=n && ip<end;k++) seg[op++]=frag[ip++]; }
+      else if (n !== -128){ const b=frag[ip++]; for(let k=0;k<1-n && op<segLen;k++) seg[op++]=b; }
+    }
+    segs.push(seg);
+  }
+  // Compose little-endian native layout. Segment order: comp0 MSB..LSB, comp1 MSB..LSB, …
+  const out = new Uint8Array(segLen*samples*bytesPerSample);
+  for (let c=0;c<samples;c++){
+    for (let k=0;k<bytesPerSample;k++){
+      const seg = segs[c*bytesPerSample+k];
+      if (!seg) continue;
+      const byteInLE = bytesPerSample-1-k;
+      for (let px=0;px<segLen;px++)
+        out[px*samples*bytesPerSample + c*bytesPerSample + byteInLE] = seg[px];
+    }
+  }
+  return out;
+}
+
+/* ── JPEG Lossless (ITU T.81 process 14, incl. selection value 1) ── */
+function jpegLosslessDecode(data){
+  let pos = 0;
+  const u8 = ()=>data[pos++];
+  const u16 = ()=>((data[pos]<<8|data[pos+1]), pos+=2, (data[pos-2]<<8)|data[pos-1]);
+  if (u16() !== 0xFFD8) throw new Error('Missing SOI');
+  let precision=0, height=0, width=0, comps=[], restartInterval=0;
+  const huffTables = {};
+
+  function buildHuff(counts, symbols){
+    // map code (as string of bits length) via nested arrays: decode bit-by-bit
+    const root = {};
+    let code = 0, k = 0;
+    for (let len=1; len<=16; len++){
+      for (let i=0;i<counts[len-1];i++){
+        let node = root;
+        for (let b=len-1;b>0;b--){
+          const bit = (code>>b)&1;
+          node = node[bit] || (node[bit]={});
+        }
+        node[code&1] = symbols[k++];
+        code++;
+      }
+      code <<= 1;
+    }
+    return root;
+  }
+
+  let predictorSel=1, ptShift=0, scanComps=[];
+
+  for(;;){
+    if (pos >= data.length) throw new Error('Unexpected EOF');
+    let marker = u16();
+    if (marker === 0xFFC3){
+      u16(); precision=u8(); height=u16(); width=u16();
+      const n=u8();
+      for (let i=0;i<n;i++) comps.push({id:u8(), hv:u8(), tq:u8()});
+    } else if (marker === 0xFFC4){
+      let len = u16()-2;
+      while (len > 0){
+        const tcth = u8();
+        const counts=[]; let total=0;
+        for (let i=0;i<16;i++){ const c=u8(); counts.push(c); total+=c; }
+        const symbols=[]; for (let i=0;i<total;i++) symbols.push(u8());
+        huffTables[tcth & 0x0F] = buildHuff(counts, symbols);
+        len -= 17+total;
+      }
+    } else if (marker === 0xFFDD){
+      u16(); restartInterval = u16();
+    } else if (marker === 0xFFDA){
+      u16();
+      const ns=u8();
+      for (let i=0;i<ns;i++){ const cs=u8(); const t=u8(); scanComps.push({cs, table:(t>>4)&0x0F}); }
+      predictorSel=u8(); u8(); ptShift=u8()&0x0F;
+      break;
+    } else if ((marker & 0xFF00) !== 0xFF00){
+      throw new Error('Bad marker 0x'+marker.toString(16));
+    } else if (marker === 0xFFD9){
+      throw new Error('EOI before scan');
+    } else {
+      const len = u16(); pos += len-2;
+    }
+  }
+  if (!comps.length) throw new Error('SOF3 not found (not a lossless JPEG)');
+
+  // Bit reader with 0xFF00 byte stuffing
+  let bbuf=0, bcnt=0;
+  function readBit(){
+    if (bcnt === 0){
+      if (pos >= data.length) return 0;
+      let b = data[pos++];
+      if (b === 0xFF){
+        const b2 = data[pos++];
+        if (b2 !== 0x00){
+          if (b2 >= 0xD0 && b2 <= 0xD7){ b = data[pos++]; if (b===0xFF){ pos++; } } // shouldn't happen mid-read
+          else { pos -= 2; return 0; }
+        }
+      }
+      bbuf = b; bcnt = 8;
+    }
+    bcnt--;
+    return (bbuf >> bcnt) & 1;
+  }
+  function resetBits(){ bbuf=0; bcnt=0; }
+  function decodeHuff(root){
+    let node = root;
+    for (let i=0;i<16;i++){
+      node = node[readBit()];
+      if (node === undefined) throw new Error('Bad Huffman code');
+      if (typeof node === 'number') return node;
+    }
+    throw new Error('Huffman code too long');
+  }
+  function readDiff(t){
+    if (t === 0) return 0;
+    if (t === 16) return 32768;
+    let v = 0;
+    for (let i=0;i<t;i++) v = (v<<1) | readBit();
+    return v < (1 << (t-1)) ? v - (1<<t) + 1 : v;
+  }
+
+  const nc = scanComps.length;
+  const out = new Uint16Array(width*height*nc);
+  const defaultVal = 1 << (precision - ptShift - 1);
+  const tables = scanComps.map(sc=>huffTables[sc.table]);
+  let mcusUntilRestart = restartInterval || Infinity;
+  let restartPending = false;
+
+  for (let y=0;y<height;y++){
+    for (let x=0;x<width;x++){
+      for (let c=0;c<nc;c++){
+        const t = decodeHuff(tables[c]);
+        const diff = readDiff(t);
+        let pred;
+        const idx = (y*width+x)*nc + c;
+        if (restartPending || (y===0 && x===0)) pred = defaultVal;
+        else if (x === 0) pred = out[((y-1)*width)*nc + c];
+        else if (y === 0) pred = out[(x-1)*nc + c];
+        else {
+          const Ra = out[(y*width+x-1)*nc + c];
+          const Rb = out[((y-1)*width+x)*nc + c];
+          const Rc = out[((y-1)*width+x-1)*nc + c];
+          switch (predictorSel){
+            case 1: pred = Ra; break;
+            case 2: pred = Rb; break;
+            case 3: pred = Rc; break;
+            case 4: pred = Ra + Rb - Rc; break;
+            case 5: pred = Ra + ((Rb - Rc) >> 1); break;
+            case 6: pred = Rb + ((Ra - Rc) >> 1); break;
+            case 7: pred = (Ra + Rb) >> 1; break;
+            default: pred = Ra;
+          }
+        }
+        out[idx] = (pred + diff) & 0xFFFF;
+      }
+      if (restartPending) restartPending = false;
+      if (--mcusUntilRestart === 0){
+        mcusUntilRestart = restartInterval;
+        resetBits();
+        // skip RSTn marker
+        while (pos < data.length-1 && !(data[pos]===0xFF && data[pos+1]>=0xD0 && data[pos+1]<=0xD7)) pos++;
+        pos += 2;
+        restartPending = true;
+      }
+    }
+  }
+  if (ptShift){ for (let i=0;i<out.length;i++) out[i] <<= ptShift; }
+  return {width, height, precision, nc, data: out};
+}
+
+/* ── Browser JPEG decode (baseline / extended 8-bit) → RGBA ── */
+async function browserJpegDecode(frag){
+  const blob = new Blob([frag], {type:'image/jpeg'});
+  const bmp = await createImageBitmap(blob);
+  const cv = document.createElement('canvas');
+  cv.width = bmp.width; cv.height = bmp.height;
+  const ctx = cv.getContext('2d');
+  ctx.drawImage(bmp, 0, 0);
+  bmp.close();
+  return ctx.getImageData(0, 0, cv.width, cv.height);
+}
+
+/* ═══════════════ Frame context (Enhanced multiframe aware) ═══════════════ */
+function firstItem(ds, tag){
+  const el = ds.get(tag);
+  return el && el.sq && el.sq.length ? el.sq[0] : null;
+}
+function fgLookup(f, frameIdx, seqTag, valueTag, isFloat){
+  // Search per-frame FG, then shared FG for a nested functional-group value
+  const order = [];
+  const pf = f.ds.get('52009230');
+  if (pf && pf.sq && pf.sq[frameIdx]) order.push(pf.sq[frameIdx]);
+  const sh = f.ds.get('52009229');
+  if (sh && sh.sq && sh.sq[0]) order.push(sh.sq[0]);
+  for (const item of order){
+    const inner = firstItem(item, seqTag);
+    if (inner && inner.has(valueTag)){
+      return isFloat ? dsFloats(inner, valueTag) : dsStr(inner, valueTag);
+    }
+  }
+  return null;
+}
+
+function frameContext(f, frameIdx){
+  const ds = f.ds;
+  let slope = dsFloat(ds,'00281053', 1);
+  let intercept = dsFloat(ds,'00281052', 0);
+  let wc = dsFloats(ds,'00281050');
+  let ww = dsFloats(ds,'00281051');
+  let spacing = dsFloats(ds,'00280030');
+
+  const pvt = fgLookup(f, frameIdx, '00289145', '00281053', true);
+  if (pvt && pvt.length) slope = pvt[0];
+  const pvi = fgLookup(f, frameIdx, '00289145', '00281052', true);
+  if (pvi && pvi.length) intercept = pvi[0];
+  const fwc = fgLookup(f, frameIdx, '00289132', '00281050', true);
+  if (fwc && fwc.length) wc = fwc;
+  const fww = fgLookup(f, frameIdx, '00289132', '00281051', true);
+  if (fww && fww.length) ww = fww;
+  const fps = fgLookup(f, frameIdx, '00289110', '00280030', true);
+  if (fps && fps.length) spacing = fps;
+  if (!spacing.length) spacing = dsFloats(ds,'00181164');       // Imager Pixel Spacing
+  if (!spacing.length) spacing = dsFloats(ds,'30020011');       // RT Image Plane Pixel Spacing
+
+  // RT Dose grid scaling folds into the rescale slope
+  const dgs = dsFloat(ds,'3004000E', null);
+  if (dgs !== null) slope *= dgs;
+
+  return {slope, intercept, wc, ww, spacing};
+}
+
+/* ═══════════════ Image info + frame decoding ═══════════════ */
+function imageInfo(f){
+  if (f._info) return f._info;
+  const ds = f.ds;
+  const info = {
+    rows: dsInt(ds,'00280010',0),
+    cols: dsInt(ds,'00280011',0),
+    samples: dsInt(ds,'00280002',1),
+    photometric: dsStr(ds,'00280004') || 'MONOCHROME2',
+    bitsAllocated: dsInt(ds,'00280100',8),
+    bitsStored: dsInt(ds,'00280101', dsInt(ds,'00280100',8)),
+    highBit: dsInt(ds,'00280102', dsInt(ds,'00280101', dsInt(ds,'00280100',8))-1),
+    signed: dsInt(ds,'00280103',0) === 1,
+    planar: dsInt(ds,'00280006',0),
+    frames: Math.max(1, dsInt(ds,'00280008',1)),
+  };
+  f._info = info;
+  return info;
+}
+
+/* Extract raw little-endian bytes of one frame (native TS) */
+function nativeFrameBytes(f, i){
+  const el = f.ds.get('7FE00010') || f.ds.get('7FE00008');
+  if (!el || !el.val) return null;
+  const info = imageInfo(f);
+  if (info.bitsAllocated === 1){
+    // bit-packed (Multi-frame Single Bit SC): unpack to bytes
+    const npx = info.rows*info.cols;
+    const out = new Uint8Array(npx);
+    const bitBase = i*npx;
+    for (let p=0;p<npx;p++){
+      const bit = bitBase+p;
+      out[p] = (el.val[bit>>3] >> (bit&7)) & 1 ? 255 : 0;
+    }
+    return out;
+  }
+  const bytesPer = info.bitsAllocated >> 3;
+  const frameLen = info.rows*info.cols*info.samples*bytesPer;
+  const off = i*frameLen;
+  if (off+frameLen > el.val.length) return el.val.subarray(off); // tolerate truncation
+  return el.val.subarray(off, off+frameLen);
+}
+
+/* Fragments belonging to frame i of encapsulated pixel data */
+function encapFrameData(f, i){
+  const el = f.ds.get('7FE00010');
+  if (!el || !el.encaps) return null;
+  const {bot, frags, fragOffsets} = el.encaps;
+  const info = imageInfo(f);
+  const concat = (list)=>{
+    if (list.length===1) return list[0];
+    let n=0; for(const x of list) n+=x.length;
+    const out=new Uint8Array(n); let o=0;
+    for(const x of list){ out.set(x,o); o+=x.length; }
+    return out;
+  };
+  if (info.frames === 1) return concat(frags);
+  if (frags.length === info.frames) return frags[i];
+  if (bot.length === info.frames && fragOffsets){
+    const startOff = bot[i];
+    const endOff = i+1<bot.length ? bot[i+1] : Infinity;
+    const list = [];
+    for (let k=0;k<frags.length;k++)
+      if (fragOffsets[k] >= startOff && fragOffsets[k] < endOff) list.push(frags[k]);
+    if (list.length) return concat(list);
+  }
+  return frags[Math.min(i, frags.length-1)] || null;
+}
+
+/* Decode frame i → {kind:'gray', px:Float32Array, min, max} (rescaled values)
+   or {kind:'rgba', img:ImageData}. Cached per file. */
+async function decodeFrame(f, i){
+  f._cache = f._cache || new Map();
+  if (f._cache.has(i)) return f._cache.get(i);
+
+  const info = imageInfo(f);
+  const ts = f.tsInfo || {};
+  const npx = info.rows*info.cols;
+  const ctx = frameContext(f, i);
+  let result;
+
+  if (ts.encap === 'jpeg'){
+    const data = encapFrameData(f, i);
+    if (!data) throw new Error('No pixel data');
+    const img = await browserJpegDecode(data);
+    if (info.samples === 1 && info.photometric.startsWith('MONOCHROME')){
+      // grayscale JPEG decoded to RGBA — take R channel back to gray for W/L
+      const px = new Float32Array(npx);
+      for (let p=0;p<npx;p++) px[p] = img.data[p*4]*ctx.slope + ctx.intercept;
+      result = grayResult(px, info, ctx);
+    } else {
+      result = {kind:'rgba', img};
+    }
+  }
+  else if (ts.encap === 'jll'){
+    const data = encapFrameData(f, i);
+    if (!data) throw new Error('No pixel data');
+    const dec = jpegLosslessDecode(data);
+    if (dec.nc === 1){
+      const px = new Float32Array(npx);
+      const mask = (1<<info.bitsStored)-1, sign = 1<<(info.bitsStored-1);
+      for (let p=0;p<npx;p++){
+        let v = dec.data[p] & 0xFFFF;
+        if (info.signed){ v &= mask; if (v & sign) v -= (1<<info.bitsStored); }
+        px[p] = v*ctx.slope + ctx.intercept;
+      }
+      result = grayResult(px, info, ctx);
+    } else {
+      const img = new ImageData(info.cols, info.rows);
+      for (let p=0;p<npx;p++){
+        img.data[p*4]=dec.data[p*3]&0xFF; img.data[p*4+1]=dec.data[p*3+1]&0xFF;
+        img.data[p*4+2]=dec.data[p*3+2]&0xFF; img.data[p*4+3]=255;
+      }
+      result = {kind:'rgba', img};
+    }
+  }
+  else if (ts.encap === 'rle'){
+    const frag = encapFrameData(f, i);
+    if (!frag) throw new Error('No pixel data');
+    const bytes = rleDecodeFrame(frag, info.rows, info.cols, info.samples, info.bitsAllocated>>3);
+    result = nativeToResult(bytes, f, info, ctx, 0); // RLE output is pixel-interleaved
+  }
+  else if (ts.encap === 'video' || ts.encap === 'unsupported'){
+    throw new Error('TSNODECODE');
+  }
+  else {
+    const bytes = nativeFrameBytes(f, i);
+    if (!bytes) throw new Error('No pixel data');
+    result = nativeToResult(bytes, f, info, ctx, info.planar);
+  }
+
+  // simple cache cap
+  if (f._cache.size > 40) f._cache.clear();
+  f._cache.set(i, result);
+  return result;
+}
+
+function grayResult(px, info, ctx){
+  let min=Infinity, max=-Infinity;
+  for (let i=0;i<px.length;i++){ const v=px[i]; if(v<min)min=v; if(v>max)max=v; }
+  return {kind:'gray', px, min, max, mono1: info.photometric==='MONOCHROME1', ctx};
+}
+
+/* Convert native little-endian frame bytes into a display result */
+function nativeToResult(bytes, f, info, ctx, planar){
+  const npx = info.rows*info.cols;
+  const pm = info.photometric;
+
+  if (info.samples === 1 && (pm.startsWith('MONOCHROME') || pm==='PALETTE COLOR')){
+    // read integer samples
+    const px = new Float32Array(npx);
+    const raw = new Int32Array(npx);
+    const shift = info.highBit + 1 - info.bitsStored;
+    const mask = info.bitsStored>=32 ? -1 : (1<<info.bitsStored)-1;
+    const sign = info.bitsStored>=32 ? 0x80000000 : 1<<(info.bitsStored-1);
+    const dv = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+    for (let p=0;p<npx;p++){
+      let v;
+      if (info.bitsAllocated<=8) v = bytes[p];
+      else if (info.bitsAllocated===16) v = dv.getUint16(p*2, true);
+      else v = dv.getUint32(p*4, true);
+      if (shift) v = v >>> shift;
+      if (info.bitsStored < 32) v &= mask;
+      if (info.signed && (v & sign)) v = v - (info.bitsStored>=32 ? 0x100000000 : (1<<info.bitsStored));
+      raw[p] = v;
+      px[p] = v*ctx.slope + ctx.intercept;
+    }
+    if (pm === 'PALETTE COLOR'){
+      return paletteResult(raw, f, info);
+    }
+    return grayResult(px, info, ctx);
+  }
+
+  // color
+  const img = new ImageData(info.cols, info.rows);
+  const d = img.data;
+  if (pm === 'YBR_FULL_422' && !planar){
+    // Y1 Y2 Cb Cr groups
+    let bi=0;
+    for (let p=0;p<npx;p+=2){
+      const y1=bytes[bi], y2=bytes[bi+1], cb=bytes[bi+2], cr=bytes[bi+3]; bi+=4;
+      ybr2rgb(d, p*4, y1, cb, cr);
+      if (p+1<npx) ybr2rgb(d, (p+1)*4, y2, cb, cr);
+    }
+  } else if (pm.startsWith('YBR')){
+    for (let p=0;p<npx;p++){
+      const y = planar? bytes[p] : bytes[p*3];
+      const cb = planar? bytes[npx+p] : bytes[p*3+1];
+      const cr = planar? bytes[2*npx+p] : bytes[p*3+2];
+      ybr2rgb(d, p*4, y, cb, cr);
+    }
+  } else {
+    // RGB
+    for (let p=0;p<npx;p++){
+      d[p*4]   = planar? bytes[p]       : bytes[p*3];
+      d[p*4+1] = planar? bytes[npx+p]   : bytes[p*3+1];
+      d[p*4+2] = planar? bytes[2*npx+p] : bytes[p*3+2];
+      d[p*4+3] = 255;
+    }
+  }
+  return {kind:'rgba', img};
+}
+
+function ybr2rgb(d, o, y, cb, cr){
+  d[o]   = Math.max(0, Math.min(255, y + 1.402*(cr-128)));
+  d[o+1] = Math.max(0, Math.min(255, y - 0.344136*(cb-128) - 0.714136*(cr-128)));
+  d[o+2] = Math.max(0, Math.min(255, y + 1.772*(cb-128)));
+  d[o+3] = 255;
+}
+
+function paletteResult(raw, f, info){
+  const ds = f.ds;
+  const lut = (descTag, dataTag)=>{
+    const desc = dsFloats(ds, descTag);
+    const el = ds.get(dataTag);
+    if (!desc.length || !el || !el.val) return null;
+    let n = desc[0]===0 ? 65536 : desc[0];
+    const first = desc[1]|0, bits = desc[2];
+    const entryBytes = el.val.length / n >= 2 ? 2 : 1;
+    const dv = new DataView(el.val.buffer, el.val.byteOffset, el.val.byteLength);
+    const get = (i)=>{
+      i = Math.max(0, Math.min(n-1, i));
+      let v = entryBytes===2 ? dv.getUint16(i*2,true) : el.val[i];
+      return bits>8 || entryBytes===2 ? v>>8 : v;
+    };
+    return {first, get};
+  };
+  const r = lut('00281101','00281201'), g = lut('00281102','00281202'), b = lut('00281103','00281203');
+  const img = new ImageData(info.cols, info.rows);
+  const d = img.data;
+  for (let p=0;p<raw.length;p++){
+    const v = raw[p];
+    d[p*4]   = r ? r.get(v - r.first) : v&0xFF;
+    d[p*4+1] = g ? g.get(v - g.first) : v&0xFF;
+    d[p*4+2] = b ? b.get(v - b.first) : v&0xFF;
+    d[p*4+3] = 255;
+  }
+  return {kind:'rgba', img};
+}
+
+
+/* ═══════════════════════ Viewer state & rendering ═══════════════════════ */
+const $ = id => document.getElementById(id);
+
+const state = {
+  files: [],            // all loaded parsed files
+  series: [],           // [{key, desc, modality, files:[...]}]
+  seriesIdx: -1,
+  instIdx: 0,
+  frame: 0,
+  wc: null, ww: null,   // active window (null = derive)
+  wlSource: 'file',     // 'file' | 'auto' | 'full' | manual after drag
+  wlIndex: 0,           // which of the file's WC/WW pairs
+  invert: false,
+  rotation: 0,          // 0,90,180,270
+  flipH: false, flipV: false,
+  zoom: 1, panX: 0, panY: 0, fitted: false,
+  tool: 'wl',
+  playing: false,
+  showText: true,
+  showOverlays: true,
+  measures: [],         // [{x1,y1,x2,y2}] in image coords
+  pdfURL: null, videoURL: null,
+};
+
+const vcanvas = $('vcanvas'), vctx = vcanvas.getContext('2d');
+const acanvas = $('anno-canvas'), actx = acanvas.getContext('2d');
+const offscreen = document.createElement('canvas');
+const offctx = offscreen.getContext('2d');
+
+function curSeries(){ return state.series[state.seriesIdx] || null; }
+function curFile(){ const s=curSeries(); return s ? s.files[state.instIdx] : null; }
+
+function resizeCanvases(){
+  const vp = $('viewport');
+  const w = vp.clientWidth, h = vp.clientHeight;
+  if (vcanvas.width!==w || vcanvas.height!==h){
+    vcanvas.width=w; vcanvas.height=h;
+    acanvas.width=w; acanvas.height=h;
+    if (!state.fitted) fitToWindow();
+    render();
+  }
+}
+new ResizeObserver(resizeCanvases).observe($('viewport'));
+
+function fitToWindow(){
+  const f = curFile(); if (!f) return;
+  const info = imageInfo(f);
+  if (!info.rows || !info.cols) return;
+  const rot = state.rotation % 180 !== 0;
+  const iw = rot ? info.rows : info.cols, ih = rot ? info.cols : info.rows;
+  const scale = Math.min(vcanvas.width/iw, vcanvas.height/ih) * 0.98;
+  state.zoom = scale > 0 ? scale : 1;
+  state.panX = 0; state.panY = 0;
+  state.fitted = true;
+}
+
+/* Active window values for the current frame */
+function activeWindow(f, res){
+  if (state.wc !== null) return [state.wc, state.ww];
+  const ctx = res.ctx || frameContext(f, state.frame);
+  if (state.wlSource === 'file' && ctx.wc.length && ctx.ww.length){
+    const i = Math.min(state.wlIndex, ctx.wc.length-1);
+    if (isFinite(ctx.wc[i]) && ctx.ww[i] > 0) return [ctx.wc[i], ctx.ww[i]];
+  }
+  if (state.wlSource === 'full' || state.wlSource === 'auto' || true){
+    const min = res.min, max = res.max;
+    return [(min+max)/2, Math.max(1, max-min)];
+  }
+}
+
+/* Paint decoded result → offscreen canvas at native resolution */
+function paintResult(f, res){
+  const info = imageInfo(f);
+  offscreen.width = info.cols; offscreen.height = info.rows;
+  if (res.kind === 'rgba'){
+    let img = res.img;
+    if (state.invert){
+      const c = new ImageData(new Uint8ClampedArray(img.data), img.width, img.height);
+      for (let i=0;i<c.data.length;i+=4){ c.data[i]=255-c.data[i]; c.data[i+1]=255-c.data[i+1]; c.data[i+2]=255-c.data[i+2]; }
+      img = c;
+    }
+    offctx.putImageData(img, 0, 0);
+    return null;
+  }
+  const [wc, ww] = activeWindow(f, res);
+  const img = offctx.createImageData(info.cols, info.rows);
+  const d = img.data, px = res.px;
+  const lo = wc - 0.5 - (ww-1)/2, range = Math.max(1e-6, ww-1);
+  const flip = res.mono1 !== state.invert;   // MONOCHROME1 XOR user invert
+  for (let p=0;p<px.length;p++){
+    let y = (px[p]-lo)/range*255;
+    y = y<0?0 : y>255?255 : y;
+    if (flip) y = 255-y;
+    d[p*4]=d[p*4+1]=d[p*4+2]=y; d[p*4+3]=255;
+  }
+  offctx.putImageData(img, 0, 0);
+  drawDicomOverlays(f, info);
+  return [wc, ww];
+}
+
+/* DICOM overlay planes (group 60xx) drawn onto the offscreen canvas */
+function drawDicomOverlays(f, info){
+  if (!state.showOverlays) return;
+  for (let g=0x6000; g<=0x601E; g+=2){
+    const gs = g.toString(16).toUpperCase().padStart(4,'0');
+    const dataEl = f.ds.get(gs+'3000');
+    if (!dataEl || !dataEl.val) continue;
+    const orows = dsInt(f.ds, gs+'0010', 0), ocols = dsInt(f.ds, gs+'0011', 0);
+    if (!orows || !ocols) continue;
+    const originEl = f.ds.get(gs+'0050');
+    let or0=1, oc0=1;
+    if (originEl && originEl.val && originEl.val.length>=4){
+      const dv=new DataView(originEl.val.buffer, originEl.val.byteOffset);
+      or0=dv.getInt16(0,true); oc0=dv.getInt16(2,true);
+    }
+    const oimg = offctx.getImageData(0,0,info.cols,info.rows);
+    const d = oimg.data;
+    for (let y=0;y<orows;y++){
+      const iy = y + or0 - 1;
+      if (iy<0||iy>=info.rows) continue;
+      for (let x=0;x<ocols;x++){
+        const bit = y*ocols+x;
+        if (!((dataEl.val[bit>>3] >> (bit&7)) & 1)) continue;
+        const ix = x + oc0 - 1;
+        if (ix<0||ix>=info.cols) continue;
+        const o=(iy*info.cols+ix)*4;
+        d[o]=102; d[o+1]=217; d[o+2]=239;
+      }
+    }
+    offctx.putImageData(oimg,0,0);
+  }
+}
+
+let renderPending = false;
+async function render(){
+  if (renderPending) return;
+  renderPending = true;
+  requestAnimationFrame(async ()=>{
+    renderPending = false;
+    await renderNow();
+  });
+}
+
+async function renderNow(){
+  const f = curFile();
+  vctx.setTransform(1,0,0,1,0,0);
+  vctx.fillStyle = '#000';
+  vctx.fillRect(0,0,vcanvas.width,vcanvas.height);
+  actx.clearRect(0,0,acanvas.width,acanvas.height);
+  clearSpecialViews();
+
+  if (!f){ $('vp-msg').style.display=''; setOverlayText(null); return; }
+  $('vp-msg').style.display='none';
+
+  // Non-image handling
+  const cat = f.sopInfo ? f.sopInfo.cat : 'image';
+  if (cat === 'pdf'){ showPDF(f); setOverlayText(f, null, null); updateFramebar(f); return; }
+  if (f.tsInfo && f.tsInfo.encap === 'video'){ showVideo(f); setOverlayText(f, null, null); updateFramebar(f); return; }
+
+  const info = imageInfo(f);
+  if (!info.rows || !info.cols || (!f.ds.has('7FE00010') && !f.ds.has('7FE00008'))){
+    showMessage('📄', (f.sopInfo?f.sopInfo.name:'This object')+'<br>has no displayable pixel data.<br><span style="font-size:11px">Browse and morph its tags in the panel on the right.</span>');
+    setOverlayText(f, null, null);
+    updateFramebar(f);
+    return;
+  }
+
+  let res, wl = null;
+  try {
+    res = await decodeFrame(f, state.frame);
+    if (f !== curFile()) return;                    // user moved on while decoding
+    wl = paintResult(f, res);
+  } catch (err){
+    if (err.message === 'TSNODECODE')
+      showMessage('🧩', 'Transfer syntax not decodable in-browser:<br><b>'+(f.tsInfo?f.tsInfo.name:f.tsUID)+'</b><br><span style="font-size:11px">Tags can still be browsed, morphed, and exported.</span>');
+    else
+      showMessage('⚠️', 'Decode error: '+err.message);
+    setOverlayText(f, null, null);
+    return;
+  }
+
+  if (!state.fitted) fitToWindow();
+
+  // draw with transform
+  vctx.save();
+  vctx.setTransform(1,0,0,1,0,0);
+  vctx.translate(vcanvas.width/2 + state.panX, vcanvas.height/2 + state.panY);
+  vctx.rotate(state.rotation*Math.PI/180);
+  vctx.scale(state.zoom*(state.flipH?-1:1), state.zoom*(state.flipV?-1:1));
+  vctx.imageSmoothingEnabled = state.zoom < 2.5;
+  vctx.drawImage(offscreen, -offscreen.width/2, -offscreen.height/2);
+  vctx.restore();
+
+  drawMeasures(f);
+  setOverlayText(f, res, wl);
+  updateFramebar(f);
+}
+
+function showMessage(icon, html){
+  const m = $('vp-msg');
+  m.style.display='';
+  m.innerHTML = '<span class="big">'+icon+'</span>'+html;
+}
+
+function clearSpecialViews(){
+  const pf = $('pdf-frame'); if (pf) pf.remove();
+  const vd = $('video-el'); if (vd){ vd.pause(); vd.remove(); }
+  if (state.pdfURL){ URL.revokeObjectURL(state.pdfURL); state.pdfURL=null; }
+  if (state.videoURL){ URL.revokeObjectURL(state.videoURL); state.videoURL=null; }
+}
+
+function showPDF(f){
+  const el = f.ds.get('00420011');
+  if (!el || !el.val){ showMessage('📄','Encapsulated PDF has no document data.'); return; }
+  state.pdfURL = URL.createObjectURL(new Blob([el.val], {type: dsStr(f.ds,'00420012')||'application/pdf'}));
+  const iframe = document.createElement('iframe');
+  iframe.id = 'pdf-frame'; iframe.src = state.pdfURL;
+  $('viewport').appendChild(iframe);
+}
+
+function showVideo(f){
+  const el = f.ds.get('7FE00010');
+  if (!el || !el.encaps || !el.encaps.frags.length){ showMessage('🎞','No video stream found.'); return; }
+  let n=0; for (const fr of el.encaps.frags) n+=fr.length;
+  const buf = new Uint8Array(n); let o=0;
+  for (const fr of el.encaps.frags){ buf.set(fr,o); o+=fr.length; }
+  state.videoURL = URL.createObjectURL(new Blob([buf], {type: f.tsInfo.mime}));
+  const v = document.createElement('video');
+  v.id='video-el'; v.controls=true; v.loop=true; v.src=state.videoURL;
+  v.onerror = ()=>{ v.remove(); showMessage('🎞','The browser could not play this video stream ('+f.tsInfo.name+').<br><span style="font-size:11px">MPEG-2 streams are not supported by browser media engines — export the file to view externally.</span>'); };
+  $('viewport').appendChild(v);
+  v.play().catch(()=>{});
+}
+
+/* ── Corner text overlays ── */
+function setOverlayText(f, res, wl){
+  if (!f || !state.showText){
+    $('ov-tl').textContent=''; $('ov-tr').textContent=''; $('ov-bl').textContent=''; $('ov-br').textContent='';
+    return;
+  }
+  const ds = f.ds;
+  const s = curSeries();
+  const info = f._info || {};
+  const fmtPN = v => v.replace(/\^+/g,' ').trim();
+  $('ov-tl').textContent = [
+    fmtPN(dsStr(ds,'00100010')) || '(no name)',
+    dsStr(ds,'00100020'),
+    [dsStr(ds,'00100030'), dsStr(ds,'00100040')].filter(Boolean).join('  '),
+  ].filter(Boolean).join('\n');
+  $('ov-tr').textContent = [
+    dsStr(ds,'00080080'),
+    dsStr(ds,'00081030'),
+    dsStr(ds,'00080020'),
+    f.sopInfo ? f.sopInfo.name : 'SOP: '+(f.sopClassUID||'?'),
+  ].filter(Boolean).join('\n');
+  const lines = [];
+  if (s) lines.push('Se '+(dsStr(ds,'00200011')||'?')+'  Im '+(state.instIdx+1)+'/'+s.files.length);
+  if ((info.frames||1) > 1) lines.push('Frame '+(state.frame+1)+'/'+info.frames);
+  lines.push('Zoom '+Math.round(state.zoom*100)+'%');
+  if (wl) lines.push('W '+Math.round(wl[1])+'  L '+Math.round(wl[0]));
+  $('ov-bl').textContent = lines.join('\n');
+  const ctx = res && res.ctx ? res.ctx : frameContext(f, state.frame);
+  const brLines = [
+    dsStr(ds,'00080060'),
+    info.cols? info.cols+'×'+info.rows+'×'+(info.frames||1) : '',
+    ctx.spacing && ctx.spacing.length>=2 ? ctx.spacing[0].toFixed(3)+'\\'+ctx.spacing[1].toFixed(3)+' mm' : '',
+    f.tsInfo ? f.tsInfo.name : '',
+    f.modified ? '● MODIFIED' : '',
+  ].filter(Boolean);
+  $('ov-br').textContent = brLines.join('\n');
+}
+
+/* ── Measurements ── */
+function imageToScreen(x, y, f){
+  const info = imageInfo(f);
+  let px = x - info.cols/2, py = y - info.rows/2;
+  if (state.flipH) px = -px;
+  if (state.flipV) py = -py;
+  const a = state.rotation*Math.PI/180;
+  const rx = px*Math.cos(a)-py*Math.sin(a), ry = px*Math.sin(a)+py*Math.cos(a);
+  return [vcanvas.width/2+state.panX+rx*state.zoom, vcanvas.height/2+state.panY+ry*state.zoom];
+}
+function screenToImage(sx, sy, f){
+  const info = imageInfo(f);
+  let px = (sx - vcanvas.width/2 - state.panX)/state.zoom;
+  let py = (sy - vcanvas.height/2 - state.panY)/state.zoom;
+  const a = -state.rotation*Math.PI/180;
+  let rx = px*Math.cos(a)-py*Math.sin(a), ry = px*Math.sin(a)+py*Math.cos(a);
+  if (state.flipH) rx = -rx;
+  if (state.flipV) ry = -ry;
+  return [rx + info.cols/2, ry + info.rows/2];
+}
+function drawMeasures(f){
+  if (!state.measures.length) return;
+  const ctx = frameContext(f, state.frame);
+  actx.strokeStyle = '#a6e22e'; actx.fillStyle = '#a6e22e';
+  actx.lineWidth = 1.5; actx.font = '12px monospace';
+  for (const m of state.measures){
+    const [x1,y1] = imageToScreen(m.x1, m.y1, f);
+    const [x2,y2] = imageToScreen(m.x2, m.y2, f);
+    actx.beginPath(); actx.moveTo(x1,y1); actx.lineTo(x2,y2); actx.stroke();
+    actx.beginPath(); actx.arc(x1,y1,2.5,0,7); actx.fill();
+    actx.beginPath(); actx.arc(x2,y2,2.5,0,7); actx.fill();
+    const dx = m.x2-m.x1, dy = m.y2-m.y1;
+    let label;
+    if (ctx.spacing && ctx.spacing.length>=2){
+      const mm = Math.sqrt((dy*ctx.spacing[0])**2 + (dx*ctx.spacing[1])**2);
+      label = mm>=10 ? (mm/10).toFixed(2)+' cm' : mm.toFixed(1)+' mm';
+    } else {
+      label = Math.sqrt(dx*dx+dy*dy).toFixed(1)+' px';
+    }
+    actx.fillText(label, (x1+x2)/2+6, (y1+y2)/2-6);
+  }
+}
+
+/* ── Frame bar / cine ── */
+function updateFramebar(f){
+  const info = f ? imageInfo(f) : null;
+  const s = curSeries();
+  const multi = info && info.frames > 1;
+  const stack = s && s.files.length > 1;
+  const bar = $('framebar');
+  if (!multi && !stack){ bar.style.display='none'; stopCine(); return; }
+  bar.style.display='';
+  const slider = $('frame-slider');
+  if (multi){
+    slider.max = info.frames-1; slider.value = state.frame;
+    $('frame-label').textContent = 'frame '+(state.frame+1)+' / '+info.frames;
+  } else {
+    slider.max = s.files.length-1; slider.value = state.instIdx;
+    $('frame-label').textContent = 'image '+(state.instIdx+1)+' / '+s.files.length;
+  }
+  $('btn-play').style.display = multi ? '' : 'none';
+  $('fps-input').style.display = multi ? '' : 'none';
+  document.querySelector('.framebar label').style.display = multi ? '' : 'none';
+}
+
+let cineTimer = null;
+function startCine(){
+  const f = curFile(); if (!f) return;
+  const info = imageInfo(f);
+  if (info.frames <= 1) return;
+  state.playing = true;
+  $('btn-play').textContent = '⏸';
+  const tick = ()=>{
+    if (!state.playing) return;
+    state.frame = (state.frame+1) % imageInfo(curFile()).frames;
+    render();
+    cineTimer = setTimeout(tick, 1000/Math.max(1, parseFloat($('fps-input').value)||15));
+  };
+  tick();
+}
+function stopCine(){
+  state.playing = false;
+  if (cineTimer){ clearTimeout(cineTimer); cineTimer=null; }
+  $('btn-play').textContent = '▶';
+}
+
+/* default fps from tags */
+function defaultFps(f){
+  const ft = dsFloat(f.ds,'00181063', 0);           // Frame Time (ms)
+  if (ft > 0) return Math.min(120, Math.max(1, Math.round(1000/ft)));
+  const rr = dsInt(f.ds,'00082144', 0);             // Recommended Display Frame Rate
+  if (rr > 0) return rr;
+  return 15;
+}
+
+
+/* ═══════════════════════ Viewport interactions ═══════════════════════ */
+const viewport = $('viewport');
+let drag = null;
+
+viewport.addEventListener('mousedown', e=>{
+  const f = curFile(); if (!f) return;
+  e.preventDefault();
+  let tool = state.tool;
+  if (e.button === 1) tool = 'pan';
+  if (e.button === 2) tool = 'wl';
+  drag = {tool, x:e.offsetX, y:e.offsetY, startZoom:state.zoom, startPan:[state.panX,state.panY]};
+  if (tool === 'wl'){
+    const res = f._cache && f._cache.get(state.frame);
+    if (res && res.kind === 'gray'){
+      const [wc,ww] = activeWindow(f,res);
+      drag.wc0 = wc; drag.ww0 = ww;
+    } else drag = null;
+  }
+  if (tool === 'measure'){
+    const [ix,iy] = screenToImage(e.offsetX, e.offsetY, f);
+    state.measures.push({x1:ix,y1:iy,x2:ix,y2:iy});
+    drag.measure = state.measures[state.measures.length-1];
+  }
+});
+window.addEventListener('mousemove', e=>{
+  if (!drag) return;
+  const f = curFile(); if (!f) return;
+  const rect = viewport.getBoundingClientRect();
+  const ox = e.clientX-rect.left, oy = e.clientY-rect.top;
+  const dx = ox-drag.x, dy = oy-drag.y;
+  if (drag.tool === 'wl'){
+    state.ww = Math.max(1, drag.ww0 + dx*(drag.ww0/200 + 1));
+    state.wc = drag.wc0 + dy*(drag.ww0/400 + 0.5);
+    render();
+  } else if (drag.tool === 'pan'){
+    state.panX = drag.startPan[0]+dx; state.panY = drag.startPan[1]+dy;
+    render();
+  } else if (drag.tool === 'zoom'){
+    state.zoom = Math.max(0.02, Math.min(64, drag.startZoom * Math.exp(-dy/150)));
+    render();
+  } else if (drag.tool === 'measure' && drag.measure){
+    const [ix,iy] = screenToImage(ox, oy, f);
+    drag.measure.x2 = ix; drag.measure.y2 = iy;
+    render();
+  }
+});
+window.addEventListener('mouseup', ()=>{
+  if (drag && drag.tool==='measure' && drag.measure){
+    const m = drag.measure;
+    if (Math.hypot(m.x2-m.x1, m.y2-m.y1) < 2) state.measures.pop();  // click, not drag
+    render();
+  }
+  drag = null;
+});
+viewport.addEventListener('contextmenu', e=>e.preventDefault());
+viewport.addEventListener('dblclick', ()=>{ resetView(); });
+
+viewport.addEventListener('wheel', e=>{
+  const f = curFile(); if (!f) return;
+  e.preventDefault();
+  if (e.ctrlKey){
+    state.zoom = Math.max(0.02, Math.min(64, state.zoom*Math.exp(-Math.sign(e.deltaY)*0.15)));
+    render(); return;
+  }
+  const dir = Math.sign(e.deltaY);
+  const info = imageInfo(f);
+  if (info.frames > 1) stepFrame(dir);
+  else stepInstance(dir);
+}, {passive:false});
+
+function stepFrame(d){
+  const f = curFile(); if (!f) return;
+  const info = imageInfo(f);
+  state.frame = Math.max(0, Math.min(info.frames-1, state.frame+d));
+  render();
+}
+function stepInstance(d){
+  const s = curSeries(); if (!s) return;
+  const ni = Math.max(0, Math.min(s.files.length-1, state.instIdx+d));
+  if (ni !== state.instIdx){ selectInstance(ni); }
+}
+function resetView(){
+  state.rotation=0; state.flipH=false; state.flipV=false;
+  state.wc=null; state.ww=null; state.wlSource='file';
+  state.invert=false; state.measures=[];
+  $('wl-preset').value='file';
+  $('btn-invert').classList.remove('active');
+  fitToWindow(); render();
+}
+
+/* ── Toolbar wiring ── */
+document.querySelectorAll('.tool-btn').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.tool-btn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    state.tool = b.dataset.tool;
+    viewport.style.cursor = {wl:'crosshair', pan:'grab', zoom:'ns-resize', measure:'copy'}[state.tool];
+  });
+});
+$('btn-invert').addEventListener('click', ()=>{
+  state.invert = !state.invert;
+  $('btn-invert').classList.toggle('active', state.invert);
+  render();
+});
+$('btn-rot').addEventListener('click', ()=>{ state.rotation=(state.rotation+90)%360; state.fitted=false; render(); });
+$('btn-fliph').addEventListener('click', ()=>{ state.flipH=!state.flipH; render(); });
+$('btn-flipv').addEventListener('click', ()=>{ state.flipV=!state.flipV; render(); });
+$('btn-reset').addEventListener('click', resetView);
+$('btn-overlays').addEventListener('click', function(){
+  state.showOverlays=!state.showOverlays;
+  this.classList.toggle('active', state.showOverlays);
+  const f=curFile(); if (f && f._cache) f._cache.clear();
+  render();
+});
+$('btn-overlays').classList.add('active');
+$('btn-text').addEventListener('click', function(){
+  state.showText=!state.showText;
+  this.classList.toggle('active', state.showText);
+  render();
+});
+$('btn-text').classList.add('active');
+$('wl-preset').addEventListener('change', e=>{
+  const v = e.target.value;
+  if (v==='auto' || v==='full'){ state.wlSource=v; state.wc=null; state.ww=null; }
+  else if (v==='file'){ state.wlSource='file'; state.wc=null; state.ww=null; }
+  else { const [c,w]=v.split(',').map(Number); state.wc=c; state.ww=w; }
+  render();
+});
+$('btn-png').addEventListener('click', ()=>{
+  const f = curFile(); if (!f) return;
+  const merged = document.createElement('canvas');
+  merged.width=vcanvas.width; merged.height=vcanvas.height;
+  const mc = merged.getContext('2d');
+  mc.drawImage(vcanvas,0,0); mc.drawImage(acanvas,0,0);
+  merged.toBlob(b=>{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(b);
+    a.download=(f.name.replace(/\.[^.]*$/,'')||'dicom')+'_frame'+(state.frame+1)+'.png';
+    a.click(); setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+  });
+});
+$('btn-play').addEventListener('click', ()=>{ state.playing ? stopCine() : startCine(); });
+$('frame-slider').addEventListener('input', e=>{
+  const f = curFile(); if (!f) return;
+  const v = parseInt(e.target.value,10);
+  if (imageInfo(f).frames > 1){ state.frame=v; render(); }
+  else selectInstance(v);
+});
+$('btn-rpanel').addEventListener('click', ()=>{ $('rpanel').classList.toggle('collapsed'); });
+
+/* keyboard */
+window.addEventListener('keydown', e=>{
+  if (e.target.tagName==='INPUT' || e.target.tagName==='SELECT' || e.target.isContentEditable) return;
+  const k = e.key.toLowerCase();
+  if (k===' '){ e.preventDefault(); state.playing?stopCine():startCine(); }
+  else if (k==='arrowright' || k==='arrowdown'){ e.preventDefault(); const f=curFile(); if (f) (imageInfo(f).frames>1 ? stepFrame(1) : stepInstance(1)); }
+  else if (k==='arrowleft' || k==='arrowup'){ e.preventDefault(); const f=curFile(); if (f) (imageInfo(f).frames>1 ? stepFrame(-1) : stepInstance(-1)); }
+  else if (k==='i') $('btn-invert').click();
+  else if (k==='r') $('btn-rot').click();
+  else if (k==='h') $('btn-fliph').click();
+  else if (k==='v') $('btn-flipv').click();
+  else if (k==='t') $('btn-text').click();
+  else if (k==='w') document.querySelector('[data-tool="wl"]').click();
+  else if (k==='p') document.querySelector('[data-tool="pan"]').click();
+  else if (k==='z') document.querySelector('[data-tool="zoom"]').click();
+  else if (k==='m') document.querySelector('[data-tool="measure"]').click();
+  else if (k==='escape'){ state.measures=[]; render(); }
+});
+
+/* ═══════════════════════ File loading & series ═══════════════════════ */
+$('btn-open').addEventListener('click', ()=>$('file-input').click());
+$('btn-open-dir').addEventListener('click', ()=>$('dir-input').click());
+$('file-input').addEventListener('change', e=>{ loadFiles([...e.target.files]); e.target.value=''; });
+$('dir-input').addEventListener('change', e=>{ loadFiles([...e.target.files]); e.target.value=''; });
+
+let dragCounter = 0;
+window.addEventListener('dragenter', e=>{ e.preventDefault(); if(++dragCounter===1) document.body.classList.add('dragging'); });
+window.addEventListener('dragleave', e=>{ e.preventDefault(); if(--dragCounter===0) document.body.classList.remove('dragging'); });
+window.addEventListener('dragover', e=>e.preventDefault());
+window.addEventListener('drop', async e=>{
+  e.preventDefault(); dragCounter=0; document.body.classList.remove('dragging');
+  const files = [...e.dataTransfer.files];
+  if (files.length) loadFiles(files);
+});
+
+async function loadFiles(fileList){
+  const errors = [];
+  let added = 0;
+  for (const file of fileList){
+    try {
+      const buf = await file.arrayBuffer();
+      const parsed = await parseDicomFile(buf, file.name);
+      if (!parsed.ds.size) throw new Error('empty dataset');
+      state.files.push(parsed);
+      added++;
+    } catch (err){
+      errors.push(file.name+': '+err.message);
+    }
+  }
+  if (errors.length && !added){
+    alert('No DICOM files could be parsed:\n'+errors.slice(0,8).join('\n'));
+  }
+  rebuildSeries();
+  if (added && state.seriesIdx < 0 && state.series.length) selectSeries(0);
+  else { renderSeriesList(); refreshScopeCounts(); }
+}
+
+function rebuildSeries(){
+  const groups = new Map();
+  for (const f of state.files){
+    const key = dsStr(f.ds,'0020000E') || '(no-series)/'+f.name;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(f);
+  }
+  const keepKey = curSeries() ? curSeries().key : null;
+  const keepFile = curFile();
+  state.series = [...groups.entries()].map(([key, files])=>{
+    files.sort((a,b)=>{
+      const na = dsInt(a.ds,'00200013',0), nb = dsInt(b.ds,'00200013',0);
+      return na!==nb ? na-nb : a.name.localeCompare(b.name);
+    });
+    const f0 = files[0];
+    return {
+      key, files,
+      desc: dsStr(f0.ds,'0008103E') || dsStr(f0.ds,'00081030') || f0.name,
+      modality: dsStr(f0.ds,'00080060') || '??',
+      patient: dsStr(f0.ds,'00100010').replace(/\^+/g,' ').trim(),
+    };
+  });
+  if (keepKey){
+    state.seriesIdx = state.series.findIndex(s=>s.key===keepKey);
+    if (state.seriesIdx>=0 && keepFile){
+      const fi = state.series[state.seriesIdx].files.indexOf(keepFile);
+      state.instIdx = fi>=0?fi:0;
+    }
+  }
+  renderSeriesList();
+  refreshScopeCounts();
+}
+
+function renderSeriesList(){
+  const holder = $('series-list');
+  holder.innerHTML = '';
+  if (!state.series.length){
+    holder.innerHTML = '<div class="empty-note">No files loaded.<br><br>Open DICOM files or drop them anywhere on this page. Everything is processed locally — no data leaves your browser.</div>';
+    return;
+  }
+  state.series.forEach((s, idx)=>{
+    const card = document.createElement('div');
+    card.className = 'series-card'+(idx===state.seriesIdx?' active':'');
+    const thumb = document.createElement('canvas');
+    thumb.width=180; thumb.height=120;
+    card.appendChild(thumb);
+    const t = document.createElement('div'); t.className='s-title'; t.textContent=s.desc; card.appendChild(t);
+    const sub = document.createElement('div'); sub.className='s-sub';
+    sub.textContent = (s.patient?s.patient+' · ':'')+s.files.length+' file'+(s.files.length===1?'':'s');
+    card.appendChild(sub);
+    const badge = document.createElement('span'); badge.className='s-badge'; badge.textContent=s.modality; card.appendChild(badge);
+    card.addEventListener('click', ()=>selectSeries(idx));
+    holder.appendChild(card);
+    drawThumb(s.files[0], thumb);
+  });
+}
+
+async function drawThumb(f, cv){
+  const tc = cv.getContext('2d');
+  tc.fillStyle='#000'; tc.fillRect(0,0,cv.width,cv.height);
+  try {
+    const info = imageInfo(f);
+    if (!info.rows || !info.cols) throw 0;
+    const res = await decodeFrame(f, Math.min(Math.floor(info.frames/2), info.frames-1));
+    const oc = document.createElement('canvas');
+    oc.width=info.cols; oc.height=info.rows;
+    const octx = oc.getContext('2d');
+    if (res.kind==='rgba') octx.putImageData(res.img,0,0);
+    else {
+      const ctx2 = res.ctx;
+      let wc, ww;
+      if (ctx2.wc.length && ctx2.ww.length && ctx2.ww[0]>0){ wc=ctx2.wc[0]; ww=ctx2.ww[0]; }
+      else { wc=(res.min+res.max)/2; ww=Math.max(1,res.max-res.min); }
+      const img = octx.createImageData(info.cols, info.rows);
+      const lo=wc-ww/2;
+      for (let p=0;p<res.px.length;p++){
+        let y=(res.px[p]-lo)/ww*255; y=y<0?0:y>255?255:y;
+        if (res.mono1) y=255-y;
+        img.data[p*4]=img.data[p*4+1]=img.data[p*4+2]=y; img.data[p*4+3]=255;
+      }
+      octx.putImageData(img,0,0);
+    }
+    const scale = Math.min(cv.width/info.cols, cv.height/info.rows);
+    const w=info.cols*scale, h=info.rows*scale;
+    tc.drawImage(oc, (cv.width-w)/2, (cv.height-h)/2, w, h);
+  } catch(e){
+    tc.fillStyle='#75715e'; tc.font='11px monospace'; tc.textAlign='center';
+    const cat = f.sopInfo ? f.sopInfo.cat : '?';
+    tc.fillText(cat==='pdf'?'📄 PDF':cat==='video'?'🎞 video':cat==='other'?'📋 non-image':'(no preview)', cv.width/2, cv.height/2);
+  }
+}
+
+function selectSeries(idx){
+  stopCine();
+  state.seriesIdx = idx;
+  state.instIdx = 0; state.frame = 0;
+  state.fitted = false; state.measures=[];
+  state.wc=null; state.ww=null;
+  const f = curFile();
+  if (f) $('fps-input').value = defaultFps(f);
+  renderSeriesList();
+  renderTagTable();
+  refreshScopeCounts();
+  render();
+}
+function selectInstance(idx){
+  state.instIdx = idx;
+  const f = curFile();
+  if (f && state.frame >= imageInfo(f).frames) state.frame = 0;
+  renderTagTable();
+  render();
+}
+
+
+/* ═══════════════════════ Tag table ═══════════════════════ */
+document.querySelectorAll('.rtab').forEach(b=>{
+  b.addEventListener('click', ()=>{
+    document.querySelectorAll('.rtab').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    $('rtab-tags').style.display = b.dataset.rtab==='tags' ? '' : 'none';
+    $('rtab-morph').style.display = b.dataset.rtab==='morph' ? '' : 'none';
+  });
+});
+$('tag-search').addEventListener('input', ()=>renderTagTable());
+
+const EDITABLE_VRS = new Set([...STRING_VRS, 'US','SS','UL','SL','FL','FD','AT']);
+function fmtTag(tag){ return '('+tag.slice(0,4).toLowerCase()+','+tag.slice(4).toLowerCase()+')'; }
+
+function renderTagTable(){
+  const tbody = $('tag-tbody');
+  const f = curFile();
+  tbody.innerHTML = '';
+  if (!f){ tbody.innerHTML='<tr><td class="t-name" style="padding:14px">No file selected.</td></tr>'; return; }
+  const filter = $('tag-search').value.trim().toLowerCase();
+
+  const addRows = (ds, depth, parentEl)=>{
+    for (const el of ds.values()){
+      const d = dictLookup(el.tag);
+      const name = d ? d[1] : '';
+      const valTxt = displayValue(el);
+      if (filter){
+        const hay = (el.tag+' '+fmtTag(el.tag)+' '+name+' '+valTxt).toLowerCase();
+        if (!hay.includes(filter) && !el.sq) continue;
+      }
+      const tr = document.createElement('tr');
+      const pad = 6+depth*14;
+      const editable = depth===0 || true; // nested leaves also editable in place
+      const canEdit = !el.sq && !el.encaps && EDITABLE_VRS.has(el.vr) && (!el.val || el.val.length<=1024) && el.tag!=='7FE00010';
+      tr.innerHTML =
+        '<td class="t-tag" style="padding-left:'+pad+'px">'+fmtTag(el.tag)+'</td>'+
+        '<td class="t-vr">'+(el.vr||'')+'</td>'+
+        '<td class="t-name">'+escapeHtml(name)+'</td>'+
+        '<td class="'+(el.sq?'t-seq ':'')+'t-val'+(el._mod?' t-mod':'')+'">'+escapeHtml(valTxt)+'</td>'+
+        '<td style="white-space:nowrap">'+
+          (canEdit?'<span class="t-edit" title="Edit value">✎</span>':'')+
+          '<span class="t-edit t-del" title="Delete element">✕</span></td>';
+      tbody.appendChild(tr);
+      if (canEdit){
+        tr.querySelector('.t-edit:not(.t-del)').addEventListener('click', ()=>beginEdit(tr, el, f));
+      }
+      tr.querySelector('.t-del').addEventListener('click', ()=>{
+        if (!confirm('Delete '+fmtTag(el.tag)+' '+name+'?')) return;
+        ds.delete(el.tag);
+        markModified(f, el.tag);
+        renderTagTable();
+      });
+      if (el.sq){
+        el.sq.forEach((item, i)=>{
+          const itr = document.createElement('tr');
+          itr.innerHTML = '<td class="t-seq" colspan="5" style="padding-left:'+(pad+14)+'px">item '+(i+1)+'</td>';
+          tbody.appendChild(itr);
+          addRows(item, depth+2, el);
+        });
+      }
+    }
+  };
+  addRows(f.ds, 0, null);
+}
+
+function escapeHtml(s){ return String(s).replace(/[&<>"]/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+function beginEdit(tr, el, f){
+  const cell = tr.querySelector('.t-val');
+  const cur = el.val && STRING_VRS.has(el.vr) ? str(el.val) : displayValue(el);
+  cell.innerHTML = '';
+  const input = document.createElement('input');
+  input.className = 'tag-edit-input';
+  input.value = cur;
+  cell.appendChild(input);
+  input.focus(); input.select();
+  const commit = ()=>{
+    try {
+      el.val = encodeValue(el.vr, input.value);
+      el._mod = true;
+      markModified(f, el.tag);
+    } catch (err){ alert('Invalid value: '+err.message); }
+    renderTagTable();
+  };
+  input.addEventListener('keydown', e=>{
+    if (e.key==='Enter') commit();
+    else if (e.key==='Escape') renderTagTable();
+    e.stopPropagation();
+  });
+  input.addEventListener('blur', commit);
+}
+
+function markModified(f, tag){
+  f.modified = true;
+  const g = tag.slice(0,4);
+  if (g==='0028' || g==='7FE0' || g==='5200' || g==='3004' || parseInt(g,16)>=0x6000 && parseInt(g,16)<=0x601E){
+    f._cache && f._cache.clear();
+    f._info = null;
+  }
+  render();
+}
+
+/* ═══════════════════════ Morph rules ═══════════════════════ */
+const rules = [];
+
+function normTag(txt){
+  const hex = txt.replace(/[^0-9a-fA-F]/g,'').toUpperCase();
+  return /^[0-9A-F]{8}$/.test(hex) ? hex : null;
+}
+
+function renderRules(){
+  const holder = $('rule-list');
+  holder.innerHTML = '';
+  if (!rules.length){ holder.innerHTML='<div class="hint">No rules defined.</div>'; return; }
+  rules.forEach((r, i)=>{
+    const d = dictLookup(r.tag);
+    const div = document.createElement('div');
+    div.className = 'rule-item';
+    div.innerHTML =
+      '<span class="r-act '+(r.action==='set'?'set':r.action==='remove'?'del':'uid')+'">'+
+        (r.action==='set'?'SET':r.action==='remove'?'DEL':'UID')+'</span>'+
+      '<span class="r-tag">'+fmtTag(r.tag)+'</span>'+
+      '<span class="r-val">'+escapeHtml((d?d[1]:'')+(r.action==='set'?' = "'+r.value+'"':''))+'</span>'+
+      '<span class="r-x" title="Remove rule">✕</span>';
+    div.querySelector('.r-x').addEventListener('click', ()=>{ rules.splice(i,1); renderRules(); });
+    holder.appendChild(div);
+  });
+}
+
+$('mr-add').addEventListener('click', ()=>{
+  const tag = normTag($('mr-tag').value);
+  if (!tag){ alert('Enter a tag as gggg,eeee (hex)'); return; }
+  const action = $('mr-action').value;
+  rules.push({tag, action, value: $('mr-value').value});
+  $('mr-tag').value=''; $('mr-value').value='';
+  renderRules();
+});
+$('btn-clear-rules').addEventListener('click', ()=>{ rules.length=0; renderRules(); });
+
+$('btn-anon').addEventListener('click', ()=>{
+  const preset = [
+    {tag:'00100010', action:'set', value:'ANONYMOUS'},
+    {tag:'00100020', action:'set', value:'ANON'+Math.floor(Math.random()*900000+100000)},
+    {tag:'00100030', action:'set', value:''},
+    {tag:'00100040', action:'set', value:''},
+    {tag:'00101010', action:'remove'}, {tag:'00101020', action:'remove'},
+    {tag:'00101030', action:'remove'}, {tag:'00101040', action:'remove'},
+    {tag:'00101000', action:'remove'}, {tag:'00101001', action:'remove'},
+    {tag:'00102154', action:'remove'}, {tag:'001021B0', action:'remove'},
+    {tag:'00104000', action:'remove'},
+    {tag:'00080050', action:'set', value:''},
+    {tag:'00080080', action:'remove'}, {tag:'00080081', action:'remove'},
+    {tag:'00080090', action:'set', value:''},
+    {tag:'00081048', action:'remove'}, {tag:'00081050', action:'remove'},
+    {tag:'00081060', action:'remove'}, {tag:'00081070', action:'remove'},
+    {tag:'00201040', action:'remove'},
+    {tag:'0020000D', action:'uid'}, {tag:'0020000E', action:'uid'},
+    {tag:'00080018', action:'uid'}, {tag:'00200052', action:'uid'},
+    {tag:'00120062', action:'set', value:'YES'},
+    {tag:'00120063', action:'set', value:'Browser tag morph — basic profile subset'},
+  ];
+  for (const r of preset)
+    if (!rules.some(x=>x.tag===r.tag && x.action===r.action)) rules.push(r);
+  renderRules();
+});
+
+function scopeFiles(){
+  const scope = document.querySelector('input[name="m-scope"]:checked').value;
+  if (scope==='all') return state.files.slice();
+  if (scope==='series'){ const s=curSeries(); return s?s.files.slice():[]; }
+  const f = curFile(); return f?[f]:[];
+}
+function refreshScopeCounts(){
+  const s = curSeries();
+  $('scope-series-n').textContent = s?s.files.length:0;
+  $('scope-all-n').textContent = state.files.length;
+}
+
+function logMorph(msg, cls){
+  const log = $('morph-log');
+  const line = document.createElement('div');
+  if (cls) line.className = cls;
+  line.textContent = msg;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+$('btn-apply-rules').addEventListener('click', ()=>{
+  if (!rules.length){ logMorph('No rules to apply.','err'); return; }
+  const files = scopeFiles();
+  if (!files.length){ logMorph('No files in scope.','err'); return; }
+  const uidMap = new Map();   // consistent regeneration across files
+  let nSet=0, nDel=0, nUid=0;
+  for (const f of files){
+    for (const r of rules){
+      const d = dictLookup(r.tag);
+      if (r.action==='remove'){
+        if (f.ds.delete(r.tag)) nDel++;
+      } else if (r.action==='set'){
+        const vr = (f.ds.get(r.tag)||{}).vr || (d?d[0]:'LO');
+        try {
+          const el = f.ds.get(r.tag) || newEl(r.tag, vr);
+          el.vr = vr; el.val = encodeValue(vr, r.value); el.sq=null; el.encaps=null; el._mod=true;
+          setSorted(f.ds, el);
+          nSet++;
+        } catch(err){ logMorph(fmtTag(r.tag)+': '+err.message, 'err'); }
+      } else if (r.action==='uid'){
+        const el = f.ds.get(r.tag);
+        if (el && el.val){
+          const old = str(el.val).trim();
+          if (!uidMap.has(old)) uidMap.set(old, genUID());
+          el.val = encodeValue('UI', uidMap.get(old));
+          el._mod = true;
+          nUid++;
+        }
+      }
+    }
+    f.modified = true;
+    markModified(f, '0028xxxx'.slice(0,4)+'0000');   // conservative cache clear via 0028 prefix
+  }
+  rebuildSeries();
+  renderTagTable();
+  render();
+  logMorph('Applied to '+files.length+' file(s): '+nSet+' set, '+nDel+' removed, '+nUid+' UIDs regenerated.','ok');
+});
+
+/* insert an element keeping the dataset tag-ordered */
+function setSorted(ds, el){
+  if (ds.has(el.tag)){ ds.set(el.tag, el); return; }
+  const entries = [...ds.entries()];
+  entries.push([el.tag, el]);
+  entries.sort((a,b)=>a[0]<b[0]?-1:a[0]>b[0]?1:0);
+  ds.clear();
+  for (const [k,v] of entries) ds.set(k,v);
+}
+
+/* ── Export ── */
+$('btn-export').addEventListener('click', ()=>{
+  const files = scopeFiles();
+  if (!files.length){ logMorph('Nothing to export.','err'); return; }
+  try {
+    if (files.length === 1){
+      const data = serializeFile(files[0]);
+      downloadBlob(new Blob([data],{type:'application/dicom'}), morphName(files[0].name));
+      logMorph('Exported '+morphName(files[0].name)+' ('+fmtBytes(data.length)+')','ok');
+    } else {
+      const zipFiles = files.map((f,i)=>({
+        name: morphName(f.name||('image'+(i+1)+'.dcm')),
+        data: serializeFile(f),
+      }));
+      const seen = new Set();
+      for (const zf of zipFiles){
+        let n = zf.name, k = 1;
+        while (seen.has(n)) n = zf.name.replace(/(\.\w+)?$/, '_'+(k++)+'$1');
+        zf.name = n; seen.add(n);
+      }
+      const zip = makeZip(zipFiles);
+      downloadBlob(new Blob([zip],{type:'application/zip'}), 'dicom_morphed.zip');
+      logMorph('Exported '+files.length+' files as dicom_morphed.zip ('+fmtBytes(zip.length)+')','ok');
+    }
+  } catch (err){
+    logMorph('Export failed: '+err.message, 'err');
+  }
+});
+function morphName(name){
+  const base = (name||'image.dcm').replace(/\.dcm$/i,'');
+  return base+'_morphed.dcm';
+}
+function downloadBlob(blob, name){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 10000);
+}
+
+/* ── datalist for tag autocomplete ── */
+(function(){
+  const dl = $('tag-datalist');
+  for (const [tag, [vr, name]] of Object.entries(DICT)){
+    if (!name || tag.startsWith('0002') || tag.startsWith('FFFE')) continue;
+    const o=document.createElement('option');
+    o.value = tag.slice(0,4).toLowerCase()+','+tag.slice(4).toLowerCase();
+    o.label = name;
+    dl.appendChild(o);
+  }
+})();
+
+/* ── SOP class modal ── */
+(function(){
+  const tbl = $('sop-table');
+  tbl.innerHTML = '<tr><th>SOP Class</th><th>UID</th><th>Support</th></tr>';
+  const catOrder = {image:0, video:1, pdf:2, other:3};
+  const rows = Object.entries(SOP_CLASSES).sort((a,b)=>
+    catOrder[a[1].cat]-catOrder[b[1].cat] || a[1].name.localeCompare(b[1].name));
+  for (const [uid, info] of rows){
+    const tr=document.createElement('tr');
+    const pill = {image:'render', video:'video', pdf:'pdf', other:'tags'}[info.cat];
+    tr.innerHTML = '<td>'+escapeHtml(info.name)+'</td><td class="uid-cell">'+uid+'</td>'+
+      '<td><span class="cat-pill cat-'+info.cat+'">'+pill+'</span></td>';
+    tbl.appendChild(tr);
+  }
+})();
+$('btn-sop').addEventListener('click', ()=>$('sop-modal').classList.add('open'));
+$('sop-close').addEventListener('click', ()=>$('sop-modal').classList.remove('open'));
+$('sop-modal').addEventListener('click', e=>{ if(e.target===$('sop-modal')) $('sop-modal').classList.remove('open'); });
+
+renderRules();
+refreshScopeCounts();
+resizeCanvases();
+</script>
+</body>
+</html>

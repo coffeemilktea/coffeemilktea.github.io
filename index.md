@@ -7,6 +7,14 @@ layout: default
   <ul class="tools-grid">
 
     <li class="tool-card">
+      <div class="tool-card-icon">🩻</div>
+      <h3>DICOM Viewer &amp; Tag Morph</h3>
+      <p class="tool-subtitle">Medical Imaging</p>
+      <p>View DICOM images across all major storage SOP classes — CT, MR, US, XA, NM, PET, mammo, RT and more — with window/level, cine, and measurements. Morph tags inline or in batch and re-export valid DICOM.</p>
+      <a href="tools/dicom-viewer.html" class="btn-launch">Launch &rarr;</a>
+    </li>
+
+    <li class="tool-card">
       <div class="tool-card-icon">🏥</div>
       <h3>DICOM Toolbox</h3>
       <p class="tool-subtitle">Medical Imaging</p>
