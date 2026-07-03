@@ -572,15 +572,13 @@ function buildPairs(segsA, segsB) {
   const groupA = groupByName(segsA);
   const groupB = groupByName(segsB);
 
-  // Build ordered list of (segName, occurrenceIndex) from both messages
+  // Build ordered list of segment names from both messages
   const seen = new Set();
   const orderedKeys = [];
-  const allNames = new Set([...Object.keys(groupA), ...Object.keys(groupB)]);
 
   // Walk message A order first, then add B-only segments
   for (const seg of segsA) {
-    const key = `${seg.name}`;
-    if (!seen.has(key)) { seen.add(key); orderedKeys.push(seg.name); }
+    if (!seen.has(seg.name)) { seen.add(seg.name); orderedKeys.push(seg.name); }
   }
   for (const seg of segsB) {
     if (!orderedKeys.includes(seg.name)) orderedKeys.push(seg.name);

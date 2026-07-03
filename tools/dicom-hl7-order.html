@@ -871,8 +871,9 @@ function parseDICOM(buf) {
     tags.push({ tag:tagStr(it.g,it.e), key:k, vr:it.vr, kw:d.kw||'', val, len:it.len, meta:false, pixel:isPx });
     count++;
 
-    // Skip sequences (scan for delimiter FFFE,E0DD)
+    // Skip sequences — defined length jumps directly; undefined length scans for FFFE,E0DD
     if (it.vr === 'SQ' || it.len === 0xFFFFFFFF) {
+      if (it.len !== 0xFFFFFFFF) { cur = it.dOff + it.len; continue; }
       let s = it.dOff; let depth = 1;
       while (s < buf.byteLength - 4 && depth > 0) {
         const sg = view.getUint16(s,true); const se = view.getUint16(s+2,true);
@@ -977,7 +978,7 @@ function generateORM() {
 
   const PID = `PID|1||${pid3}||${patName}||${patDOB}|${patSex}|||||||||||`;
 
-  const PV1 = `PV1|1|${patCls}|${location}||||${provider}|||||||||||${ordNum}`;
+  const PV1 = `PV1|1|${patCls}|${location}||||${provider}||||||||||||${ordNum}`;
 
   const ORC = `ORC|${ctrl}|${ordNum}||||||||||${provider}|||${now}`;
 
@@ -1038,13 +1039,13 @@ function generateORM() {
     '',           // 41
     '',           // 42
     '',           // 43
-    `${protocol ? protocol+'^'^'^' : ''}`,  // 44 - Procedure Code (trimmed below)
+    protocol,     // 44 - Procedure Code (protocol name)
   ].join('|').replace(/\|+$/, '');          // strip trailing pipes
 
   const segs = [MSH, PID, PV1, ORC, OBR];
 
   // ZDS — custom Z-segment carrying Study UID
-  if (studyUID) segs.push(`ZDS|${studyUID}^Application^DICOM`);
+  if (studyUID) segs.push(`ZDS|${studyUID}^^Application^DICOM`);
 
   return segs.join('\r\n');
 }
@@ -1177,13 +1178,17 @@ function renderORM(orm) {
     const seg = line.substring(0,3);
     const clz = 'seg-' + seg;
     html += `<div class="seg-block ${clz}">`;
-    html += `<div class="seg-line" onclick="toggleDetail(this,${JSON.stringify(line)},${JSON.stringify(seg)})">`;
+    html += `<div class="seg-line" data-line="${esc(line)}" data-seg="${esc(seg)}">`;
     html += `<span class="seg-label">${esc(seg)}</span>`;
     html += `<span class="seg-content">${colorFields(esc(line.substring(3)))}</span>`;
     html += `</div></div>`;
   }
   html += '</div>';
-  document.getElementById('ormPanel').innerHTML = html;
+  const panel = document.getElementById('ormPanel');
+  panel.innerHTML = html;
+  panel.querySelectorAll('.seg-line').forEach(el => {
+    el.addEventListener('click', () => toggleDetail(el, el.dataset.line, el.dataset.seg));
+  });
   document.getElementById('ormStatus').textContent =
     `${lines.length} segments · ${new Date().toLocaleTimeString()}`;
   document.getElementById('rawText').value = orm.replace(/\r\n/g,'\n');

@@ -574,7 +574,9 @@ function matchDate(itemDate, fromISO, toISO) {
   const d = itemDate || '';
   const from = isoToDicom(fromISO), to = isoToDicom(toISO);
   if (from && to) return d >= from && d <= to;
-  return d === (from || to);
+  // Open-ended DICOM range matching: "YYYYMMDD-" / "-YYYYMMDD"
+  if (from) return d >= from;
+  return d <= to;
 }
 
 // ─── Return Keys ──────────────────────────────────────────────────────────────
@@ -926,9 +928,9 @@ function renderResultCard(item, n, returnKeys) {
   // Header
   card.innerHTML = `<div class="result-card-header">
     <span class="rsp-label">RSP #${n} FF00H</span>
-    <span class="card-patient">${item.patientName || '(no name)'}</span>
-    <span class="card-pid">${item.patientID || '—'}</span>
-    <span class="card-mod-badge ${modCls}">${item.modality || '?'}</span>
+    <span class="card-patient">${esc(item.patientName || '(no name)')}</span>
+    <span class="card-pid">${esc(item.patientID || '—')}</span>
+    <span class="card-mod-badge ${esc(modCls)}">${esc(item.modality || '?')}</span>
   </div>`;
 
   // Core attributes (always shown)
@@ -969,8 +971,8 @@ function renderResultCard(item, n, returnKeys) {
     const d = document.createElement('div');
     d.className = 'attr';
     d.innerHTML = `<span class="attr-label">${formatTag(a.tag)} ${DICOM_TAGS[a.tag]?.vr || ''}</span>
-      <span class="attr-name">${a.name}</span>
-      <span class="attr-val${a.uid ? ' uid' : ''}">${a.val || '—'}</span>`;
+      <span class="attr-name">${esc(a.name)}</span>
+      <span class="attr-val${a.uid ? ' uid' : ''}">${esc(a.val || '—')}</span>`;
     attrsDiv.appendChild(d);
   }
   card.appendChild(attrsDiv);
@@ -992,8 +994,8 @@ function renderResultCard(item, n, returnKeys) {
     <div class="sq-attrs">${sqFields.map(f =>
       `<div class="attr">
         <span class="attr-label">${formatTag(f.tag)} ${DICOM_TAGS[f.tag]?.vr||''}</span>
-        <span class="attr-name">${f.name}</span>
-        <span class="attr-val">${f.val || '—'}</span>
+        <span class="attr-name">${esc(f.name)}</span>
+        <span class="attr-val">${esc(f.val || '—')}</span>
       </div>`).join('')}
     </div>`;
   card.appendChild(sqDiv);
@@ -1035,7 +1037,7 @@ function dline(indent, tag, vr, val, name) {
   const len = blank ? 0 : val.length;
   const lenStr = String(len).padStart(4,' ');
   const ind = '  '.repeat(indent);
-  return `<div class="dump-line">${ind}<span class="d-tag">${t}</span> <span class="d-vr">${vr}</span> <span class="${blank?'d-empty':'d-val'}">[${val||''}]</span><span class="d-len"> #${lenStr}</span>  <span class="d-name">${name}</span></div>`;
+  return `<div class="dump-line">${ind}<span class="d-tag">${t}</span> <span class="d-vr">${vr}</span> <span class="${blank?'d-empty':'d-val'}">[${esc(val)}]</span><span class="d-len"> #${lenStr}</span>  <span class="d-name">${esc(name)}</span></div>`;
 }
 function dcmt(text) {
   return `<div class="dump-line"><span class="d-cmmt"># ${text}</span></div>`;
@@ -1167,7 +1169,7 @@ function logEntry(type, msg, detail) {
   const cls = { tx:'log-tx', rx:'log-rx', info:'log-info', dim:'log-dim', err:'log-err' }[type] || 'log-dim';
   const div = document.createElement('div');
   div.className = 'log-entry';
-  div.innerHTML = `<span class="log-ts">[${ts()}]</span> <span class="${cls}">${msg}</span>${detail?`<br><span class="log-dim" style="padding-left:14px">${detail}</span>`:''}`;
+  div.innerHTML = `<span class="log-ts">[${ts()}]</span> <span class="${cls}">${esc(msg)}</span>${detail?`<br><span class="log-dim" style="padding-left:14px">${esc(detail)}</span>`:''}`;
   log.appendChild(div);
   log.scrollTop = log.scrollHeight;
 }
@@ -1222,7 +1224,7 @@ async function testConnection() {
     if (authType === 'bearer' && creds) headers['Authorization'] = `Bearer ${creds}`;
     if (authType === 'basic' && creds) headers['Authorization'] = `Basic ${btoa(creds)}`;
     const resp = await fetch(url + '?limit=1', { headers, mode: 'cors' });
-    statusEl.textContent = `${resp.status} OK`;
+    statusEl.textContent = `${resp.status} ${resp.ok ? 'OK' : (resp.statusText || 'error')}`;
     statusEl.className = 'conn-status ' + (resp.ok ? 'conn-ok' : 'conn-err');
   } catch(e) {
     statusEl.textContent = 'failed';
@@ -1257,14 +1259,14 @@ function renderWorklistTable() {
     const tr = document.createElement('tr');
     const modCls = 'mod-' + item.modality;
     tr.innerHTML = `
-      <td class="tag-cell"><span class="tag">(0010,0010)</span><span class="val">${item.patientName||'—'}</span></td>
-      <td class="tag-cell"><span class="tag">(0010,0020)</span><span class="val">${item.patientID||'—'}</span></td>
-      <td class="tag-cell"><span class="tag">(0008,0050)</span><span class="val">${item.accessionNumber||'—'}</span></td>
-      <td><span class="mod-badge ${modCls}">${item.modality}</span></td>
-      <td class="tag-cell"><span class="tag">(0040,0001)/(0040,0010)</span><span class="val">${item.stationAE||'—'} / ${item.stationName||'—'}</span></td>
-      <td class="tag-cell"><span class="tag">(0040,0002)</span><span class="val">${item.schedDate?dicomDateDisplay(item.schedDate):'—'} ${item.schedTime||''}</span></td>
-      <td class="tag-cell"><span class="tag">(0032,1060)</span><span class="val">${item.procedureDesc||'—'}</span></td>
-      <td class="tag-cell"><span class="tag">(0008,0090)</span><span class="val">${item.referringPhysician||'—'}</span></td>
+      <td class="tag-cell"><span class="tag">(0010,0010)</span><span class="val">${esc(item.patientName||'—')}</span></td>
+      <td class="tag-cell"><span class="tag">(0010,0020)</span><span class="val">${esc(item.patientID||'—')}</span></td>
+      <td class="tag-cell"><span class="tag">(0008,0050)</span><span class="val">${esc(item.accessionNumber||'—')}</span></td>
+      <td><span class="mod-badge ${esc(modCls)}">${esc(item.modality)}</span></td>
+      <td class="tag-cell"><span class="tag">(0040,0001)/(0040,0010)</span><span class="val">${esc(item.stationAE||'—')} / ${esc(item.stationName||'—')}</span></td>
+      <td class="tag-cell"><span class="tag">(0040,0002)</span><span class="val">${item.schedDate?dicomDateDisplay(item.schedDate):'—'} ${esc(item.schedTime||'')}</span></td>
+      <td class="tag-cell"><span class="tag">(0032,1060)</span><span class="val">${esc(item.procedureDesc||'—')}</span></td>
+      <td class="tag-cell"><span class="tag">(0008,0090)</span><span class="val">${esc(item.referringPhysician||'—')}</span></td>
       <td><div class="td-actions">
         <button class="btn btn-ghost btn-sm" onclick="openEditModal('${item.id}')">Edit</button>
         <button class="btn btn-danger btn-sm" onclick="deleteItem('${item.id}')">Del</button>
@@ -1340,17 +1342,53 @@ function saveItem() {
   if (!item.accessionNumber) { alert('Accession Number is required.'); return; }
   if (editId) { const idx=worklist.findIndex(w=>w.id===editId); if(idx!==-1) worklist[idx]=item; }
   else worklist.push(item);
+  saveWorklist();
   closeModal();
   renderWorklistTable();
 }
 function deleteItem(id) {
   if (!confirm('Delete this worklist item?')) return;
   worklist = worklist.filter(w => w.id !== id);
+  saveWorklist();
   renderWorklistTable();
+}
+
+// ─── Persistence ───
+const WL_STORAGE_KEY = 'mwl-simulator-worklist';
+function saveWorklist() {
+  try { localStorage.setItem(WL_STORAGE_KEY, JSON.stringify(worklist)); } catch (e) { /* storage unavailable */ }
+}
+function loadWorklist() {
+  try {
+    const raw = localStorage.getItem(WL_STORAGE_KEY);
+    if (raw !== null) { worklist = JSON.parse(raw) || []; return; }
+  } catch (e) { /* fall through to seed */ }
+  // First run — seed sample items so C-FIND queries have something to match
+  const today = isoToDicom(todayISO());
+  worklist = [
+    { id: uid(), patientName:'DOE^JOHN^A', patientID:'MRN001234', dob:'19800515', sex:'M',
+      accessionNumber:'ACC0001', procedureDesc:'CT CHEST WITH CONTRAST', procedureID:'RP001',
+      referringPhysician:'SMITH^JAMES', modality:'CT', stationAE:'CT_SCANNER_01', stationName:'CT1',
+      stepID:'SP001', schedDate:today, schedTime:'0900', performingPhysician:'JONES^ROBERT',
+      stepDesc:'CT CHEST WITH IV CONTRAST', institutionName:'GENERAL HOSPITAL', priority:'ROUTINE', studyUID: genUID() },
+    { id: uid(), patientName:'SMITH^JANE^M', patientID:'MRN005678', dob:'19750823', sex:'F',
+      accessionNumber:'ACC0002', procedureDesc:'MRI BRAIN WITHOUT CONTRAST', procedureID:'RP002',
+      referringPhysician:'BROWN^DAVID', modality:'MR', stationAE:'MR_SCANNER_01', stationName:'MR1',
+      stepID:'SP002', schedDate:today, schedTime:'1030', performingPhysician:'WILSON^MARY',
+      stepDesc:'MRI BRAIN ROUTINE', institutionName:'GENERAL HOSPITAL', priority:'URGENT', studyUID: genUID() },
+    { id: uid(), patientName:'GARCIA^MARIA', patientID:'MRN009012', dob:'19910302', sex:'F',
+      accessionNumber:'ACC0003', procedureDesc:'US ABDOMEN COMPLETE', procedureID:'RP003',
+      referringPhysician:'SMITH^JAMES', modality:'US', stationAE:'US_ROOM_02', stationName:'US2',
+      stepID:'SP003', schedDate:today, schedTime:'1315', performingPhysician:'JONES^ROBERT',
+      stepDesc:'US ABDOMEN COMPLETE', institutionName:'GENERAL HOSPITAL', priority:'ROUTINE', studyUID: genUID() },
+  ];
+  saveWorklist();
 }
 
 // ─── Init ─────────────────────────────────────────────────────────────────────
 document.getElementById('modal-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+loadWorklist();
+updateWorklistCount();
 buildReturnKeyGrid();
 </script>
 </body>

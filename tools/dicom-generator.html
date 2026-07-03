@@ -1239,6 +1239,18 @@ function decodeDICOMValue(vr, bytes) {
       const hex = Array.from(bytes.slice(0, shown)).map(b => b.toString(16).padStart(2,'0')).join(' ');
       return bytes.length > shown ? `${hex} … [${bytes.length} bytes]` : hex;
     }
+    case '--': {
+      // Implicit VR — unknown type. Show as text when printable, else hex.
+      let printable = true;
+      for (let i = 0; i < bytes.length; i++) {
+        const c = bytes[i];
+        if (c !== 0 && c !== 0x0a && c !== 0x0d && c !== 0x1b && (c < 0x20 || c > 0x7e)) { printable = false; break; }
+      }
+      if (printable) return text();
+      const shown = Math.min(16, bytes.length);
+      const hex = Array.from(bytes.slice(0, shown)).map(b => b.toString(16).padStart(2,'0')).join(' ');
+      return bytes.length > shown ? `${hex} … [${bytes.length} bytes]` : hex;
+    }
     default: return text();
   }
 }
@@ -1262,6 +1274,12 @@ function parseDICOM(buffer) {
   off = 132;
   const rows = [];
 
+  // File meta (group 0002) is always Explicit VR LE; the main dataset follows
+  // the transfer syntax declared in (0002,0010).
+  let tsUID = '1.2.840.10008.1.2.1';
+  let explicitVR = true;
+  let modeDecided = false;
+
   function r16() { const v = dv.getUint16(off, true); off += 2; return v; }
   function r32() { const v = dv.getUint32(off, true); off += 4; return v; }
 
@@ -1271,6 +1289,17 @@ function parseDICOM(buffer) {
       const el  = r16();
       const tagStr = grp.toString(16).padStart(4,'0').toUpperCase()
                    + el.toString(16).padStart(4,'0').toUpperCase();
+
+      if (!modeDecided && depth === 0 && grp !== 0x0002) {
+        modeDecided = true;
+        if (tsUID === '1.2.840.10008.1.2') {
+          explicitVR = false;
+        } else if (tsUID === '1.2.840.10008.1.2.2') {
+          throw new Error('Explicit VR Big Endian transfer syntax is not supported by this reader.');
+        } else if (tsUID === '1.2.840.10008.1.2.1.99') {
+          throw new Error('Deflated transfer syntax is not supported by this reader.');
+        }
+      }
 
       // ── Delimiter / item tags (FFFE,xxxx) — no VR field ──
       if (grp === 0xFFFE) {
@@ -1288,20 +1317,27 @@ function parseDICOM(buffer) {
         continue;
       }
 
-      // ── Read VR ──
-      if (off + 2 > buffer.byteLength) break;
-      const vr = String.fromCharCode(u8[off], u8[off+1]); off += 2;
-
-      // ── Read length ──
-      let length;
-      if (LONG_VRS.has(vr)) {
+      // ── Read VR + length ──
+      let vr, length;
+      if (explicitVR || grp === 0x0002) {
         if (off + 2 > buffer.byteLength) break;
-        off += 2; // reserved bytes
+        vr = String.fromCharCode(u8[off], u8[off+1]); off += 2;
+        if (LONG_VRS.has(vr)) {
+          if (off + 2 > buffer.byteLength) break;
+          off += 2; // reserved bytes
+          if (off + 4 > buffer.byteLength) break;
+          length = r32();
+        } else {
+          if (off + 2 > buffer.byteLength) break;
+          length = r16();
+        }
+      } else {
+        // Implicit VR: tag is followed by a 4-byte length, no VR field.
+        // Undefined length can only be a sequence; other values are decoded
+        // heuristically (text if printable, hex preview otherwise).
         if (off + 4 > buffer.byteLength) break;
         length = r32();
-      } else {
-        if (off + 2 > buffer.byteLength) break;
-        length = r16();
+        vr = (length === 0xFFFFFFFF && grp !== 0x7FE0) ? 'SQ' : '--';
       }
 
       const isUndef = (length === 0xFFFFFFFF);
@@ -1328,6 +1364,7 @@ function parseDICOM(buffer) {
       const bytes = u8.slice(off, off + actualLen);
       off += actualLen;
       const value = decodeDICOMValue(vr, bytes);
+      if (tagStr === '00020010') tsUID = value.trim();
       // Mark group 0002 elements as meta for styling
       const isMeta = (grp === 0x0002);
       rows.push({ tag: tagStr, vr, length: actualLen, depth, value, isMeta });
