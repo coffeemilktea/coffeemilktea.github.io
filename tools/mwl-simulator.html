@@ -559,6 +559,7 @@ const dicomDateDisplay = d => d && d.length === 8
   ? `${d.slice(6,8)} ${MONTHS[parseInt(d.slice(4,6))-1]} ${d.slice(0,4)}` : (d || '—');
 const ts = () => { const n = new Date(); return [n.getHours(),n.getMinutes(),n.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':'); };
 const formatTag = t => `(${t.slice(0,4)},${t.slice(4)})`;
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 
 // ─── DICOM Matching ───────────────────────────────────────────────────────────
 function matchWildcard(value, pattern) {
