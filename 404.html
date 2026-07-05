@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Page not found — Healthcare Data Tools</title>
+  <meta name="robots" content="noindex">
+  <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <script src="/tools/theme.js"></script>
+  <style>
+    :root {
+      --bg: #272822; --surface: #1e1f1a; --surface2: #3e3d32; --border: #49483e;
+      --accent: #66d9ef; --green: #a6e22e; --text: #f8f8f2; --muted: #75715e;
+      --body: #b9b7a8; --radius: 10px;
+      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
+      --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+    }
+    [data-theme="light"] {
+      --bg: #f9f8f5; --surface: #ffffff; --surface2: #f0efe9; --border: #d6d5cc;
+      --accent: #0597a7; --green: #5c8400; --text: #272822; --muted: #75715e;
+      --body: #55544a;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      background: var(--bg); color: var(--text); font-family: var(--font-sans);
+      line-height: 1.6; padding: 24px;
+    }
+    .card {
+      max-width: 460px; width: 100%; text-align: center;
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 44px 36px;
+    }
+    .code {
+      font-family: var(--font-mono); font-size: 3rem; font-weight: 700;
+      color: var(--accent); margin: 0 0 4px; letter-spacing: -0.02em;
+    }
+    h1 { font-size: 1.15rem; margin: 0 0 10px; }
+    p { color: var(--body); font-size: 0.9rem; margin: 0 0 24px; }
+    .msh {
+      font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted);
+      background: var(--surface2); border: 1px solid var(--border); border-radius: 6px;
+      padding: 8px 12px; margin: 0 0 28px; overflow-wrap: anywhere;
+    }
+    a.btn {
+      display: inline-block; background: var(--green); color: var(--bg);
+      border-radius: var(--radius); padding: 10px 22px; text-decoration: none;
+      font-weight: 600; font-size: 0.9rem;
+    }
+    [data-theme="light"] a.btn { color: #fff; }
+    a.btn:hover { filter: brightness(1.08); }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <p class="code">404</p>
+    <h1>Page not found</h1>
+    <p>The page you're looking for doesn't exist or has moved.</p>
+    <p class="msh">MSA|AE|404^Page not found^HTTP</p>
+    <a class="btn" href="/">Back to the tools</a>
+  </main>
+</body>
+</html>
