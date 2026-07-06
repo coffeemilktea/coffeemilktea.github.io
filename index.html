@@ -424,11 +424,13 @@
       overflow: hidden;
     }
 
-    /* Tinted sheen that glows on hover */
+    /* Tinted sheen that glows on hover — sits behind card content so the
+       stretched link (h3 a::after) still covers the whole card. */
     .tool-card::before {
       content: "";
       position: absolute;
       inset: 0;
+      z-index: -1;
       border-radius: inherit;
       background: radial-gradient(140% 90% at 0% 0%, color-mix(in srgb, var(--tint) 16%, transparent), transparent 55%);
       opacity: .6;
@@ -442,8 +444,6 @@
       transform: translateY(-4px);
     }
     .tool-card:hover::before { opacity: 1; }
-
-    .tool-card > * { position: relative; z-index: 1; }
 
     .tool-top {
       display: flex;
