@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://ocha.dev/</loc></url>
-  <url><loc>https://ocha.dev/tools/dicom-viewer.html</loc></url>
-  <url><loc>https://ocha.dev/tools/dicom-generator.html</loc></url>
-  <url><loc>https://ocha.dev/tools/msgparser.html</loc></url>
-  <url><loc>https://ocha.dev/tools/diff-checker.html</loc></url>
-  <url><loc>https://ocha.dev/tools/mwl-simulator.html</loc></url>
-  <url><loc>https://ocha.dev/tools/dicom-hl7-order.html</loc></url>
+  <url><loc>https://ocha.dev/hl7-dicom-tools/tools/dicom-viewer.html</loc></url>
+  <url><loc>https://ocha.dev/hl7-dicom-tools/tools/dicom-generator.html</loc></url>
+  <url><loc>https://ocha.dev/hl7-dicom-tools/tools/msgparser.html</loc></url>
+  <url><loc>https://ocha.dev/hl7-dicom-tools/tools/diff-checker.html</loc></url>
+  <url><loc>https://ocha.dev/hl7-dicom-tools/tools/mwl-simulator.html</loc></url>
+  <url><loc>https://ocha.dev/hl7-dicom-tools/tools/dicom-hl7-order.html</loc></url>
 </urlset>
