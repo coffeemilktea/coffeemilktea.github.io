@@ -16,15 +16,15 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Healthcare Data Tools — Browser-based HL7 &amp; DICOM utilities">
   <meta name="twitter:description" content="Parse HL7 v2.x messages, view and edit DICOM files, generate test data, and simulate modality worklists — entirely in your browser.">
-  <meta name="theme-color" content="#1e1f1a">
+  <meta name="theme-color" content="#1b1c17">
 
   <script src="/tools/theme.js"></script>
 
   <style>
     /* ── Tokens (mirrors tools/theme.css) ── */
     :root {
-      --bg:       #272822;
-      --surface:  #1e1f1a;
+      --bg:       #0e0f0b;
+      --surface:  #161712;
       --surface2: #3e3d32;
       --border:   #49483e;
       --accent:   #66d9ef;
@@ -34,16 +34,24 @@
       --red:      #f92672;
       --orange:   #fd971f;
       --text:     #f8f8f2;
-      --muted:    #75715e;
-      --body:     #b9b7a8;
-      --radius:   10px;
+      --muted:    #a5a08c;
+      --body:     #c8c6b7;
+      --radius:   16px;
       --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
       --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
-      --shadow:   0 12px 32px rgba(0, 0, 0, .35);
+      --shadow:   0 20px 45px rgba(0, 0, 0, .45);
+
+      /* ── Glass tokens ── */
+      --glass:        rgba(38, 40, 33, 0.45);
+      --glass-strong: rgba(30, 31, 26, 0.62);
+      --glass-border: rgba(248, 248, 242, 0.10);
+      --glass-hi:     rgba(255, 255, 255, 0.14);
+      --glass-blur:   18px;
+      --glass-shadow: 0 8px 32px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255,255,255,.05);
     }
 
     [data-theme="light"] {
-      --bg:       #f9f8f5;
+      --bg:       #eef1f6;
       --surface:  #ffffff;
       --surface2: #f0efe9;
       --border:   #d6d5cc;
@@ -54,9 +62,16 @@
       --red:      #d4006e;
       --orange:   #c96900;
       --text:     #272822;
-      --muted:    #75715e;
-      --body:     #55544a;
-      --shadow:   0 12px 32px rgba(39, 40, 34, .10);
+      --muted:    #6a695d;
+      --body:     #4b4a41;
+      --shadow:   0 20px 45px rgba(39, 40, 34, .12);
+
+      --glass:        rgba(255, 255, 255, 0.55);
+      --glass-strong: rgba(255, 255, 255, 0.72);
+      --glass-border: rgba(255, 255, 255, 0.7);
+      --glass-hi:     rgba(255, 255, 255, 0.9);
+      --glass-blur:   18px;
+      --glass-shadow: 0 8px 32px rgba(39, 40, 34, .10), inset 0 1px 0 rgba(255,255,255,.6);
     }
 
     /* ── Base ── */
@@ -74,7 +89,50 @@
       font-family: var(--font-sans);
       line-height: 1.65;
       -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
     }
+
+    /* ── Ambient aurora backdrop (what the glass refracts) ── */
+    .aurora {
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      overflow: hidden;
+      pointer-events: none;
+      background:
+        radial-gradient(1200px 800px at 50% -10%, color-mix(in srgb, var(--accent) 10%, transparent), transparent 60%),
+        var(--bg);
+    }
+
+    .aurora span {
+      position: absolute;
+      display: block;
+      border-radius: 50%;
+      filter: blur(70px);
+      opacity: 0.55;
+      will-change: transform;
+    }
+    [data-theme="light"] .aurora span { opacity: 0.4; filter: blur(80px); }
+
+    .aurora .b1 {
+      width: 46vw; height: 46vw; top: -8vw; left: -6vw;
+      background: var(--accent);
+      animation: drift1 24s ease-in-out infinite alternate;
+    }
+    .aurora .b2 {
+      width: 40vw; height: 40vw; top: 30vh; right: -10vw;
+      background: var(--accent2);
+      animation: drift2 30s ease-in-out infinite alternate;
+    }
+    .aurora .b3 {
+      width: 38vw; height: 38vw; bottom: -12vw; left: 20vw;
+      background: var(--green);
+      animation: drift3 27s ease-in-out infinite alternate;
+    }
+
+    @keyframes drift1 { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(6vw, 8vh, 0) scale(1.15); } }
+    @keyframes drift2 { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(-8vw, -6vh, 0) scale(1.1); } }
+    @keyframes drift3 { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(4vw, -8vh, 0) scale(1.2); } }
 
     a { color: var(--accent); }
 
@@ -106,10 +164,11 @@
       position: sticky;
       top: 0;
       z-index: 100;
-      background: color-mix(in srgb, var(--surface) 88%, transparent);
-      backdrop-filter: blur(10px);
-      -webkit-backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
+      background: var(--glass-strong);
+      backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(160%);
+      border-bottom: 1px solid var(--glass-border);
+      box-shadow: 0 1px 0 var(--glass-hi) inset, 0 6px 24px rgba(0,0,0,.12);
     }
 
     .header-inner {
@@ -138,9 +197,12 @@
       place-items: center;
       width: 30px;
       height: 30px;
-      border-radius: 8px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--glass);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1px solid var(--glass-border);
+      box-shadow: inset 0 1px 0 var(--glass-hi);
       color: var(--green);
       flex: none;
     }
@@ -162,13 +224,16 @@
 
     .header-nav a:hover {
       color: var(--text);
-      background: var(--surface2);
+      background: var(--glass);
     }
 
     /* Theme toggle (markup/behavior shared with tools/theme.js) */
     .btn-theme {
-      background: var(--surface2);
-      border: 1px solid var(--border);
+      background: var(--glass);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+      border: 1px solid var(--glass-border);
+      box-shadow: inset 0 1px 0 var(--glass-hi);
       border-radius: 20px;
       padding: 0 12px;
       height: 30px;
@@ -184,18 +249,13 @@
       white-space: nowrap;
       margin-left: 6px;
     }
-    .btn-theme:hover { color: var(--text); border-color: var(--muted); }
+    .btn-theme:hover { color: var(--text); border-color: var(--accent); }
 
     /* ── Hero ── */
     .hero {
       position: relative;
       overflow: hidden;
-      padding: 88px 0 72px;
-      border-bottom: 1px solid var(--border);
-      background:
-        radial-gradient(600px 320px at 12% 0%,   color-mix(in srgb, var(--accent) 9%, transparent), transparent 70%),
-        radial-gradient(600px 320px at 88% 10%,  color-mix(in srgb, var(--green) 8%, transparent), transparent 70%),
-        var(--surface);
+      padding: 96px 0 80px;
     }
 
     .hero-eyebrow {
@@ -245,23 +305,27 @@
       font-size: 0.92rem;
       font-weight: 600;
       text-decoration: none;
-      transition: filter .15s, background .15s, color .15s, border-color .15s;
+      transition: filter .15s, background .15s, color .15s, border-color .15s, transform .15s;
     }
 
     .btn-primary {
       background: var(--green);
       color: var(--bg);
       border: 1px solid var(--green);
+      box-shadow: 0 8px 24px color-mix(in srgb, var(--green) 35%, transparent), inset 0 1px 0 rgba(255,255,255,.25);
     }
     [data-theme="light"] .btn-primary { color: #ffffff; }
-    .btn-primary:hover { filter: brightness(1.08); }
+    .btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
 
     .btn-ghost {
-      background: transparent;
+      background: var(--glass);
+      backdrop-filter: blur(10px) saturate(140%);
+      -webkit-backdrop-filter: blur(10px) saturate(140%);
       color: var(--text);
-      border: 1px solid var(--border);
+      border: 1px solid var(--glass-border);
+      box-shadow: inset 0 1px 0 var(--glass-hi);
     }
-    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
 
     .hero-points {
       display: grid;
@@ -282,12 +346,15 @@
     .point-icon {
       display: grid;
       place-items: center;
-      width: 34px;
-      height: 34px;
-      border-radius: 8px;
+      width: 38px;
+      height: 38px;
+      border-radius: 11px;
       flex: none;
-      border: 1px solid var(--border);
-      background: var(--surface2);
+      border: 1px solid var(--glass-border);
+      background: var(--glass);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: inset 0 1px 0 var(--glass-hi);
       color: var(--accent);
       margin-top: 2px;
     }
@@ -346,18 +413,37 @@
       position: relative;
       display: flex;
       flex-direction: column;
-      background: var(--surface);
-      border: 1px solid var(--border);
+      background: var(--glass);
+      backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+      border: 1px solid var(--glass-border);
       border-radius: var(--radius);
       padding: 24px;
-      transition: border-color .18s, box-shadow .18s, transform .18s;
+      box-shadow: var(--glass-shadow);
+      transition: border-color .18s, box-shadow .18s, transform .18s, background .18s;
+      overflow: hidden;
+    }
+
+    /* Tinted sheen that glows on hover */
+    .tool-card::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: inherit;
+      background: radial-gradient(140% 90% at 0% 0%, color-mix(in srgb, var(--tint) 16%, transparent), transparent 55%);
+      opacity: .6;
+      transition: opacity .18s;
+      pointer-events: none;
     }
 
     .tool-card:hover {
-      border-color: color-mix(in srgb, var(--tint) 55%, var(--border));
-      box-shadow: var(--shadow);
-      transform: translateY(-2px);
+      border-color: color-mix(in srgb, var(--tint) 60%, var(--glass-border));
+      box-shadow: 0 24px 50px rgba(0, 0, 0, .55), var(--shadow), 0 0 0 1px color-mix(in srgb, var(--tint) 25%, transparent);
+      transform: translateY(-4px);
     }
+    .tool-card:hover::before { opacity: 1; }
+
+    .tool-card > * { position: relative; z-index: 1; }
 
     .tool-top {
       display: flex;
@@ -433,8 +519,10 @@
 
     /* ── About ── */
     .about {
-      border-top: 1px solid var(--border);
-      background: var(--surface);
+      border-top: 1px solid var(--glass-border);
+      background: var(--glass);
+      backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
     }
 
     .about-grid {
@@ -453,10 +541,14 @@
     .about p:last-child { margin-bottom: 0; }
 
     .privacy-card {
-      background: var(--bg);
-      border: 1px solid color-mix(in srgb, var(--green) 40%, var(--border));
+      position: relative;
+      background: var(--glass-strong);
+      backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(150%);
+      border: 1px solid color-mix(in srgb, var(--green) 45%, var(--glass-border));
       border-radius: var(--radius);
       padding: 24px;
+      box-shadow: var(--glass-shadow), 0 0 40px color-mix(in srgb, var(--green) 12%, transparent);
     }
 
     .privacy-card h3 {
@@ -475,9 +567,11 @@
 
     /* ── Footer ── */
     .site-footer {
-      border-top: 1px solid var(--border);
+      border-top: 1px solid var(--glass-border);
       padding: 40px 0 32px;
-      background: var(--surface);
+      background: var(--glass-strong);
+      backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
     }
 
     .footer-grid {
@@ -551,10 +645,17 @@
       html { scroll-behavior: auto; }
       .tool-card, .tool-cta svg { transition: none; }
       .tool-card:hover { transform: none; }
+      .aurora span { animation: none !important; }
     }
   </style>
 </head>
 <body>
+  <div class="aurora" aria-hidden="true">
+    <span class="b1"></span>
+    <span class="b2"></span>
+    <span class="b3"></span>
+  </div>
+
   <a class="skip-link" href="#tools">Skip to tools</a>
 
   <header class="site-header">
