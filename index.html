@@ -16,62 +16,64 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Healthcare Data Tools — Browser-based HL7 &amp; DICOM utilities">
   <meta name="twitter:description" content="Parse HL7 v2.x messages, view and edit DICOM files, generate test data, and simulate modality worklists — entirely in your browser.">
-  <meta name="theme-color" content="#1b1c17">
+  <meta name="theme-color" content="#1a1b26">
 
   <script src="/tools/theme.js"></script>
 
   <style>
     /* ── Tokens (landing page palette; the tools ship their own theme) ── */
     :root {
-      --bg:       #0e0f0b;
-      --surface:  #161712;
-      --surface2: #3e3d32;
-      --border:   #49483e;
-      --accent:   #66d9ef;
-      --accent2:  #ae81ff;
-      --green:    #a6e22e;
-      --yellow:   #e6db74;
-      --red:      #f92672;
-      --orange:   #fd971f;
-      --text:     #f8f8f2;
-      --muted:    #a5a08c;
-      --body:     #c8c6b7;
+      --bg:       #1a1b26;
+      --surface:  #16161e;
+      --surface2: #292e42;
+      --border:   #3b4261;
+      --accent:   #7aa2f7;
+      --accent2:  #bb9af7;
+      --cyan:     #7dcfff;
+      --green:    #9ece6a;
+      --yellow:   #e0af68;
+      --red:      #f7768e;
+      --orange:   #ff9e64;
+      --text:     #c0caf5;
+      --muted:    #9aa5ce;
+      --body:     #a9b1d6;
       --radius:   16px;
       --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
       --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
       --shadow:   0 20px 45px rgba(0, 0, 0, .45);
 
       /* ── Glass tokens ── */
-      --glass:        rgba(38, 40, 33, 0.45);
-      --glass-strong: rgba(30, 31, 26, 0.62);
-      --glass-border: rgba(248, 248, 242, 0.10);
+      --glass:        rgba(41, 46, 66, 0.50);
+      --glass-strong: rgba(22, 22, 30, 0.66);
+      --glass-border: rgba(192, 202, 245, 0.12);
       --glass-hi:     rgba(255, 255, 255, 0.14);
       --glass-blur:   18px;
       --glass-shadow: 0 8px 32px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255,255,255,.05);
     }
 
     [data-theme="light"] {
-      --bg:       #eef1f6;
-      --surface:  #ffffff;
-      --surface2: #f0efe9;
-      --border:   #d6d5cc;
-      --accent:   #0597a7;
-      --accent2:  #7c3aed;
-      --green:    #5c8400;
-      --yellow:   #866e00;
-      --red:      #d4006e;
-      --orange:   #c96900;
-      --text:     #272822;
-      --muted:    #6a695d;
-      --body:     #4b4a41;
-      --shadow:   0 20px 45px rgba(39, 40, 34, .12);
+      --bg:       #e1e2e7;
+      --surface:  #f4f4f8;
+      --surface2: #d4d6e1;
+      --border:   #a8adc9;
+      --accent:   #2e7de9;
+      --accent2:  #9854f1;
+      --cyan:     #007197;
+      --green:    #587539;
+      --yellow:   #8c6c3e;
+      --red:      #f52a65;
+      --orange:   #b15c00;
+      --text:     #343b58;
+      --muted:    #6a739e;
+      --body:     #4c5279;
+      --shadow:   0 20px 45px rgba(52, 59, 88, .12);
 
       --glass:        rgba(255, 255, 255, 0.55);
       --glass-strong: rgba(255, 255, 255, 0.72);
       --glass-border: rgba(255, 255, 255, 0.7);
       --glass-hi:     rgba(255, 255, 255, 0.9);
       --glass-blur:   18px;
-      --glass-shadow: 0 8px 32px rgba(39, 40, 34, .10), inset 0 1px 0 rgba(255,255,255,.6);
+      --glass-shadow: 0 8px 32px rgba(52, 59, 88, .10), inset 0 1px 0 rgba(255,255,255,.6);
     }
 
     /* ── Base ── */
@@ -126,7 +128,7 @@
     }
     .aurora .b3 {
       width: 38vw; height: 38vw; bottom: -12vw; left: 20vw;
-      background: var(--green);
+      background: var(--cyan);
       animation: drift3 27s ease-in-out infinite alternate;
     }
 
