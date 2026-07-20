@@ -311,13 +311,18 @@
     }
 
     .btn-primary {
-      background: var(--green);
-      color: var(--bg);
-      border: 1px solid var(--green);
-      box-shadow: 0 8px 24px color-mix(in srgb, var(--green) 35%, transparent), inset 0 1px 0 rgba(255,255,255,.25);
+      background: color-mix(in srgb, var(--accent) 16%, transparent);
+      backdrop-filter: blur(10px) saturate(140%);
+      -webkit-backdrop-filter: blur(10px) saturate(140%);
+      color: var(--accent);
+      border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
+      box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 18%, transparent), inset 0 1px 0 rgba(255,255,255,.08);
     }
-    [data-theme="light"] .btn-primary { color: #ffffff; }
-    .btn-primary:hover { filter: brightness(1.08); transform: translateY(-1px); }
+    .btn-primary:hover {
+      background: color-mix(in srgb, var(--accent) 26%, transparent);
+      border-color: var(--accent);
+      transform: translateY(-1px);
+    }
 
     .btn-ghost {
       background: var(--glass);
