@@ -1257,11 +1257,14 @@
          events, so a section already on screen on a tall display would never
          load if the visitor never scrolled. IntersectionObserver has no such
          blind spot. -->
-    <section class="quickref"
-             hx-get="/partials/sections/quickref.html"
-             hx-trigger="intersect once"
-             hx-swap="innerHTML transition:true">
-      <div class="container">
+    <section class="quickref">
+      <!-- The htmx attributes belong on the .container, not the <section>:
+           an innerHTML swap on the section would replace the container too,
+           and the fragment would lose the layout's max-width and gutters. -->
+      <div class="container"
+           hx-get="/partials/sections/quickref.html"
+           hx-trigger="intersect once"
+           hx-swap="innerHTML transition:true">
         <div class="quickref-skeleton" aria-hidden="true">
           <span></span><span></span><span></span><span></span>
         </div>
