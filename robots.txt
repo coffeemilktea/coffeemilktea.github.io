@@ -1,4 +1,7 @@
 User-agent: *
 Allow: /
 
+# htmx fragments — swapped into the page, not standalone documents.
+Disallow: /partials/
+
 Sitemap: https://ocha.dev/sitemap.xml

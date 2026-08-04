@@ -7,6 +7,7 @@
   <meta name="robots" content="noindex">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
   <script src="/tools/theme.js"></script>
+  <script src="/vendor/htmx.min.js" defer></script>
   <style>
     :root {
       --bg: #1a1b26; --surface: #16161e; --surface2: #292e42; --border: #3b4261;
@@ -51,6 +52,26 @@
       font-weight: 600; font-size: 0.9rem;
     }
     a.btn:hover { background: color-mix(in srgb, var(--accent) 26%, transparent); border-color: var(--accent); }
+
+    /* ── htmx-loaded tool list (shared fragment with the landing page) ── */
+    .jump { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
+    /* Stay invisible until the fragment actually lands (or if JS is off). */
+    .jump:not(:has(.tool-links)) { display: none; }
+    .jump h2 {
+      font-family: var(--font-mono); font-size: 0.66rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.14em; color: var(--muted);
+      margin: 0 0 12px;
+    }
+    .tool-links {
+      list-style: none; margin: 0; padding: 0;
+      display: flex; flex-wrap: wrap; gap: 8px; justify-content: center;
+    }
+    .tool-links a {
+      display: inline-block; color: var(--body); text-decoration: none;
+      font-size: 0.78rem; border: 1px solid var(--border); border-radius: 999px;
+      padding: 4px 12px; transition: color .15s, border-color .15s;
+    }
+    .tool-links a:hover { color: var(--accent); border-color: var(--accent); }
   </style>
 </head>
 <body>
@@ -60,6 +81,11 @@
     <p>The page you're looking for doesn't exist or has moved.</p>
     <p class="msh">MSA|AE|404^Page not found^HTTP</p>
     <a class="btn" href="/">Back to the tools</a>
+
+    <!-- Same fragment the landing page's tool list is generated from. -->
+    <div class="jump" hx-get="/partials/tool-links.html" hx-trigger="load" hx-swap="beforeend">
+      <h2>Jump straight to a tool</h2>
+    </div>
   </main>
 </body>
 </html>

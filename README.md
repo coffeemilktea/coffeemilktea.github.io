@@ -6,6 +6,52 @@ The tools themselves are maintained in the **[hl7-dicom-tools](https://github.co
 
 ---
 
+## 🧩 How the page is built
+
+The landing page is a static hypermedia page driven by **[htmx](https://htmx.org/) 2.0.7**, vendored at `vendor/htmx.min.js` — no CDN, no build step, no framework. GitHub Pages serves plain files; htmx fetches HTML fragments over the wire and swaps them into the DOM.
+
+```
+index.html              shell + hero + the six tool cards + about + footer
+404.html                error page; pulls its tool list from a shared fragment
+partials/
+  tool-links.html       the six tool links, shared by 404.html
+  detail/*.html         one per tool — "Use cases" panel + its own Hide control
+  empty.html            zero-byte fragment; swapping it in collapses a panel
+vendor/htmx.min.js      htmx 2.0.7
+tools/theme.js          shared dark/light controller (unchanged)
+```
+
+### What htmx does, and what it deliberately doesn't
+
+Each tool card carries a **Use cases** button:
+
+```html
+<button hx-get="/partials/detail/msgparser.html"
+        hx-target="#detail-msgparser"
+        hx-swap="innerHTML">Use cases</button>
+```
+
+The fetched fragment ships its own **Hide details** control, which `hx-get`s the
+zero-byte `partials/empty.html` back into the same target. Open and close are
+therefore both plain hypermedia exchanges — the page has **no custom JavaScript**
+beyond the existing theme toggle. CSS handles the rest: `:has(.tool-detail > *)`
+hides the trigger once a panel is in, and `.htmx-request` drives the spinner.
+
+The **tool cards themselves stay in `index.html`** rather than being fragment-loaded.
+Crawlers and no-JS visitors get the complete tool list, descriptions, and links in
+the initial response; htmx only adds content that wasn't there before. That is why
+there is no htmx-driven category filter — filtering six cards would have meant
+duplicating every card across several partials for no real gain.
+
+`hx-boost` is intentionally **not** used. The only outbound links go to the tools in
+the other repo, which ship their own `<head>`, styles, and scripts; boosting those
+would swap bodies across documents that don't share a shell.
+
+`/partials/` is disallowed in `robots.txt` so the fragments aren't indexed as thin
+standalone pages.
+
+---
+
 ## 🔒 Privacy & Security
 
 **Client-side only — no data leaves your browser.**  
@@ -77,4 +123,7 @@ To run the tools locally, clone the [hl7-dicom-tools](https://github.com/coffeem
     *   **Node.js:** `npx http-server -p 8000`
     *   Access the tools at `http://localhost:8000/tools/`.
 
-To preview this landing page locally, serve this repository root the same way.
+To preview this landing page locally, serve this repository root the same way. It must
+be served over HTTP rather than opened via `file://` — htmx fetches the fragments in
+`partials/` with XHR, and the page references `/vendor/`, `/tools/`, and `/partials/`
+by root-absolute path.
