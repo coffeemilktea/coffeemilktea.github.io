@@ -1,19 +1,45 @@
 /* ============================================================
-   Monokai landing page — mirrors tools/theme.css palette
+   ocha.dev landing page — tea theme
+   Palette mirrors tools/theme.css (steeped sencha / milk tea)
    ============================================================ */
 
 :root {
-  --bg:       #272822;
-  --surface:  #1e1f1a;
-  --surface2: #3e3d32;
-  --border:   #49483e;
-  --accent:   #66d9ef;
-  --green:    #a6e22e;
-  --text:     #f8f8f2;
-  --muted:    #75715e;
+  --bg:       #1c211a;  /* wet tea leaf   */
+  --surface:  #161b15;  /* cast-iron pot  */
+  --surface2: #2a3227;  /* damp leaf      */
+  --border:   #3a4536;  /* tea stem       */
+  --accent:   #7fd1ae;  /* jade steam     */
+  --accent2:  #c9a7e8;  /* ume blossom    */
+  --green:    #a8d05a;  /* matcha         */
+  --yellow:   #e6cf7a;  /* genmaicha rice */
+  --text:     #f4f1e4;  /* milk tea cream */
+  --muted:    #8f9683;  /* dried stem     */
+
+  /* Tea-leaf watermark + steam tints, derived from the palette */
+  --leaf-tint:  rgba(127, 209, 174, 0.055);
+  --brew-tint:  rgba(168, 208, 90, 0.05);
+  --card-glow:  rgba(0, 0, 0, .45);
+
   --radius:   8px;
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
   --font-sans: system-ui, -apple-system, sans-serif;
+}
+
+[data-theme="light"] {
+  --bg:       #f7f3e8;  /* genmaicha paper */
+  --surface:  #fffdf7;  /* fresh milk      */
+  --surface2: #efe8d8;  /* latte foam      */
+  --border:   #dcd2be;  /* rice straw      */
+  --accent:   #0f7a63;  /* deep sencha     */
+  --accent2:  #7645a8;  /* ume             */
+  --green:    #4a7c1e;  /* matcha whisked  */
+  --yellow:   #7d6410;  /* toasted barley  */
+  --text:     #2a2a20;
+  --muted:    #6b6656;
+
+  --leaf-tint: rgba(15, 122, 99, 0.05);
+  --brew-tint: rgba(165, 97, 26, 0.045);
+  --card-glow: rgba(74, 60, 34, .13);
 }
 
 /* ── Reset & base ── */
@@ -27,6 +53,12 @@ body {
   color: var(--text);
   font-family: var(--font-sans);
   line-height: 1.6;
+  /* Two soft "brew" blooms — steam rising off the page */
+  background-image:
+    radial-gradient(760px 520px at 12% -8%,  var(--leaf-tint), transparent 70%),
+    radial-gradient(680px 480px at 92% 108%, var(--brew-tint), transparent 70%);
+  background-attachment: fixed;
+  transition: background-color .25s ease, color .25s ease;
 }
 
 a { color: var(--accent); }
@@ -41,9 +73,76 @@ a:visited { color: var(--accent); }
 
 /* ── Header ── */
 header {
+  position: relative;
   background: var(--surface);
   border-bottom: 1px solid var(--border);
   padding: 28px 0;
+  overflow: hidden;
+}
+
+/* Steeping gradient across the top edge — leaf → roast → blossom */
+header::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    var(--green) 0%, var(--accent) 38%, var(--yellow) 72%, var(--accent2) 100%);
+  opacity: .8;
+}
+
+header .container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.site-brand {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  flex: 1 1 320px;
+  min-width: 0;
+}
+
+/* Teacup mark with rising steam */
+.brand-cup {
+  flex: none;
+  width: 42px;
+  height: 42px;
+  margin-top: 2px;
+  border-radius: 12px;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  line-height: 1;
+  position: relative;
+}
+
+.brand-cup::after {
+  content: "";
+  position: absolute;
+  top: -5px;
+  right: 7px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent);
+  opacity: .55;
+  animation: steam 3.4s ease-in-out infinite;
+}
+
+@keyframes steam {
+  0%, 100% { transform: translateY(0)     scale(.85); opacity: .18; }
+  50%      { transform: translateY(-6px)  scale(1.1);  opacity: .6;  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-cup::after { animation: none; opacity: .4; }
 }
 
 .site-title-link {
@@ -61,9 +160,29 @@ header {
 }
 
 .site-tagline {
-  margin: 0 0 16px;
+  margin: 0;
   color: var(--muted);
   font-size: 0.9rem;
+}
+
+/* お茶 — the name behind the domain */
+.brand-note {
+  display: block;
+  margin-top: 7px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  letter-spacing: .02em;
+}
+
+.brand-note .jp { color: var(--green); }
+
+.site-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+  padding-top: 4px;
 }
 
 .site-nav a.btn {
@@ -84,6 +203,29 @@ header {
   border-color: var(--accent);
 }
 
+/* Theme toggle — shares tools/theme.js and its stored preference */
+.btn-theme {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 0 12px;
+  height: 32px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  transition: color .15s, border-color .15s, background .15s;
+}
+
+.btn-theme:hover { color: var(--text); border-color: var(--accent); }
+.btn-theme:active { transform: scale(0.98); }
+
 /* ── Main content wrapper ── */
 #main_content {
   padding: 40px 0 80px;
@@ -94,15 +236,41 @@ header {
   margin: 0 0 40px;
 }
 
-.tools-section h2 {
+.tools-section h2,
+.about-section h2 {
   font-size: 0.7rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
   color: var(--muted);
   margin: 0 0 20px;
+}
+
+.tools-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   padding-bottom: 10px;
   border-bottom: 1px solid var(--border);
+}
+
+/* Small leaf bullet before section headings */
+.tools-section h2::before,
+.about-section h2::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 50% 0 50% 0;   /* leaf silhouette */
+  background: var(--green);
+  transform: rotate(12deg);
+}
+
+.about-section h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .tools-grid {
@@ -115,18 +283,41 @@ header {
 }
 
 .tool-card {
+  position: relative;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 22px;
   display: flex;
   flex-direction: column;
-  transition: border-color .2s, box-shadow .2s;
+  overflow: hidden;
+  transition: border-color .2s, box-shadow .2s, transform .2s;
+}
+
+/* Tea stain: a faint ring in the corner, darkening as it steeps on hover */
+.tool-card::after {
+  content: "";
+  position: absolute;
+  top: -34px;
+  right: -34px;
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  border: 1px solid var(--accent);
+  opacity: .1;
+  transition: opacity .25s, transform .25s;
+  pointer-events: none;
 }
 
 .tool-card:hover {
   border-color: var(--accent);
-  box-shadow: 0 8px 28px rgba(0, 0, 0, .4);
+  box-shadow: 0 8px 28px var(--card-glow);
+  transform: translateY(-2px);
+}
+
+.tool-card:hover::after {
+  opacity: .3;
+  transform: scale(1.12);
 }
 
 .tool-card-icon {
@@ -182,18 +373,10 @@ header {
 .about-section {
   background: var(--surface);
   border: 1px solid var(--border);
+  border-left: 3px solid var(--green);
   border-radius: var(--radius);
   padding: 22px 26px;
   margin: 40px 0 0;
-}
-
-.about-section h2 {
-  font-size: 0.7rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  color: var(--muted);
-  margin: 0 0 10px;
 }
 
 .about-section p {
@@ -235,6 +418,11 @@ header {
   margin: 4px 0;
 }
 
+.footer-leaf {
+  color: var(--green);
+  opacity: .75;
+}
+
 .footer-links a {
   color: var(--muted);
   text-decoration: none;
@@ -243,4 +431,10 @@ header {
 .footer-links a:hover {
   color: var(--accent);
   text-decoration: underline;
+}
+
+/* ── Narrow screens ── */
+@media (max-width: 600px) {
+  header .container { flex-direction: column; }
+  .site-nav { margin-left: 0; }
 }

@@ -55,5 +55,8 @@ layout: default
     These tools are built for healthcare IT professionals, developers, and students working with medical data standards.
     Whether you're debugging HL7 messages, testing DICOM implementations, or learning healthcare data formats, these utilities are here to help.
   </p>
+  <p>
+    <em>ocha</em> (&#12362;&#33590;) is Japanese for tea &mdash; so pour a cup and let the integration work steep.
+  </p>
   <span class="privacy-badge">&#128274; Client-side only &mdash; no data leaves your browser</span>
 </section>

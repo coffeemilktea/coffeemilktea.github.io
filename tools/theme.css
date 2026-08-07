@@ -1,56 +1,58 @@
-/* HL7 Tools — shared Monokai theme
-   Used by: msgparser.html, dicom-generator.html, hl7-diff.html
+/* Healthcare Data Tools — shared tea theme (ocha.dev)
+   Used by: msgparser.html, dicom-generator.html, diff-checker.html,
+            dicom-hl7-order.html
+   Palette: steeped sencha (dark) / milk tea (light)
    ─────────────────────────────────────────────────────────── */
 
-/* ── Dark mode (default — Monokai) ── */
+/* ── Dark mode (default — steeped sencha) ── */
 :root {
-  --bg:       #272822;
-  --surface:  #1e1f1a;
-  --surface2: #3e3d32;
-  --border:   #49483e;
-  --accent:   #66d9ef;
-  --accent2:  #ae81ff;
-  --green:    #a6e22e;
-  --yellow:   #e6db74;
-  --red:      #f92672;
-  --orange:   #fd971f;
-  --text:     #f8f8f2;
-  --muted:    #75715e;
+  --bg:       #1c211a;  /* wet tea leaf   */
+  --surface:  #161b15;  /* cast-iron pot  */
+  --surface2: #2a3227;  /* damp leaf      */
+  --border:   #3a4536;  /* tea stem       */
+  --accent:   #7fd1ae;  /* jade steam     */
+  --accent2:  #c9a7e8;  /* ume blossom    */
+  --green:    #a8d05a;  /* matcha         */
+  --yellow:   #e6cf7a;  /* genmaicha rice */
+  --red:      #f2789f;  /* sakura         */
+  --orange:   #dd9a52;  /* hojicha roast  */
+  --text:     #f4f1e4;  /* milk tea cream */
+  --muted:    #8f9683;  /* dried stem     */
   --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
   --font-sans: system-ui, -apple-system, sans-serif;
   --radius:   8px;
 
   /* Aliases — used by dicom-generator.html */
-  --fg:       #f8f8f2;
-  --comment:  #75715e;
-  --input-bg: #15160f;
-  --cyan:     #66d9ef;
-  --pink:     #f92672;
-  --purple:   #ae81ff;
+  --fg:       #f4f1e4;
+  --comment:  #8f9683;
+  --input-bg: #11150f;
+  --cyan:     #7fd1ae;
+  --pink:     #f2789f;
+  --purple:   #c9a7e8;
 }
 
-/* ── Light mode (Monokai-inspired warm paper) ── */
+/* ── Light mode (milk tea — warm brewed paper) ── */
 [data-theme="light"] {
-  --bg:       #f9f8f5;
-  --surface:  #ffffff;
-  --surface2: #f0efe9;
-  --border:   #d6d5cc;
-  --accent:   #0597a7;
-  --accent2:  #7c3aed;
-  --green:    #5c8400;
-  --yellow:   #866e00;
-  --red:      #d4006e;
-  --orange:   #c96900;
-  --text:     #272822;
-  --muted:    #75715e;
+  --bg:       #f7f3e8;  /* genmaicha paper */
+  --surface:  #fffdf7;  /* fresh milk      */
+  --surface2: #efe8d8;  /* latte foam      */
+  --border:   #dcd2be;  /* rice straw      */
+  --accent:   #0f7a63;  /* deep sencha     */
+  --accent2:  #7645a8;  /* ume             */
+  --green:    #4a7c1e;  /* matcha whisked  */
+  --yellow:   #7d6410;  /* toasted barley  */
+  --red:      #bb2b5c;  /* dark sakura     */
+  --orange:   #a5611a;  /* hojicha         */
+  --text:     #2a2a20;
+  --muted:    #6b6656;
 
   /* Aliases for dicom-generator.html */
-  --fg:       #272822;
-  --comment:  #75715e;
-  --input-bg: #f0efe9;
-  --cyan:     #0597a7;
-  --pink:     #d4006e;
-  --purple:   #7c3aed;
+  --fg:       #2a2a20;
+  --comment:  #6b6656;
+  --input-bg: #efe8d8;
+  --cyan:     #0f7a63;
+  --pink:     #bb2b5c;
+  --purple:   #7645a8;
 }
 
 /* ── Shared: App Header ── */

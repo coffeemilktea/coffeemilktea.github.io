@@ -199,7 +199,7 @@
       box-shadow: 0 1px 3px rgba(0,0,0,.25);
     }
 
-    .btn-primary:hover { background: #4bc8e0; box-shadow: 0 2px 6px rgba(102,217,239,.35); }
+    .btn-primary:hover { background: #4bc8e0; box-shadow: 0 2px 6px rgba(127,209,174,.35); }
     .btn-primary:active { transform: scale(0.98); }
 
     .btn-ghost {
@@ -234,7 +234,7 @@
       transition: background .15s, box-shadow .15s, transform .1s;
     }
 
-    .btn-parse:hover { background: #4bc8e0; box-shadow: 0 3px 10px rgba(102,217,239,.4); }
+    .btn-parse:hover { background: #4bc8e0; box-shadow: 0 3px 10px rgba(127,209,174,.4); }
     .btn-parse:active { transform: scale(0.99); box-shadow: none; }
 
     textarea {
@@ -527,20 +527,20 @@
     .seg-name.PID { color: var(--green); }
     .seg-name.PV1, .seg-name.PV2 { color: var(--orange); }
     .seg-name.OBR { color: var(--yellow); }
-    .seg-name.OBX { color: #ae81ff; }
-    .seg-name.ORC { color: #f92672; }
-    .seg-name.DG1 { color: #a6e22e; }
-    .seg-name.NTE { color: #75715e; }
-    .seg-name.AL1 { color: #fd971f; }
+    .seg-name.OBX { color: var(--accent2); }
+    .seg-name.ORC { color: var(--red); }
+    .seg-name.DG1 { color: var(--green); }
+    .seg-name.NTE { color: var(--muted); }
+    .seg-name.AL1 { color: var(--orange); }
     .seg-name.EVN { color: var(--accent2); }
-    .seg-name.IN1 { color: #66d9ef; }
-    .seg-name.NK1 { color: #f92672; }
-    .seg-name.MRG { color: #e6db74; }
-    .seg-name.RXO, .seg-name.RXE, .seg-name.RXA { color: #a6e22e; }
-    .seg-name.SCH { color: #66d9ef; }
-    .seg-name.SPM { color: #ae81ff; }
-    .seg-name.SAC { color: #818cf8; }
-    .seg-name.TQ1, .seg-name.TQ2 { color: #fdba74; }
+    .seg-name.IN1 { color: var(--accent); }
+    .seg-name.NK1 { color: var(--red); }
+    .seg-name.MRG { color: var(--yellow); }
+    .seg-name.RXO, .seg-name.RXE, .seg-name.RXA { color: var(--green); }
+    .seg-name.SCH { color: var(--accent); }
+    .seg-name.SPM { color: var(--accent2); }
+    .seg-name.SAC { color: #86b6c9; }
+    .seg-name.TQ1, .seg-name.TQ2 { color: #e8c49a; }
 
     /* Tabs for output */
     .tab-bar {
@@ -656,7 +656,7 @@
 
     .fhir-badge {
       background: var(--accent);
-      color: #1a1a1a;
+      color: var(--bg);
       font-family: var(--font-mono);
       font-size: 13px;
       font-weight: 700;
@@ -2139,11 +2139,11 @@ function fhirSyntaxHighlight(json) {
   return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, match => {
     let color;
     if (/^"/.test(match)) {
-      if (/:$/.test(match)) color = '#66d9ef'; // key → cyan
-      else color = '#e6db74';                  // string → yellow
-    } else if (/true|false/.test(match)) color = '#ae81ff'; // boolean → purple
-    else if (/null/.test(match)) color = '#f92672';         // null → red
-    else color = '#ae81ff';                                  // number → purple
+      if (/:$/.test(match)) color = 'var(--accent)'; // key → cyan
+      else color = 'var(--yellow)';                  // string → yellow
+    } else if (/true|false/.test(match)) color = 'var(--accent2)'; // boolean → purple
+    else if (/null/.test(match)) color = 'var(--red)';         // null → red
+    else color = 'var(--accent2)';                                  // number → purple
     return `<span style="color:${color}">${match}</span>`;
   });
 }

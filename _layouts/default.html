@@ -5,22 +5,34 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{ '/assets/css/custom.css' | relative_url }}">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#127861;</text></svg>">
+    <!-- Shares the tools' theme preference so light/dark carries across the site -->
+    <script src="{{ '/tools/theme.js' | relative_url }}"></script>
     {% seo %}
   </head>
 
   <body>
     <header>
       <div class="container">
-        <a href="{{ '/' | relative_url }}" class="site-title-link">
-          <h1>{{ site.title | default: site.github.repository_name }}</h1>
-        </a>
-        <p class="site-tagline">{{ site.description | default: site.github.project_tagline }}</p>
+        <div class="site-brand">
+          <span class="brand-cup" aria-hidden="true">&#127861;</span>
+          <div>
+            <a href="{{ '/' | relative_url }}" class="site-title-link">
+              <h1>{{ site.title | default: site.github.repository_name }}</h1>
+            </a>
+            <p class="site-tagline">{{ site.description | default: site.github.project_tagline }}</p>
+            <span class="brand-note"><span class="jp">&#12362;&#33590;</span> &middot; ocha &mdash; steeped at ocha.dev</span>
+          </div>
+        </div>
         <nav class="site-nav">
           {% if site.github.is_user_page %}
             <a href="{{ site.github.repository_url }}" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
           {% elsif site.github.is_project_page %}
             <a href="{{ site.github.owner_url }}" class="btn btn-github"><span class="icon"></span>View on GitHub</a>
           {% endif %}
+          <button type="button" id="btn-theme" class="btn-theme" title="Switch theme">
+            <span class="theme-icon">&#9728;&#65039;</span><span class="theme-label">Light</span>
+          </button>
         </nav>
       </div>
     </header>
@@ -34,6 +46,7 @@
     <footer class="site-footer">
       <div class="container">
         <p>All tools run entirely in your browser &mdash; no data is sent to external servers.</p>
+        <p><span class="footer-leaf">&#127807;</span> Brewed with care &mdash; steep, sip, ship.</p>
         <p class="footer-links">
           <a href="{{ '/' | relative_url }}">Home</a>
           &middot;
