@@ -17,65 +17,77 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Healthcare Data Tools — Browser-based HL7 &amp; DICOM utilities">
   <meta name="twitter:description" content="Parse HL7 v2.x messages, view and edit DICOM files, generate test data, and simulate modality worklists — entirely in your browser.">
-  <meta name="theme-color" content="#1a1b26">
+  <meta name="theme-color" content="#1c211a">
 
   <script src="/tools/theme.js"></script>
   <script src="/vendor/htmx.min.js" defer></script>
 
   <style>
-    /* ── Tokens (landing page palette; the tools ship their own theme) ── */
+    /* ── Tokens (landing page palette; the tools ship their own theme) ──
+       Tea theme, after the name: ocha (お茶) is Japanese for tea.
+       Dark is "steeped sencha", light is "milk tea". Every foreground here
+       clears WCAG AA against --bg, --surface, and both glass fills. ── */
     :root {
-      --bg:       #1a1b26;
-      --surface:  #16161e;
-      --surface2: #292e42;
-      --border:   #3b4261;
-      --accent:   #7aa2f7;
-      --accent2:  #bb9af7;
-      --cyan:     #7dcfff;
-      --green:    #9ece6a;
-      --yellow:   #e0af68;
-      --red:      #f7768e;
-      --orange:   #ff9e64;
-      --text:     #c0caf5;
-      --muted:    #9aa5ce;
-      --body:     #a9b1d6;
+      --bg:       #1c211a;  /* wet tea leaf    */
+      --surface:  #161b15;  /* cast-iron pot   */
+      --surface2: #2a3227;  /* damp leaf       */
+      --border:   #3a4536;  /* tea stem        */
+      --accent:   #7fd1ae;  /* jade steam      */
+      --accent2:  #c9a7e8;  /* ume blossom     */
+      --cyan:     #8ed7bf;  /* first-brew mist */
+      --green:    #a8d05a;  /* matcha          */
+      --yellow:   #e6cf7a;  /* genmaicha rice  */
+      --red:      #f2789f;  /* sakura          */
+      --orange:   #dd9a52;  /* hojicha roast   */
+      --text:     #f4f1e4;  /* milk tea cream  */
+      --muted:    #9ba291;  /* dried stem      */
+      --body:     #d5d2c0;  /* steeped cream   */
       --radius:   16px;
       --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-      --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      /* Japanese faces ahead of the generic sans so kana render properly */
+      --font-sans: system-ui, -apple-system, 'Hiragino Kaku Gothic ProN', 'Yu Gothic',
+                   'Noto Sans JP', 'Segoe UI', sans-serif;
       --shadow:   0 20px 45px rgba(0, 0, 0, .45);
 
-      /* ── Glass tokens ── */
-      --glass:        rgba(41, 46, 66, 0.50);
-      --glass-strong: rgba(22, 22, 30, 0.66);
-      --glass-border: rgba(192, 202, 245, 0.12);
-      --glass-hi:     rgba(255, 255, 255, 0.14);
+      /* Tea-leaf glyph, used as a mask so it inherits currentColor */
+      --leaf-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 18C6 10 12 4 20 4c0 8-6 14-14 14z' fill='%23000'/%3E%3C/svg%3E");
+
+      /* Seigaiha (青海波) — the traditional wave-crest motif. Masked, so both
+         the divider band and the texture take their color from currentColor. */
+      --seigaiha-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24' viewBox='0 0 48 24'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.2'%3E%3Cpath d='M0 24a24 24 0 0 1 48 0M6 24a18 18 0 0 1 36 0M12 24a12 12 0 0 1 24 0M18 24a6 6 0 0 1 12 0'/%3E%3C/g%3E%3C/svg%3E");
+
+      /* ── Glass tokens (re-derived over the warm base) ── */
+      --glass:        rgba(42, 50, 39, 0.50);
+      --glass-strong: rgba(22, 27, 21, 0.66);
+      --glass-border: rgba(244, 241, 228, 0.12);
+      --glass-hi:     rgba(255, 253, 244, 0.14);
       --glass-blur:   18px;
-      --glass-shadow: 0 8px 32px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255,255,255,.05);
+      --glass-shadow: 0 8px 32px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255,253,244,.05);
     }
 
     [data-theme="light"] {
-      --bg:       #e1e2e7;
-      --surface:  #f4f4f8;
-      --surface2: #d4d6e1;
-      --border:   #a8adc9;
-      --accent:   #2e7de9;
-      --accent2:  #9854f1;
-      --cyan:     #007197;
-      --green:    #587539;
-      --yellow:   #8c6c3e;
-      --red:      #f52a65;
-      --orange:   #b15c00;
-      --text:     #343b58;
-      --muted:    #6a739e;
-      --body:     #4c5279;
-      --shadow:   0 20px 45px rgba(52, 59, 88, .12);
+      --bg:       #eee7d8;  /* genmaicha paper */
+      --surface:  #fbf8f0;  /* milk foam       */
+      --surface2: #dfd5c0;  /* latte           */
+      --border:   #b3a68c;  /* rice straw      */
+      --accent:   #0c6b56;  /* deep sencha     */
+      --accent2:  #6d3f9c;  /* ume             */
+      --cyan:     #0b6178;  /* mizu            */
+      --green:    #3c6417;  /* whisked matcha  */
+      --yellow:   #67520b;  /* toasted barley  */
+      --red:      #a51f4c;  /* dark sakura     */
+      --orange:   #8a4e12;  /* hojicha         */
+      --text:     #2a2a20;
+      --muted:    #5f5a4a;
+      --body:     #46422f;
+      --shadow:   0 20px 45px rgba(74, 60, 34, .13);
 
-      --glass:        rgba(255, 255, 255, 0.55);
-      --glass-strong: rgba(255, 255, 255, 0.72);
-      --glass-border: rgba(255, 255, 255, 0.7);
-      --glass-hi:     rgba(255, 255, 255, 0.9);
+      --glass:        rgba(255, 253, 247, 0.55);
+      --glass-strong: rgba(255, 253, 247, 0.72);
+      --glass-border: rgba(255, 253, 247, 0.7);
+      --glass-hi:     rgba(255, 255, 252, 0.9);
       --glass-blur:   18px;
-      --glass-shadow: 0 8px 32px rgba(52, 59, 88, .10), inset 0 1px 0 rgba(255,255,255,.6);
+      --glass-shadow: 0 8px 32px rgba(74, 60, 34, .11), inset 0 1px 0 rgba(255,253,247,.6);
     }
 
     /* ── Base ── */
@@ -123,9 +135,12 @@
       background: var(--accent);
       animation: drift1 24s ease-in-out infinite alternate;
     }
+    /* Genmaicha gold rather than the ume of --accent2: at this size and blur
+       a violet blob washes the whole page lavender and fights the tea. */
     .aurora .b2 {
       width: 40vw; height: 40vw; top: 30vh; right: -10vw;
-      background: var(--accent2);
+      background: var(--yellow);
+      opacity: .42;
       animation: drift2 30s ease-in-out infinite alternate;
     }
     .aurora .b3 {
@@ -395,7 +410,9 @@
     section { padding: 64px 0; }
 
     .section-kicker {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 7px;
       font-family: var(--font-mono);
       font-size: 0.7rem;
       font-weight: 700;
@@ -403,6 +420,31 @@
       letter-spacing: 0.16em;
       color: var(--accent);
       margin-bottom: 8px;
+    }
+
+    /* Tea-leaf bullet. Masked rather than inlined so the kicker inside the
+       htmx-loaded quickref partial picks it up too, and so it always tracks
+       the kicker's own color in either theme. */
+    .section-kicker::before {
+      content: "";
+      width: 12px;
+      height: 12px;
+      flex: none;
+      background: currentColor;
+      -webkit-mask: var(--leaf-glyph) center / contain no-repeat;
+      mask: var(--leaf-glyph) center / contain no-repeat;
+    }
+
+    /* Japanese counterpart to each kicker, set quieter than the English */
+    .section-kicker .jp {
+      color: var(--muted);
+      font-weight: 600;
+      letter-spacing: 0.08em;
+    }
+    .section-kicker .jp::before {
+      content: "·";
+      margin-right: 6px;
+      opacity: .7;
     }
 
     section h2 {
@@ -555,12 +597,30 @@
       pointer-events: none;
     }
 
+    /* Tea stain: the ring a cup leaves behind, darkening as it steeps on
+       hover. Sits in the corner opposite the ::before sheen. */
+    .tool-card::after {
+      content: "";
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 108px;
+      height: 108px;
+      z-index: -1;
+      border-radius: 50%;
+      border: 1px solid var(--tint);
+      opacity: .12;
+      transition: opacity .22s, transform .22s;
+      pointer-events: none;
+    }
+
     .tool-card:hover {
       border-color: color-mix(in srgb, var(--tint) 60%, var(--glass-border));
       box-shadow: 0 24px 50px rgba(0, 0, 0, .55), var(--shadow), 0 0 0 1px color-mix(in srgb, var(--tint) 25%, transparent);
       transform: translateY(-4px);
     }
     .tool-card:hover::before { opacity: 1; }
+    .tool-card:hover::after { opacity: .34; transform: scale(1.1); }
 
     .tool-top {
       display: flex;
@@ -885,11 +945,28 @@
 
     /* ── Footer ── */
     .site-footer {
+      position: relative;
       border-top: 1px solid var(--glass-border);
       padding: 40px 0 32px;
       background: var(--glass-strong);
       backdrop-filter: blur(var(--glass-blur)) saturate(140%);
       -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
+    }
+
+    /* Seigaiha wave crests breaking along the top edge of the footer */
+    .site-footer::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 100%;
+      height: 24px;
+      color: var(--accent);
+      background: currentColor;
+      opacity: .22;
+      -webkit-mask: var(--seigaiha-band) repeat-x bottom / 48px 24px;
+      mask: var(--seigaiha-band) repeat-x bottom / 48px 24px;
+      pointer-events: none;
     }
 
     .footer-grid {
@@ -906,6 +983,15 @@
       max-width: 34ch;
       margin: 10px 0 0;
     }
+
+    /* The name behind the domain */
+    .ocha-note {
+      font-family: var(--font-mono);
+      font-size: 0.74rem !important;
+      letter-spacing: .01em;
+    }
+    .ocha-note .jp { color: var(--green); font-family: var(--font-sans); }
+    .ocha-note em { font-style: normal; color: var(--body); }
 
     .footer-col h4 {
       margin: 0 0 10px;
@@ -965,8 +1051,9 @@
 
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
-      .tool-card, .tool-cta svg { transition: none; }
+      .tool-card, .tool-cta svg, .tool-card::after { transition: none; }
       .tool-card:hover { transform: none; }
+      .tool-card:hover::after { transform: none; }
       .aurora span { animation: none !important; }
       .detail-inner, .quickref-inner, .tool-card { animation: none; }
       .quickref-skeleton span { animation: none; }
@@ -995,7 +1082,8 @@
            Everything else leaves for another app or another origin. -->
       <a class="brand" href="/" hx-boost="true">
         <span class="brand-mark" aria-hidden="true">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 12 7 12 10 5 14 19 17 12 22 12"/></svg>
+          <!-- Teacup: bowl, handle, saucer, and two curls of steam -->
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12v3.5a6 6 0 0 1-12 0V10z"/><path d="M16 11h1.5a2.2 2.2 0 0 1 0 4.4H16"/><path d="M3 22h14"/><path d="M8 7.5c1-1.2-1-2 0-3.2" stroke-width="1.5"/><path d="M12 7.5c1-1.2-1-2 0-3.2" stroke-width="1.5"/></svg>
         </span>
         Healthcare Data Tools
       </a>
@@ -1063,7 +1151,7 @@
     -->
     <section id="tools" class="tools">
       <div class="container">
-        <h2><span class="section-kicker">The toolkit</span>Six tools, zero setup</h2>
+        <h2><span class="section-kicker">The toolkit<span class="jp" lang="ja">道具</span></span>Six tools, zero setup</h2>
         <p class="section-intro">
           Everything you need to debug, test, and learn HL7 v2.x and DICOM &mdash; each tool is a
           standalone page that works offline once loaded.
@@ -1274,7 +1362,7 @@
     <section id="about" class="about">
       <div class="container about-grid">
         <div>
-          <h2><span class="section-kicker">About</span>Built for healthcare integration work</h2>
+          <h2><span class="section-kicker">About<span class="jp" lang="ja">概要</span></span>Built for healthcare integration work</h2>
           <p>
             These tools grew out of day-to-day interface engineering: debugging HL7 feeds, testing PACS
             and modality connections, and building synthetic data for demos and development. They're made
@@ -1307,11 +1395,13 @@
         <div class="footer-brand">
           <a class="brand" href="/" hx-boost="true">
             <span class="brand-mark" aria-hidden="true">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 12 7 12 10 5 14 19 17 12 22 12"/></svg>
+              <!-- Teacup: bowl, handle, saucer, and two curls of steam -->
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12v3.5a6 6 0 0 1-12 0V10z"/><path d="M16 11h1.5a2.2 2.2 0 0 1 0 4.4H16"/><path d="M3 22h14"/><path d="M8 7.5c1-1.2-1-2 0-3.2" stroke-width="1.5"/><path d="M12 7.5c1-1.2-1-2 0-3.2" stroke-width="1.5"/></svg>
             </span>
             Healthcare Data Tools
           </a>
           <p>Browser-based utilities for HL7 v2.x and DICOM. Free to use, client-side by design.</p>
+          <p class="ocha-note"><span class="jp" lang="ja">お茶</span> &middot; <em>ocha</em> &mdash; Japanese for tea. Steep, sip, ship.</p>
         </div>
         <div class="footer-col">
           <h4>Tools</h4>
