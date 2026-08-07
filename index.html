@@ -17,65 +17,68 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Healthcare Data Tools — Browser-based HL7 &amp; DICOM utilities">
   <meta name="twitter:description" content="Parse HL7 v2.x messages, view and edit DICOM files, generate test data, and simulate modality worklists — entirely in your browser.">
-  <meta name="theme-color" content="#1a1b26">
+  <meta name="theme-color" content="#1c211a">
 
   <script src="/tools/theme.js"></script>
   <script src="/vendor/htmx.min.js" defer></script>
 
   <style>
-    /* ── Tokens (landing page palette; the tools ship their own theme) ── */
+    /* ── Tokens (landing page palette; the tools ship their own theme) ──
+       Tea theme, after the name: ocha (お茶) is Japanese for tea.
+       Dark is "steeped sencha", light is "milk tea". Every foreground here
+       clears WCAG AA against --bg, --surface, and both glass fills. ── */
     :root {
-      --bg:       #1a1b26;
-      --surface:  #16161e;
-      --surface2: #292e42;
-      --border:   #3b4261;
-      --accent:   #7aa2f7;
-      --accent2:  #bb9af7;
-      --cyan:     #7dcfff;
-      --green:    #9ece6a;
-      --yellow:   #e0af68;
-      --red:      #f7768e;
-      --orange:   #ff9e64;
-      --text:     #c0caf5;
-      --muted:    #9aa5ce;
-      --body:     #a9b1d6;
+      --bg:       #1c211a;  /* wet tea leaf    */
+      --surface:  #161b15;  /* cast-iron pot   */
+      --surface2: #2a3227;  /* damp leaf       */
+      --border:   #3a4536;  /* tea stem        */
+      --accent:   #7fd1ae;  /* jade steam      */
+      --accent2:  #c9a7e8;  /* ume blossom     */
+      --cyan:     #8ed7bf;  /* first-brew mist */
+      --green:    #a8d05a;  /* matcha          */
+      --yellow:   #e6cf7a;  /* genmaicha rice  */
+      --red:      #f2789f;  /* sakura          */
+      --orange:   #dd9a52;  /* hojicha roast   */
+      --text:     #f4f1e4;  /* milk tea cream  */
+      --muted:    #9ba291;  /* dried stem      */
+      --body:     #d5d2c0;  /* steeped cream   */
       --radius:   16px;
       --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
       --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
       --shadow:   0 20px 45px rgba(0, 0, 0, .45);
 
-      /* ── Glass tokens ── */
-      --glass:        rgba(41, 46, 66, 0.50);
-      --glass-strong: rgba(22, 22, 30, 0.66);
-      --glass-border: rgba(192, 202, 245, 0.12);
-      --glass-hi:     rgba(255, 255, 255, 0.14);
+      /* ── Glass tokens (re-derived over the warm base) ── */
+      --glass:        rgba(42, 50, 39, 0.50);
+      --glass-strong: rgba(22, 27, 21, 0.66);
+      --glass-border: rgba(244, 241, 228, 0.12);
+      --glass-hi:     rgba(255, 253, 244, 0.14);
       --glass-blur:   18px;
-      --glass-shadow: 0 8px 32px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255,255,255,.05);
+      --glass-shadow: 0 8px 32px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255,253,244,.05);
     }
 
     [data-theme="light"] {
-      --bg:       #e1e2e7;
-      --surface:  #f4f4f8;
-      --surface2: #d4d6e1;
-      --border:   #a8adc9;
-      --accent:   #2e7de9;
-      --accent2:  #9854f1;
-      --cyan:     #007197;
-      --green:    #587539;
-      --yellow:   #8c6c3e;
-      --red:      #f52a65;
-      --orange:   #b15c00;
-      --text:     #343b58;
-      --muted:    #6a739e;
-      --body:     #4c5279;
-      --shadow:   0 20px 45px rgba(52, 59, 88, .12);
+      --bg:       #eee7d8;  /* genmaicha paper */
+      --surface:  #fbf8f0;  /* milk foam       */
+      --surface2: #dfd5c0;  /* latte           */
+      --border:   #b3a68c;  /* rice straw      */
+      --accent:   #0c6b56;  /* deep sencha     */
+      --accent2:  #6d3f9c;  /* ume             */
+      --cyan:     #0b6178;  /* mizu            */
+      --green:    #3c6417;  /* whisked matcha  */
+      --yellow:   #67520b;  /* toasted barley  */
+      --red:      #a51f4c;  /* dark sakura     */
+      --orange:   #8a4e12;  /* hojicha         */
+      --text:     #2a2a20;
+      --muted:    #5f5a4a;
+      --body:     #46422f;
+      --shadow:   0 20px 45px rgba(74, 60, 34, .13);
 
-      --glass:        rgba(255, 255, 255, 0.55);
-      --glass-strong: rgba(255, 255, 255, 0.72);
-      --glass-border: rgba(255, 255, 255, 0.7);
-      --glass-hi:     rgba(255, 255, 255, 0.9);
+      --glass:        rgba(255, 253, 247, 0.55);
+      --glass-strong: rgba(255, 253, 247, 0.72);
+      --glass-border: rgba(255, 253, 247, 0.7);
+      --glass-hi:     rgba(255, 255, 252, 0.9);
       --glass-blur:   18px;
-      --glass-shadow: 0 8px 32px rgba(52, 59, 88, .10), inset 0 1px 0 rgba(255,255,255,.6);
+      --glass-shadow: 0 8px 32px rgba(74, 60, 34, .11), inset 0 1px 0 rgba(255,253,247,.6);
     }
 
     /* ── Base ── */
@@ -123,9 +126,12 @@
       background: var(--accent);
       animation: drift1 24s ease-in-out infinite alternate;
     }
+    /* Genmaicha gold rather than the ume of --accent2: at this size and blur
+       a violet blob washes the whole page lavender, which fights the tea. */
     .aurora .b2 {
       width: 40vw; height: 40vw; top: 30vh; right: -10vw;
-      background: var(--accent2);
+      background: var(--yellow);
+      opacity: .42;
       animation: drift2 30s ease-in-out infinite alternate;
     }
     .aurora .b3 {
@@ -207,6 +213,7 @@
     }
 
     .brand-mark {
+      position: relative;
       display: grid;
       place-items: center;
       width: 30px;
@@ -219,6 +226,25 @@
       box-shadow: inset 0 1px 0 var(--glass-hi);
       color: var(--green);
       flex: none;
+    }
+
+    /* Steam curling off the cup */
+    .brand-mark::after {
+      content: "";
+      position: absolute;
+      top: -4px;
+      right: 5px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--accent);
+      opacity: .5;
+      animation: steam 3.4s ease-in-out infinite;
+    }
+
+    @keyframes steam {
+      0%, 100% { transform: translateY(0)    scale(.8); opacity: .16; }
+      50%      { transform: translateY(-5px) scale(1.1); opacity: .55; }
     }
 
     .header-nav {
@@ -395,7 +421,9 @@
     section { padding: 64px 0; }
 
     .section-kicker {
-      display: block;
+      display: flex;
+      align-items: center;
+      gap: 8px;
       font-family: var(--font-mono);
       font-size: 0.7rem;
       font-weight: 700;
@@ -403,6 +431,17 @@
       letter-spacing: 0.16em;
       color: var(--accent);
       margin-bottom: 8px;
+    }
+
+    /* Tea-leaf bullet */
+    .section-kicker::before {
+      content: "";
+      width: 7px;
+      height: 7px;
+      flex: none;
+      border-radius: 50% 0 50% 0;
+      background: var(--green);
+      transform: rotate(12deg);
     }
 
     section h2 {
@@ -555,12 +594,30 @@
       pointer-events: none;
     }
 
+    /* Tea stain: the ring a cup leaves behind, darkening as it steeps on
+       hover. Sits in the corner opposite the ::before sheen. */
+    .tool-card::after {
+      content: "";
+      position: absolute;
+      top: -40px;
+      right: -40px;
+      width: 108px;
+      height: 108px;
+      z-index: -1;
+      border-radius: 50%;
+      border: 1px solid var(--tint);
+      opacity: .12;
+      transition: opacity .22s, transform .22s;
+      pointer-events: none;
+    }
+
     .tool-card:hover {
       border-color: color-mix(in srgb, var(--tint) 60%, var(--glass-border));
       box-shadow: 0 24px 50px rgba(0, 0, 0, .55), var(--shadow), 0 0 0 1px color-mix(in srgb, var(--tint) 25%, transparent);
       transform: translateY(-4px);
     }
     .tool-card:hover::before { opacity: 1; }
+    .tool-card:hover::after { opacity: .34; transform: scale(1.1); }
 
     .tool-top {
       display: flex;
@@ -907,6 +964,15 @@
       margin: 10px 0 0;
     }
 
+    /* The name behind the domain */
+    .ocha-note {
+      font-family: var(--font-mono);
+      font-size: 0.74rem !important;
+      letter-spacing: .01em;
+    }
+    .ocha-note .jp { color: var(--green); }
+    .ocha-note em { font-style: normal; color: var(--body); }
+
     .footer-col h4 {
       margin: 0 0 10px;
       font-family: var(--font-mono);
@@ -965,9 +1031,11 @@
 
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
-      .tool-card, .tool-cta svg { transition: none; }
+      .tool-card, .tool-cta svg, .tool-card::after { transition: none; }
       .tool-card:hover { transform: none; }
+      .tool-card:hover::after { transform: none; }
       .aurora span { animation: none !important; }
+      .brand-mark::after { animation: none; opacity: .38; }
       .detail-inner, .quickref-inner, .tool-card { animation: none; }
       .quickref-skeleton span { animation: none; }
       .tool-more .spinner { animation-duration: 1.6s; }
@@ -995,7 +1063,8 @@
            Everything else leaves for another app or another origin. -->
       <a class="brand" href="/" hx-boost="true">
         <span class="brand-mark" aria-hidden="true">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 12 7 12 10 5 14 19 17 12 22 12"/></svg>
+          <!-- Teacup: bowl, handle, saucer -->
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13v4a6.5 6.5 0 0 1-13 0V8z"/><path d="M17 9h1.6a2.4 2.4 0 0 1 0 4.8H17"/><path d="M3 21h15"/></svg>
         </span>
         Healthcare Data Tools
       </a>
@@ -1307,11 +1376,13 @@
         <div class="footer-brand">
           <a class="brand" href="/" hx-boost="true">
             <span class="brand-mark" aria-hidden="true">
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="2 12 7 12 10 5 14 19 17 12 22 12"/></svg>
+              <!-- Teacup: bowl, handle, saucer -->
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h13v4a6.5 6.5 0 0 1-13 0V8z"/><path d="M17 9h1.6a2.4 2.4 0 0 1 0 4.8H17"/><path d="M3 21h15"/></svg>
             </span>
             Healthcare Data Tools
           </a>
           <p>Browser-based utilities for HL7 v2.x and DICOM. Free to use, client-side by design.</p>
+          <p class="ocha-note"><span class="jp">お茶</span> &middot; <em>ocha</em> &mdash; Japanese for tea. Steep, sip, ship.</p>
         </div>
         <div class="footer-col">
           <h4>Tools</h4>
