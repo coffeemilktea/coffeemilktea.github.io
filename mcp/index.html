@@ -1,0 +1,553 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HL7 v2.5.1 MCP Server</title>
+<meta name="description" content="Model Context Protocol server exposing HL7 v2.5.1 segment definitions, message structures, code tables, and message parsing tools for LLMs.">
+<style>
+:root {
+  --ink: #0d1117;
+  --panel: #161b22;
+  --panel2: #1c2128;
+  --line: #30363d;
+  --line-soft: #21262d;
+  --bone: #e6edf3;
+  --muted: #8b949e;
+  --dim: #6e7681;
+  --green: #3fb950;
+  --green-bg: rgba(63,185,80,.09);
+  --green-line: rgba(63,185,80,.3);
+  --amber: #d29922;
+  --amber-bg: rgba(210,153,34,.09);
+  --amber-line: rgba(210,153,34,.3);
+  --blue: #58a6ff;
+  --blue-bg: rgba(88,166,255,.08);
+  --red: #f85149;
+  --mono: "SF Mono", "Fira Code", "Cascadia Mono", ui-monospace, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+body { background: var(--ink); color: var(--bone); font-family: var(--sans);
+  font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+::selection { background: var(--green); color: #051305; }
+
+/* ── layout ── */
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+@media (min-width: 900px) { .wrap { padding: 0 40px; } }
+main { max-width: 780px; padding-bottom: 120px; }
+
+/* ── nav ── */
+.topbar { display: flex; align-items: center; gap: 20px; padding: 14px 0;
+  border-bottom: 1px solid var(--line-soft); margin-bottom: 0; }
+.topbar .logo { font-family: var(--mono); font-size: 12px; color: var(--dim);
+  text-decoration: none; letter-spacing: .06em; }
+.topbar .logo:hover { color: var(--muted); }
+.topbar .sep { color: var(--line); }
+.topbar .crumb { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+/* ── hero ── */
+.hero { padding: 64px 0 48px; }
+.hero-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono);
+  font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--green);
+  border: 1px solid var(--green-line); background: var(--green-bg);
+  padding: 4px 10px; border-radius: 2px; margin-bottom: 20px; }
+.hero-badge .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
+h1 { font-size: clamp(30px, 5vw, 48px); font-weight: 700; letter-spacing: -.02em;
+  line-height: 1.1; margin-bottom: 16px; }
+h1 span { color: var(--muted); font-weight: 400; }
+.hero-lede { font-size: 17px; color: var(--muted); max-width: 60ch; margin-bottom: 28px; line-height: 1.7; }
+.hero-lede strong { color: var(--bone); }
+.meta-row { display: flex; flex-wrap: wrap; gap: 8px 24px; font-family: var(--mono);
+  font-size: 11px; color: var(--dim); padding-top: 20px;
+  border-top: 1px solid var(--line-soft); }
+.meta-row b { color: var(--muted); }
+
+/* ── notice ── */
+.notice { border: 1px solid var(--amber-line); background: var(--amber-bg);
+  border-radius: 4px; padding: 14px 16px; margin: 32px 0;
+  font-size: 13.5px; color: var(--muted); line-height: 1.6; }
+.notice strong { color: var(--amber); }
+
+/* ── sections ── */
+section { padding-top: 56px; }
+h2 { font-size: 22px; font-weight: 700; letter-spacing: -.015em;
+  margin-bottom: 12px; }
+h3 { font-size: 15px; font-weight: 600; letter-spacing: -.005em; margin: 28px 0 8px; }
+p { color: var(--muted); margin-bottom: 14px; max-width: 70ch; }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── tools grid ── */
+.tools { display: grid; gap: 12px; margin-top: 20px; }
+@media (min-width: 640px) { .tools { grid-template-columns: 1fr 1fr; } }
+.tool-card { border: 1px solid var(--line); background: var(--panel); border-radius: 4px;
+  padding: 16px; }
+.tool-card .tname { font-family: var(--mono); font-size: 12.5px; color: var(--green);
+  margin-bottom: 6px; }
+.tool-card .tdesc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+.tool-card .tparams { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
+.param { font-family: var(--mono); font-size: 10.5px; background: var(--panel2);
+  border: 1px solid var(--line-soft); border-radius: 2px; padding: 2px 6px;
+  color: var(--muted); }
+.param.req { color: var(--amber); border-color: var(--amber-line); }
+
+/* ── code blocks ── */
+.codeblock { margin: 16px 0; border: 1px solid var(--line); border-radius: 4px;
+  background: var(--panel); overflow: hidden; }
+.codeblock-head { display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border-bottom: 1px solid var(--line);
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--dim); }
+.codeblock pre { margin: 0; padding: 14px 16px; overflow-x: auto;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.7; color: var(--bone); }
+.hl { color: var(--green); }
+.hl-a { color: var(--amber); }
+.hl-b { color: var(--blue); }
+.cm { color: var(--dim); }
+
+/* ── steps ── */
+.steps { list-style: none; padding: 0; counter-reset: step; margin-top: 20px; }
+.step { display: grid; grid-template-columns: 28px 1fr; gap: 12px;
+  padding-bottom: 28px; counter-increment: step; }
+.step::before { content: counter(step); width: 28px; height: 28px;
+  background: var(--panel2); border: 1px solid var(--line); border-radius: 50%;
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  display: grid; place-items: center; flex-shrink: 0; margin-top: 1px; }
+.step-body h3 { margin-top: 2px; }
+.step-body p { font-size: 13.5px; }
+
+/* ── config table ── */
+.tw { overflow-x: auto; margin: 16px 0; border: 1px solid var(--line);
+  border-radius: 4px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 500px; font-size: 13px; }
+thead th { text-align: left; font-family: var(--mono); font-size: 10px;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
+  font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--line);
+  background: var(--panel2); }
+tbody td { padding: 9px 14px; border-bottom: 1px solid var(--line-soft);
+  vertical-align: top; color: var(--muted); }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover td { background: rgba(255,255,255,.02); }
+td.mono, th.mono { font-family: var(--mono); font-size: 12px; color: var(--bone); white-space: nowrap; }
+td.green { font-family: var(--mono); font-size: 12px; color: var(--green); }
+
+/* ── footer ── */
+footer { padding: 48px 0 32px; border-top: 1px solid var(--line-soft);
+  margin-top: 80px; }
+footer p { font-size: 13px; color: var(--dim); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<nav class="topbar">
+  <a href="/" class="logo">coffeemilktea.github.io</a>
+  <span class="sep">/</span>
+  <span class="crumb">mcp</span>
+</nav>
+
+<div class="wrap" style="display:grid; grid-template-columns: 1fr; padding:0;">
+<main>
+
+<header class="hero">
+  <div class="hero-badge"><span class="dot"></span>Model Context Protocol</div>
+  <h1>HL7 v2.5.1 Reference<br><span>MCP Server</span></h1>
+  <p class="hero-lede">
+    A <strong>Model Context Protocol server</strong> that gives LLMs structured access to the
+    HL7 v2.5.1 standard — segment definitions, field metadata, message structures,
+    code tables, a message parser, and a validator with <strong>deep profiles for
+    ORM^O01, ADT^A08, ADT^A31, ADT^A40 and ORU^R01</strong>. Built for PACS
+    administrators, healthcare IT engineers, and interface analysts.
+  </p>
+  <div class="meta-row">
+    <span><b>Protocol</b> MCP Streamable HTTP</span>
+    <span><b>Standard</b> HL7 v2.5.1 + IHE RAD extensions</span>
+    <span><b>Runtime</b> Node.js 18+</span>
+    <span><b>License</b> MIT</span>
+  </div>
+</header>
+
+<div class="notice">
+  <strong>Note — static hosting:</strong> GitHub Pages serves only static files.
+  This page is the documentation and download hub. To use the MCP server, download
+  <code>server.js</code> below and run it locally (or deploy it to Railway, Render,
+  or Cloudflare Workers). The endpoint will be <code>http://localhost:3000/mcp</code>
+  by default.
+</div>
+
+<!-- ── Tools ── -->
+<section id="tools">
+  <h2>Available Tools</h2>
+  <p>Eight tools covering the full HL7 v2.5.1 reference surface.</p>
+
+  <div class="tools">
+    <div class="tool-card">
+      <div class="tname">list_segments</div>
+      <div class="tdesc">List all supported HL7 v2.5.1 segments with their names and field counts.</div>
+      <div class="tparams"><span class="param">no parameters</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">get_segment</div>
+      <div class="tdesc">Full definition of a segment — every field with data type, length, optionality, repeatability, and a detailed description.</div>
+      <div class="tparams"><span class="param req">segment</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">get_field</div>
+      <div class="tdesc">Look up a single field by segment and sequence number. Returns data type, length, optionality, and description.</div>
+      <div class="tparams"><span class="param req">segment</span><span class="param req">field</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">list_message_types</div>
+      <div class="tdesc">List all supported HL7 message types and events with short descriptions.</div>
+      <div class="tparams"><span class="param">no parameters</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">get_message_structure</div>
+      <div class="tdesc">Get the required and optional segment sequence for a message type (e.g., ADT^A01, ORM^O01, ORU^R01, ADT^A40).</div>
+      <div class="tparams"><span class="param req">messageType</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">lookup_code_table</div>
+      <div class="tdesc">Look up values in a standard HL7 code table by table number. Supports optional text filter. Tables: 0001, 0003, 0004, 0007, 0008, 0074, 0078, 0085, 0119, 0123, 0155, 0190, 0357.</div>
+      <div class="tparams"><span class="param req">tableNumber</span><span class="param">filter?</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">parse_message</div>
+      <div class="tdesc">Parse a pipe-delimited HL7 message into structured JSON. Strips MLLP framing, labels every field by name, and extracts a key-identifiers summary — MRN, prior MRN, order control, accession (reporting <em>which</em> field it came from), Study Instance UID and result status.</div>
+      <div class="tparams"><span class="param req">message</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">validate_message</div>
+      <div class="tdesc">Validate against v2.5.1 rules and return errors, warnings and advisory notes separately. Base checks run on any message; five message types get a deep profile.</div>
+      <div class="tparams"><span class="param req">message</span></div>
+    </div>
+  </div>
+
+  <h3>Deep validation profiles</h3>
+  <p>Beyond the base MSH, delimiter, timestamp and code-table checks that run on every
+  message, these five types are validated against their specific semantics:</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Message</th><th>What the profile checks beyond the basics</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="green">ORM^O01</td>
+          <td>ORC-1 against table 0119; that an order number exists in ORC-2 or ORC-3; that action codes (CA, DC, HD, RL, RP, SC, XO) actually identify an existing order; <b>SC sent without ORC-5</b>, the classic duplicate-worklist cause; ORC↔OBR pairing across the repeating ORDER group; OBR-4 present; accession recoverable from OBR-18/2/3; and ZDS Study Instance UID validated as a real DICOM UID — digits and dots only, ≤64 chars, no leading-zero components.</td>
+        </tr>
+        <tr>
+          <td class="green">ADT^A08</td>
+          <td>EVN present and second; EVN-1 agrees with MSH-9.2; PV1 required per the ADT_A01 structure; PV1-2 against table 0004; <b>missing PV1-19</b> flagged, since a visit-level update with no visit number can land on the wrong encounter; MRG rejected outright.</td>
+        </tr>
+        <tr>
+          <td class="green">ADT^A31</td>
+          <td>PV1 required by the ADT_A05 structure even though A31 is person-level; <b>warns when PV1-19 is populated</b>, because a person-level event carrying a visit number is the usual A08/A31 mix-up; notes when Patient Class is something other than N.</td>
+        </tr>
+        <tr>
+          <td class="green">ADT^A40</td>
+          <td>MRG required; <b>PID↔MRG pairing across the repeating PATIENT group</b> of ADT_A39, so multi-merge messages are checked pair by pair; MRG ordered after its PID; <b>self-merge detection</b> when PID-3 equals MRG-1; and a warning when the two identifiers come from different assigning authorities.</td>
+        </tr>
+        <tr>
+          <td class="green">ORU^R01</td>
+          <td>OBX segments grouped under their owning OBR; OBX appearing before any OBR flagged; OBR-25 against table 0123 with an explicit callout when a table 0085 code is used by mistake; OBX-11 against 0085; <b>cross-checks OBR-25 against every OBX-11</b> so a "Final" report containing preliminary lines is caught; NM values that are not numeric; and repeated OBX-3 within a group with no OBX-4 Sub-ID.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── Quick Start ── -->
+<section id="quickstart">
+  <h2>Quick Start</h2>
+
+  <ol class="steps">
+    <li class="step">
+      <div></div>
+      <div class="step-body">
+        <h3>Download the server</h3>
+        <p>Right-click and save, or clone the repo.</p>
+        <div class="codeblock">
+          <div class="codeblock-head"><span>shell</span></div>
+          <pre><span class="hl-b">curl</span> -O https://coffeemilktea.github.io/mcp/server.js</pre>
+        </div>
+      </div>
+    </li>
+    <li class="step">
+      <div></div>
+      <div class="step-body">
+        <h3>Install dependencies</h3>
+        <div class="codeblock">
+          <div class="codeblock-head"><span>shell</span></div>
+          <pre><span class="hl-b">npm</span> install @modelcontextprotocol/sdk express cors zod</pre>
+        </div>
+      </div>
+    </li>
+    <li class="step">
+      <div></div>
+      <div class="step-body">
+        <h3>Run the server</h3>
+        <div class="codeblock">
+          <div class="codeblock-head"><span>shell</span></div>
+          <pre><span class="hl-b">node</span> server.js
+<span class="cm"># HL7 v2.5.1 MCP server listening on http://localhost:3000/mcp</span></pre>
+        </div>
+      </div>
+    </li>
+    <li class="step">
+      <div></div>
+      <div class="step-body">
+        <h3>Add to Claude Desktop</h3>
+        <p>Edit <code>~/Library/Application Support/Claude/claude_desktop_config.json</code> (Mac) or <code>%APPDATA%\Claude\claude_desktop_config.json</code> (Windows).</p>
+        <div class="codeblock">
+          <div class="codeblock-head"><span>claude_desktop_config.json</span></div>
+<pre>{
+  <span class="hl">"mcpServers"</span>: {
+    <span class="hl">"hl7-reference"</span>: {
+      <span class="hl-a">"type"</span>: <span class="hl-b">"http"</span>,
+      <span class="hl-a">"url"</span>: <span class="hl-b">"http://localhost:3000/mcp"</span>
+    }
+  }
+}</pre>
+        </div>
+        <p>Restart Claude Desktop. The eight tools will appear in the tool panel.</p>
+      </div>
+    </li>
+    <li class="step">
+      <div></div>
+      <div class="step-body">
+        <h3>Or use with Claude Code</h3>
+        <p>Add to your project's <code>.claude/settings.json</code>:</p>
+        <div class="codeblock">
+          <div class="codeblock-head"><span>.claude/settings.json</span></div>
+<pre>{
+  <span class="hl">"mcpServers"</span>: {
+    <span class="hl">"hl7-reference"</span>: {
+      <span class="hl-a">"type"</span>: <span class="hl-b">"http"</span>,
+      <span class="hl-a">"url"</span>: <span class="hl-b">"http://localhost:3000/mcp"</span>
+    }
+  }
+}</pre>
+        </div>
+      </div>
+    </li>
+  </ol>
+</section>
+
+<!-- ── Deploy remotely ── -->
+<section id="deploy">
+  <h2>Deploy Remotely</h2>
+  <p>Run on Railway or Render for a persistent endpoint you can share across machines.</p>
+
+  <h3>Railway (one command)</h3>
+  <div class="codeblock">
+    <div class="codeblock-head"><span>shell</span></div>
+<pre><span class="hl-b">railway</span> init <span class="cm"># answer prompts</span>
+<span class="hl-b">railway</span> up    <span class="cm"># deploys; gives you https://yourapp.up.railway.app</span></pre>
+  </div>
+  <p>Set <code>PORT</code> env var if needed. Railway auto-detects Node.js.</p>
+
+  <h3>Render</h3>
+  <p>Create a new Web Service, point to the repo, set Start Command to <code>node server.js</code>.
+  The deployed URL becomes your MCP endpoint — use <code>https://yourapp.onrender.com/mcp</code>.</p>
+
+  <h3>Environment variables</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Variable</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td class="green">PORT</td><td class="mono">3000</td><td>HTTP port the server listens on</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── Reference ── -->
+<section id="reference">
+  <h2>Supported HL7 Content</h2>
+
+  <h3>Segments</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Code</th><th>Name</th><th>Notes</th></tr></thead>
+      <tbody>
+        <tr><td class="green">MSH</td><td>Message Header</td><td>All 21 fields, delimiter rules, version check</td></tr>
+        <tr><td class="green">MSA</td><td>Message Acknowledgment</td><td>ACK codes AA/AE/AR/CA/CE/CR</td></tr>
+        <tr><td class="green">EVN</td><td>Event Type</td><td>Recorded vs. planned date, reason codes</td></tr>
+        <tr><td class="green">PID</td><td>Patient Identification</td><td>All 38 v2.5.1 fields, deprecated ones included and marked</td></tr>
+        <tr><td class="green">PV1</td><td>Patient Visit</td><td>Patient class, location, attending/referring/admitting physicians</td></tr>
+        <tr><td class="green">ORC</td><td>Common Order</td><td>Order control codes, placer/filler numbers</td></tr>
+        <tr><td class="green">OBR</td><td>Observation Request</td><td>OBR-18 accession, OBR-25 result status, diagnostic service section</td></tr>
+        <tr><td class="green">OBX</td><td>Observation/Result</td><td>All value types, abnormal flags, result status</td></tr>
+        <tr><td class="green">NTE</td><td>Notes and Comments</td><td>Source codes, formatted text</td></tr>
+        <tr><td class="green">MRG</td><td>Merge Patient Information</td><td>Prior patient ID — used in ADT^A40</td></tr>
+        <tr><td class="green">AL1</td><td>Patient Allergy Information</td><td>Allergen type, severity, reaction</td></tr>
+        <tr><td class="green">DG1</td><td>Diagnosis</td><td>ICD codes, diagnosis type, priority</td></tr>
+        <tr><td class="green">IN1</td><td>Insurance</td><td>Plan, company, insured relationship</td></tr>
+        <tr><td class="green">SCH</td><td>Scheduling Activity Information</td><td>SIU/SRM messages</td></tr>
+        <tr><td class="green">ERR</td><td>Error</td><td>HL7 error condition codes (Table 0357)</td></tr>
+        <tr><td class="green">ZDS</td><td>Study Instance UID</td><td>IHE RAD extension — one field only, RP data type</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Message Types</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Type</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td class="green">ADT^A01</td><td>Admit/Visit Notification</td></tr>
+        <tr><td class="green">ADT^A02</td><td>Transfer a Patient</td></tr>
+        <tr><td class="green">ADT^A03</td><td>Discharge/End Visit</td></tr>
+        <tr><td class="green">ADT^A04</td><td>Register a Patient</td></tr>
+        <tr><td class="green">ADT^A05</td><td>Pre-Admit a Patient</td></tr>
+        <tr><td class="green">ADT^A08</td><td>Update Patient Information</td></tr>
+        <tr><td class="green">ADT^A11</td><td>Cancel Admit/Visit Notification</td></tr>
+        <tr><td class="green">ADT^A13</td><td>Cancel Discharge/End Visit</td></tr>
+        <tr><td class="green">ADT^A28</td><td>Add Person Information</td></tr>
+        <tr><td class="green">ADT^A31</td><td>Update Person Information</td></tr>
+        <tr><td class="green">ADT^A40</td><td>Merge Patient — Patient Identifier List</td></tr>
+        <tr><td class="green">ORM^O01</td><td>Order Message (with IHE RAD ZDS)</td></tr>
+        <tr><td class="green">ORR^O02</td><td>Order Response</td></tr>
+        <tr><td class="green">ORU^R01</td><td>Unsolicited Observation Result</td></tr>
+        <tr><td class="green">ACK</td><td>General Acknowledgment</td></tr>
+        <tr><td class="green">SIU^S12</td><td>Notification of New Appointment Booking</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Code Tables</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Table</th><th>Name</th></tr></thead>
+      <tbody>
+        <tr><td class="green">0001</td><td>Administrative Sex (F/M/O/U/A/N)</td></tr>
+        <tr><td class="green">0003</td><td>Event Type (A01–A45, O01, R01, T02…)</td></tr>
+        <tr><td class="green">0004</td><td>Patient Class (I/O/E/P/B/U…)</td></tr>
+        <tr><td class="green">0007</td><td>Admission Type (Accident/Elective/Emergency/Routine/Urgent)</td></tr>
+        <tr><td class="green">0008</td><td>Acknowledgment Code (AA/AE/AR/CA/CE/CR)</td></tr>
+        <tr><td class="green">0074</td><td>Diagnostic Service Section ID (RAD/CT/NMR/LAB/CH/HM…)</td></tr>
+        <tr><td class="green">0078</td><td>Abnormal Flags (L/H/LL/HH/A/N/U/D/S/R/I…)</td></tr>
+        <tr><td class="green">0085</td><td>Observation Result Status — <b>OBX-11</b> (C/D/F/I/N/O/P/R/S/U/W/X)</td></tr>
+        <tr><td class="green">0119</td><td>Order Control Codes (NW/CA/DC/HD/RL/RP/SC/OK/UA…)</td></tr>
+        <tr><td class="green">0123</td><td>Result Status — <b>OBR-25</b> (O/I/S/A/P/C/R/F/X/Y/Z — no M, N, U or W)</td></tr>
+        <tr><td class="green">0155</td><td>Accept/Application Acknowledgment Conditions (AL/ER/NE/SU)</td></tr>
+        <tr><td class="green">0190</td><td>Address Type (H/B/M/C/O/P/TM…)</td></tr>
+        <tr><td class="green">0357</td><td>Message Error Condition Codes (0/100/101/200/204…)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── Standards notes ── -->
+<section id="notes">
+  <h2>Version Traps This Server Encodes</h2>
+  <p>Most HL7 reference material circulating online is a blend of v2.3 through v2.9.
+  These are the points where v2.5.1 specifically differs from what people expect,
+  and where the reference data here has been pinned to the 2.5.1 standard.</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Trap</th><th>The v2.5.1 position</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">CE vs CWE</td>
+          <td>In v2.5.1 the coded fields are <b>CE</b>, not CWE — OBR-4, OBX-3, MSH-19, NTE-4, DG1-3, AL1-2/3/4, IN1-2/17, SCH-6/7/25. CWE replaced CE from v2.7. The exceptions are ERR-3 and ERR-5, which genuinely <em>are</em> CWE in 2.5.1 because ERR was rewritten in v2.5.</td>
+        </tr>
+        <tr>
+          <td class="mono">Table 0123 vs 0085</td>
+          <td>OBR-25 uses table 0123 (O, I, S, A, P, C, R, F, X, Y, Z). OBX-11 uses table 0085 (C, D, F, I, N, O, P, R, S, U, W, X). <b>M, N, U and W are not valid in OBR-25</b> — putting an OBX-11 code there is the single most common ORU build error, and the validator names it explicitly.</td>
+        </tr>
+        <tr>
+          <td class="mono">PID-39</td>
+          <td>Does not exist in v2.5.1. PID ends at <b>PID-38</b> (Production Class Code). Tribal Citizenship arrived in v2.6.</td>
+        </tr>
+        <tr>
+          <td class="mono">ZDS</td>
+          <td>IHE RAD TF-2 defines <b>exactly one field</b>, and its data type is <b>RP</b> (Reference Pointer), not ST — components are Pointer^Application ID^Type of Data^Subtype, so the UID sits in ZDS-1.1. Anything in ZDS-2 onward is a site-local invention.</td>
+        </tr>
+        <tr>
+          <td class="mono">ORC in ORU</td>
+          <td>ORC is <b>optional</b> inside the ORDER_OBSERVATION group of ORU^R01, and the whole PATIENT group — so <b>PID too</b> — is optional in the abstract syntax. Real interfaces require both, but a message without them is still conformant, so the validator warns rather than errors.</td>
+        </tr>
+        <tr>
+          <td class="mono">Repeating groups</td>
+          <td>ADT_A39 repeats <code>{ PID [PD1] MRG [PV1] }</code>, so one A40 can carry several merges. ORM_O01 repeats the ORDER group and ORU_R01 repeats both PATIENT_RESULT and ORDER_OBSERVATION. Flattened references that show one of each are wrong, and the validator pairs the repeats up properly.</td>
+        </tr>
+        <tr>
+          <td class="mono">SCH-9 vs SCH-11</td>
+          <td>Appointment Duration is <b>SCH-9</b>, with its units in SCH-10. SCH-11 is Appointment Timing Quantity (TQ).</td>
+        </tr>
+        <tr>
+          <td class="mono">Table 0078</td>
+          <td>The off-scale abnormal flags are <code>&lt;</code> and <code>&gt;</code>, not <code>&lt;=</code> and <code>&gt;=</code>.</td>
+        </tr>
+        <tr>
+          <td class="mono">OBR-18 accession</td>
+          <td>Mapping the DICOM Accession Number (0008,0050) to OBR-18 is an <b>IHE RAD convention, not an HL7 requirement</b>. Sites also use OBR-2, OBR-3 or ORC-3. <code>parse_message</code> therefore reports which field it actually found the accession in rather than assuming.</td>
+        </tr>
+        <tr>
+          <td class="mono">MSH-3 / MSH-5</td>
+          <td>Optional in the standard, despite nearly every site treating them as mandatory. Reported as warnings, not errors.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── Example queries ── -->
+<section id="examples">
+  <h2>Example Prompts</h2>
+  <p>Once connected, you can ask Claude questions like:</p>
+
+  <div class="codeblock">
+    <div class="codeblock-head"><span>natural language → tool call</span></div>
+<pre><span class="cm"># Field lookup</span>
+"What does PID-3 contain and what's its data type?"
+<span class="hl">→</span> get_field(segment="PID", field=3)
+
+<span class="cm"># Message structure</span>
+"What segments are required in an ADT A40 merge message?"
+<span class="hl">→</span> get_message_structure(messageType="ADT^A40")
+
+<span class="cm"># Parse a real message</span>
+"Parse this HL7 message and tell me the patient's MRN and accession number."
+<span class="hl">→</span> parse_message(message="MSH|^~\&amp;|RIS|HOSP|PACS|HOSP|...")
+
+<span class="cm"># Code table lookup</span>
+"What does ORC-1 code 'SC' mean?"
+<span class="hl">→</span> lookup_code_table(tableNumber="0119", filter="SC")
+
+<span class="cm"># Validate before sending</span>
+"Validate this ORM^O01 and tell me what's missing."
+<span class="hl">→</span> validate_message(message="MSH|^~\&amp;|...")
+
+<span class="cm"># Merge integrity</span>
+"Is this A40 safe to send? Check the merge direction."
+<span class="hl">→</span> validate_message(...)  <span class="cm">→ catches self-merge, unpaired
+                              PID/MRG, cross-authority merge</span>
+
+<span class="cm"># Report status consistency</span>
+"This ORU says Final but the EMR shows it as preliminary. Why?"
+<span class="hl">→</span> validate_message(...)  <span class="cm">→ cross-checks OBR-25 vs OBX-11</span>
+
+<span class="cm"># Segment overview</span>
+"Explain the ZDS segment and what it's used for in IHE."
+<span class="hl">→</span> get_segment(segment="ZDS")</pre>
+  </div>
+</section>
+
+</main>
+</div>
+
+<div class="wrap">
+<footer>
+  <p>Part of <a href="/">coffeemilktea.github.io</a> — browser-based healthcare IT tools.</p>
+  <p style="margin-top:6px;">HL7 v2.5.1 content based on the published HL7 International standard. Server source: <a href="/mcp/server.js">server.js</a></p>
+</footer>
+</div>
+
+</div>
+</body>
+</html>
