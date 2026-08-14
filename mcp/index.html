@@ -95,7 +95,7 @@ a:hover { text-decoration: underline; }
 
 /* ── code blocks ── */
 .codeblock { margin: 16px 0; border: 1px solid var(--line); border-radius: 4px;
-  background: var(--panel); overflow: hidden; }
+  background: var(--panel); overflow: hidden; min-width: 0; }
 .codeblock-head { display: flex; align-items: center; justify-content: space-between;
   padding: 8px 12px; border-bottom: 1px solid var(--line);
   font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
@@ -111,6 +111,7 @@ a:hover { text-decoration: underline; }
 .steps { list-style: none; padding: 0; counter-reset: step; margin-top: 20px; }
 .step { display: grid; grid-template-columns: 28px 1fr; gap: 12px;
   padding-bottom: 28px; counter-increment: step; }
+.step-body { min-width: 0; }
 .step::before { content: counter(step); width: 28px; height: 28px;
   background: var(--panel2); border: 1px solid var(--line); border-radius: 50%;
   font-family: var(--mono); font-size: 11px; color: var(--muted);
@@ -264,7 +265,6 @@ footer p { font-size: 13px; color: var(--dim); }
 
   <ol class="steps">
     <li class="step">
-      <div></div>
       <div class="step-body">
         <h3>Download the server</h3>
         <p>Right-click and save, or clone the repo.</p>
@@ -275,7 +275,6 @@ footer p { font-size: 13px; color: var(--dim); }
       </div>
     </li>
     <li class="step">
-      <div></div>
       <div class="step-body">
         <h3>Install dependencies</h3>
         <div class="codeblock">
@@ -285,7 +284,6 @@ footer p { font-size: 13px; color: var(--dim); }
       </div>
     </li>
     <li class="step">
-      <div></div>
       <div class="step-body">
         <h3>Run the server</h3>
         <div class="codeblock">
@@ -296,7 +294,6 @@ footer p { font-size: 13px; color: var(--dim); }
       </div>
     </li>
     <li class="step">
-      <div></div>
       <div class="step-body">
         <h3>Add to Claude Desktop</h3>
         <p>Edit <code>~/Library/Application Support/Claude/claude_desktop_config.json</code> (Mac) or <code>%APPDATA%\Claude\claude_desktop_config.json</code> (Windows).</p>
@@ -315,7 +312,6 @@ footer p { font-size: 13px; color: var(--dim); }
       </div>
     </li>
     <li class="step">
-      <div></div>
       <div class="step-body">
         <h3>Or use with Claude Code</h3>
         <p>Add to your project's <code>.claude/settings.json</code>:</p>
