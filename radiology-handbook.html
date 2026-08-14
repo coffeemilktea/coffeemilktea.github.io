@@ -1,0 +1,2218 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radiology Transaction Handbook — HL7 &amp; DICOM for PACS Administrators</title>
+<meta name="description" content="A working reference for PACS administrators and healthcare IT: the order-to-image timeline, HL7 ADT/ORM/ORU, DICOM SCU/SCP roles, DIMSE services, DICOMweb QIDO/WADO/STOW, tags, ports and troubleshooting.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..900&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#08090B;
+  --panel:#101419;
+  --panel-2:#161C22;
+  --line:#252E37;
+  --line-soft:#1A2129;
+  --bone:#E9EEF2;
+  --tissue:#9BA8B3;
+  --dim:#6C7883;
+  --dcm:#3FC7DA;
+  --dcm-bg:rgba(63,199,218,.09);
+  --dcm-line:rgba(63,199,218,.34);
+  --hl7:#F2A93B;
+  --hl7-bg:rgba(242,169,59,.09);
+  --hl7-line:rgba(242,169,59,.34);
+  --alert:#E5594E;
+  --alert-bg:rgba(229,89,78,.09);
+  --ok:#6FCF8B;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+  --sans:"IBM Plex Sans",system-ui,-apple-system,Segoe UI,sans-serif;
+  --disp:"Archivo","IBM Plex Sans",system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;scroll-padding-top:24px}
+body{margin:0;background:var(--ink);color:var(--bone);font-family:var(--sans);
+  font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
+::selection{background:var(--dcm);color:#04252A}
+
+.wedge{height:7px;width:100%;
+  background:linear-gradient(90deg,#000 0 8.33%,#151515 0 16.66%,#282828 0 25%,#3b3b3b 0 33.3%,
+    #505050 0 41.6%,#666 0 50%,#7d7d7d 0 58.3%,#959595 0 66.6%,#aeaeae 0 75%,#c8c8c8 0 83.3%,
+    #e2e2e2 0 91.6%,#fff 0 100%)}
+.wedge--top{position:fixed;top:0;left:0;z-index:60}
+.wedge--part{height:5px;opacity:.85;margin:0 0 22px}
+
+.shell{max-width:1440px;margin:0 auto;padding:0 20px}
+@media(min-width:1080px){.shell{display:grid;grid-template-columns:272px minmax(0,1fr);gap:64px;padding:0 40px 0 32px}}
+main{max-width:980px;padding:0 0 120px}
+
+.index{display:none}
+@media(min-width:1080px){
+  .index{display:block;position:sticky;top:0;align-self:start;height:100vh;overflow-y:auto;
+    padding:40px 20px 60px 0;border-right:1px solid var(--line-soft)}
+}
+.index-mark{font-family:var(--mono);font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--dim);margin-bottom:20px}
+.index-group{font-family:var(--mono);font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dim);margin:22px 0 8px;padding-bottom:6px;border-bottom:1px solid var(--line-soft)}
+.index-group.g-hl7{color:var(--hl7)}
+.index-group.g-dcm{color:var(--dcm)}
+.index a{display:block;padding:5px 0 5px 14px;margin-left:-1px;border-left:2px solid transparent;
+  color:var(--tissue);text-decoration:none;font-size:13.5px;line-height:1.35;transition:color .15s,border-color .15s}
+.index a .n{font-family:var(--mono);font-size:10.5px;color:var(--dim);margin-right:9px}
+.index a:hover{color:var(--bone)}
+.index a.on{color:var(--bone);border-left-color:var(--dcm)}
+.index a.on .n{color:var(--dcm)}
+
+.mnav{display:block;margin:0 0 34px;border:1px solid var(--line);background:var(--panel);border-radius:3px}
+@media(min-width:1080px){.mnav{display:none}}
+.mnav summary{cursor:pointer;padding:13px 16px;font-family:var(--mono);font-size:11px;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--tissue);list-style:none}
+.mnav summary::-webkit-details-marker{display:none}
+.mnav summary::after{content:"▾";float:right;color:var(--dim)}
+.mnav[open] summary::after{content:"▴"}
+.mnav ol{margin:0;padding:0 16px 16px 34px}
+.mnav a{color:var(--tissue);text-decoration:none;font-size:14px;line-height:2}
+.mnav a:hover{color:var(--bone)}
+
+.hero{padding:74px 0 26px}
+@media(min-width:1080px){.hero{padding:86px 0 30px}}
+.hero-tag{font-family:var(--mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--dcm);margin-bottom:26px}
+.hero-tag .sep{color:var(--dim);margin:0 10px}
+.hero-tag .amb{color:var(--hl7)}
+h1{font-family:var(--disp);font-variation-settings:"wdth" 118,"wght" 800;
+  font-size:clamp(38px,7.2vw,72px);line-height:.97;letter-spacing:-.022em;margin:0 0 22px;text-wrap:balance}
+h1 .thin{font-variation-settings:"wdth" 118,"wght" 400;color:var(--tissue);display:block}
+.hero-lede{font-size:clamp(17px,2.2vw,20px);color:var(--tissue);max-width:64ch;margin:0 0 30px}
+.hero-lede strong{color:var(--bone);font-weight:600}
+.hero-meta{display:flex;flex-wrap:wrap;gap:8px 26px;font-family:var(--mono);font-size:11.5px;
+  color:var(--dim);padding-top:22px;border-top:1px solid var(--line-soft)}
+.hero-meta b{color:var(--tissue);font-weight:500}
+
+/* part dividers */
+.part{margin:96px 0 8px;padding:26px 0 0;border-top:2px solid var(--line)}
+.part-n{font-family:var(--mono);font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--dim);margin-bottom:10px}
+.part h2{margin-bottom:10px}
+.part--hl7{border-top-color:var(--hl7-line)}
+.part--hl7 .part-n{color:var(--hl7)}
+.part--dcm{border-top-color:var(--dcm-line)}
+.part--dcm .part-n{color:var(--dcm)}
+.part-lede{font-size:17px;color:var(--tissue);max-width:72ch;margin:0}
+
+/* chain */
+.chain-frame{margin:48px 0 8px;padding:26px 22px 22px;border:1px solid var(--line);
+  background:linear-gradient(180deg,var(--panel) 0%,#0C1014 100%);border-radius:4px}
+.chain-cap{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dim);margin-bottom:22px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.chain{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+@media(min-width:900px){.chain{flex-direction:row;align-items:stretch}}
+.node{position:relative;flex:1 1 0;min-width:0;padding:0 0 30px}
+@media(min-width:900px){.node{padding:0 20px 0 0}}
+.node:last-child{padding-bottom:0}
+.node-box{border:1px solid var(--line);background:var(--panel-2);border-radius:3px;padding:11px 12px;height:100%}
+.node-box .who{font-family:var(--disp);font-variation-settings:"wdth" 108,"wght" 600;font-size:14px;line-height:1.2}
+.node-box .what{font-size:11.5px;color:var(--dim);margin-top:3px;line-height:1.35}
+.node-box .role{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;color:var(--tissue);margin-top:6px}
+.hop{font-family:var(--mono);font-size:10.5px;letter-spacing:.04em;display:flex;align-items:center;gap:7px;padding:7px 2px 0}
+@media(min-width:900px){
+  .hop{position:absolute;right:-2px;top:50%;transform:translate(50%,-50%);padding:3px 7px;
+    background:var(--ink);border-radius:2px;white-space:nowrap;z-index:2}
+  .node:not(:last-child) .node-box::after{content:"";position:absolute;right:0;top:50%;width:20px;height:1px;background:var(--line)}
+}
+.hop--dcm{color:var(--dcm)}
+.hop--hl7{color:var(--hl7)}
+.node:last-child .hop{display:none}
+.legend{display:flex;flex-wrap:wrap;gap:10px 22px;margin-top:24px;font-family:var(--mono);
+  font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim)}
+.legend i{display:inline-block;width:22px;height:2px;vertical-align:middle;margin-right:8px}
+.legend .i-dcm{background:var(--dcm)}
+.legend .i-hl7{background:var(--hl7)}
+
+/* ---- TIMELINE ---- */
+.tl-frame{margin:32px 0;border:1px solid var(--line);border-radius:4px;
+  background:linear-gradient(180deg,var(--panel) 0%,#0B0F13 60%);padding:24px 20px 8px;overflow:hidden}
+.tl-cap{font-family:var(--mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--dim);display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:20px}
+.phasebar{display:grid;grid-template-columns:repeat(2,1fr);gap:5px;margin-bottom:32px}
+@media(min-width:640px){.phasebar{grid-template-columns:repeat(4,1fr)}}
+@media(min-width:960px){.phasebar{grid-template-columns:repeat(7,1fr)}}
+.phase{border:1px solid var(--line);border-top-width:2px;background:var(--panel-2);
+  border-radius:0 0 2px 2px;padding:9px 9px 10px}
+.phase[data-p="hl7"]{border-top-color:var(--hl7)}
+.phase[data-p="dcm"]{border-top-color:var(--dcm)}
+.phase[data-p="both"]{border-top-color:var(--tissue)}
+.ph-t{display:block;font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;color:var(--dim);margin-bottom:4px}
+.ph-n{display:block;font-family:var(--disp);font-variation-settings:"wdth" 106,"wght" 600;font-size:13.5px;line-height:1.15}
+.tl{list-style:none;margin:0;padding:0}
+.tl-item{display:grid;grid-template-columns:62px 20px minmax(0,1fr);gap:0;position:relative}
+@media(min-width:700px){.tl-item{grid-template-columns:88px 22px minmax(0,1fr)}}
+.tl-time{font-family:var(--mono);font-size:11px;color:var(--dim);padding:2px 10px 0 0;text-align:right;white-space:nowrap}
+.tl-time b{display:block;color:var(--tissue);font-weight:500;font-size:12px}
+.tl-rail{position:relative}
+.tl-rail::before{content:"";position:absolute;left:50%;top:0;bottom:0;width:1px;background:var(--line);transform:translateX(-50%)}
+.tl-item:first-child .tl-rail::before{top:9px}
+.tl-item:last-child .tl-rail::before{bottom:auto;height:9px}
+.tl-rail::after{content:"";position:absolute;left:50%;top:5px;width:9px;height:9px;border-radius:50%;
+  transform:translateX(-50%);background:var(--tissue);box-shadow:0 0 0 3px var(--ink)}
+.tl-item[data-p="hl7"] .tl-rail::after{background:var(--hl7)}
+.tl-item[data-p="dcm"] .tl-rail::after{background:var(--dcm)}
+.tl-item[data-p="human"] .tl-rail::after{background:transparent;border:1px solid var(--tissue);width:7px;height:7px;top:6px}
+.tl-body{padding:0 0 26px 14px;min-width:0}
+.tl-item:last-child .tl-body{padding-bottom:6px}
+.tl-head{font-family:var(--disp);font-variation-settings:"wdth" 106,"wght" 600;font-size:15.5px;line-height:1.3;margin-bottom:5px}
+.tl-who{font-family:var(--mono);font-size:11px;color:var(--dim);line-height:1.5;margin-bottom:7px}
+.tl-who .ar{color:var(--tissue);margin:0 5px}
+.tl-body p{font-size:14px;color:var(--tissue);margin:0;max-width:66ch}
+.tl-tags{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px}
+
+section{padding:56px 0 0;margin-top:56px;border-top:1px solid var(--line-soft);scroll-margin-top:20px}
+.part + section{border-top:0;margin-top:0;padding-top:34px}
+main > section:first-of-type{margin-top:40px}
+.eyebrow{font-family:var(--mono);font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);margin:0 0 12px}
+.eyebrow b{color:var(--dcm);font-weight:500}
+.eyebrow .amb{color:var(--hl7)}
+h2{font-family:var(--disp);font-variation-settings:"wdth" 114,"wght" 700;
+  font-size:clamp(27px,4.2vw,40px);line-height:1.05;letter-spacing:-.018em;margin:0 0 16px;text-wrap:balance}
+h3{font-family:var(--disp);font-variation-settings:"wdth" 106,"wght" 600;font-size:19px;letter-spacing:-.005em;margin:40px 0 12px}
+h4{font-family:var(--mono);font-size:11.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--tissue);font-weight:500;margin:30px 0 10px}
+p{margin:0 0 16px;max-width:74ch}
+.lede{font-size:17.5px;color:var(--tissue);max-width:70ch}
+a{color:var(--dcm)}
+strong{font-weight:600}
+code{font-family:var(--mono);font-size:.875em;background:var(--panel-2);border:1px solid var(--line-soft);
+  border-radius:2px;padding:1px 5px;color:var(--bone)}
+.t-dcm{color:var(--dcm)}
+.t-hl7{color:var(--hl7)}
+.t-alert{color:var(--alert)}
+.t-dim{color:var(--dim)}
+ul,ol{max-width:74ch;padding-left:20px}
+li{margin-bottom:7px}
+li::marker{color:var(--dim)}
+
+.badge{display:inline-block;font-family:var(--mono);font-size:10px;letter-spacing:.14em;text-transform:uppercase;
+  padding:2px 7px;border-radius:2px;vertical-align:2px;border:1px solid var(--line);color:var(--tissue);white-space:nowrap}
+.badge--dcm{color:var(--dcm);border-color:var(--dcm-line);background:var(--dcm-bg)}
+.badge--hl7{color:var(--hl7);border-color:var(--hl7-line);background:var(--hl7-bg)}
+.badge--alert{color:var(--alert);border-color:rgba(229,89,78,.34);background:var(--alert-bg)}
+.badge--scu{color:var(--ink);background:var(--dcm);border-color:var(--dcm);font-weight:600}
+.badge--scp{color:var(--dcm);background:transparent;border-color:var(--dcm-line);font-weight:600}
+
+.panel{border:1px solid var(--line);background:var(--panel);border-radius:4px;padding:22px 22px 6px;margin:26px 0}
+.panel--dcm{border-left:2px solid var(--dcm)}
+.panel--hl7{border-left:2px solid var(--hl7)}
+.panel--alert{border-left:2px solid var(--alert)}
+.panel h4{margin-top:0}
+.panel p:last-child,.panel ul:last-child,.panel ol:last-child{margin-bottom:16px}
+.grid2{display:grid;gap:16px;grid-template-columns:1fr}
+@media(min-width:760px){.grid2{grid-template-columns:1fr 1fr}}
+.grid3{display:grid;gap:14px;grid-template-columns:1fr}
+@media(min-width:680px){.grid3{grid-template-columns:repeat(3,1fr)}}
+.card{border:1px solid var(--line);background:var(--panel);border-radius:3px;padding:16px 16px 8px}
+.card h4{margin-top:0}
+.card p{font-size:14.5px;color:var(--tissue)}
+.stat{font-family:var(--disp);font-variation-settings:"wdth" 100,"wght" 700;font-size:26px;line-height:1;margin-bottom:6px}
+
+.msg{margin:22px 0;border:1px solid var(--line);border-radius:4px;background:#0B0F13;overflow:hidden}
+.msg-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:9px 14px;border-bottom:1px solid var(--line);background:var(--panel);
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)}
+.msg pre{margin:0;padding:16px 14px;overflow-x:auto;font-family:var(--mono);font-size:12.5px;line-height:1.85;color:var(--bone)}
+.msg pre .seg{color:var(--hl7);font-weight:600}
+.msg pre .seg-d{color:var(--dcm);font-weight:600}
+.msg pre .hi{background:rgba(242,169,59,.14);border-bottom:1px solid var(--hl7-line);padding:0 1px}
+.msg pre .hi-d{background:rgba(63,199,218,.14);border-bottom:1px solid var(--dcm-line);padding:0 1px}
+.msg pre .cmt{color:var(--dim)}
+.msg-foot{padding:12px 14px;border-top:1px solid var(--line);background:var(--panel);font-size:13.5px;color:var(--tissue)}
+.msg-foot b{color:var(--bone)}
+
+.tw{overflow-x:auto;margin:22px 0;border:1px solid var(--line);border-radius:4px;background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13.5px;min-width:560px}
+thead th{text-align:left;font-family:var(--mono);font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--dim);font-weight:500;padding:11px 14px;border-bottom:1px solid var(--line);background:var(--panel-2)}
+tbody td{padding:9px 14px;border-bottom:1px solid var(--line-soft);vertical-align:top;color:var(--tissue)}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:rgba(255,255,255,.018)}
+td.k,td.mono,th.mono{font-family:var(--mono);font-size:12.5px;color:var(--bone);white-space:nowrap}
+td.k{color:var(--dcm)}
+td.ka{font-family:var(--mono);font-size:12.5px;color:var(--hl7);white-space:nowrap}
+td b{color:var(--bone);font-weight:600}
+caption{caption-side:bottom;text-align:left;padding:10px 14px;font-size:12.5px;color:var(--dim);border-top:1px solid var(--line-soft)}
+
+.filter{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:22px 0 0}
+.filter input{flex:1 1 240px;background:var(--panel-2);border:1px solid var(--line);border-radius:3px;
+  color:var(--bone);font-family:var(--mono);font-size:13px;padding:10px 12px}
+.filter input::placeholder{color:var(--dim)}
+.filter input:focus{outline:2px solid var(--dcm);outline-offset:1px}
+.chip{background:transparent;border:1px solid var(--line);border-radius:2px;color:var(--tissue);
+  font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:8px 11px;cursor:pointer}
+.chip:hover{color:var(--bone);border-color:var(--tissue)}
+.chip[aria-pressed="true"]{color:var(--dcm);border-color:var(--dcm-line);background:var(--dcm-bg)}
+.count{font-family:var(--mono);font-size:11px;color:var(--dim)}
+tr.hide{display:none}
+
+.steps{list-style:none;margin:30px 0 0;padding:0 0 0 30px;border-left:1px solid var(--line);counter-reset:st}
+.step{position:relative;padding:0 0 34px 0;counter-increment:st}
+.step::before{content:counter(st,decimal-leading-zero);position:absolute;left:-30px;transform:translateX(-50%);top:2px;
+  font-family:var(--mono);font-size:10px;color:var(--ink);background:var(--tissue);width:22px;height:22px;
+  border-radius:50%;display:grid;place-items:center;letter-spacing:0}
+.step[data-p="dcm"]::before{background:var(--dcm)}
+.step[data-p="hl7"]::before{background:var(--hl7)}
+.step h4{margin:0 0 5px;font-family:var(--disp);font-variation-settings:"wdth" 106,"wght" 600;
+  font-size:16.5px;letter-spacing:0;text-transform:none;color:var(--bone)}
+.step .who{font-family:var(--mono);font-size:11px;color:var(--dim);margin-bottom:7px}
+.step p{font-size:14.5px;color:var(--tissue);margin:0 0 8px}
+
+details.qa{border:1px solid var(--line);background:var(--panel);border-radius:3px;margin:10px 0}
+details.qa summary{cursor:pointer;padding:14px 16px;font-size:15px;color:var(--bone);list-style:none;display:flex;gap:12px;align-items:flex-start}
+details.qa summary::-webkit-details-marker{display:none}
+details.qa summary::before{content:"?";font-family:var(--mono);font-size:11px;color:var(--dcm);flex:0 0 auto;padding-top:3px}
+details.qa[open] summary{border-bottom:1px solid var(--line-soft)}
+details.qa .ans{padding:14px 16px 4px 40px;font-size:14.5px;color:var(--tissue)}
+details.qa .ans p{margin-bottom:12px}
+
+footer{padding:70px 0 40px;border-top:1px solid var(--line-soft);margin-top:80px;color:var(--dim);font-size:13.5px}
+footer p{max-width:70ch}
+.top{display:inline-block;margin-top:18px;font-family:var(--mono);font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--tissue);text-decoration:none;border-bottom:1px solid var(--line);padding-bottom:3px}
+.top:hover{color:var(--bone)}
+
+a:focus-visible,summary:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--dcm);outline-offset:2px;border-radius:2px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{transition:none!important;animation:none!important}}
+@media print{
+  body{background:#fff;color:#111}
+  .index,.mnav,.wedge--top,.top{display:none}
+  .panel,.card,.msg,.tw,.tl-frame,.chain-frame{border-color:#bbb;background:#fff;break-inside:avoid}
+  .msg pre,.tl-body p{color:#111}
+  section{padding-top:28px}
+  a{color:#111}
+}
+</style>
+</head>
+<body>
+<div class="wedge wedge--top"></div>
+<div class="shell">
+
+<aside class="index" aria-label="Contents">
+  <div class="index-mark">Contents</div>
+  <nav id="sidenav">
+    <div class="index-group">Part 0 · Orientation</div>
+    <a href="#actors"><span class="n">01</span>Who talks to whom</a>
+    <a href="#timeline"><span class="n">02</span>Timeline: register → read</a>
+    <a href="#lifecycle"><span class="n">03</span>Order-to-image lifecycle</a>
+    <div class="index-group g-hl7">Part I · HL7 v2</div>
+    <a href="#hl7-mech"><span class="n">04</span>Message structure &amp; MLLP</a>
+    <a href="#hl7-roles"><span class="n">05</span>Senders, receivers, acks</a>
+    <a href="#adt"><span class="n">06</span>ADT — identity feed</a>
+    <a href="#orm"><span class="n">07</span>ORM / OMI — the order</a>
+    <a href="#oru"><span class="n">08</span>ORU — the report</a>
+    <div class="index-group g-dcm">Part II · DICOM</div>
+    <a href="#dicom-model"><span class="n">09</span>Data model, UIDs, VRs</a>
+    <a href="#scu-scp"><span class="n">10</span>SCU and SCP roles</a>
+    <a href="#assoc"><span class="n">11</span>Association negotiation</a>
+    <a href="#dimse"><span class="n">12</span>DIMSE services</a>
+    <a href="#qr"><span class="n">13</span>Query / Retrieve</a>
+    <a href="#mwl"><span class="n">14</span>MWL, MPPS, commitment</a>
+    <a href="#dicomweb"><span class="n">15</span>DICOMweb RS services</a>
+    <a href="#tags"><span class="n">16</span>Tag reference</a>
+    <a href="#transfer"><span class="n">17</span>Transfer syntaxes</a>
+    <div class="index-group">Part III · Integration &amp; ops</div>
+    <a href="#mapping"><span class="n">18</span>HL7 → DICOM mapping</a>
+    <a href="#network"><span class="n">19</span>Ports, time, bandwidth</a>
+    <a href="#troubleshoot"><span class="n">20</span>Troubleshooting playbook</a>
+    <a href="#status"><span class="n">21</span>Status &amp; reject codes</a>
+    <a href="#identity"><span class="n">22</span>Identity repair &amp; IOCM</a>
+    <a href="#security"><span class="n">23</span>Security &amp; audit</a>
+    <a href="#selfcheck"><span class="n">24</span>Self-check</a>
+  </nav>
+</aside>
+
+<main>
+
+<header class="hero" id="top">
+  <div class="hero-tag">Study guide<span class="sep">/</span><span class="amb">HL7 v2</span><span class="sep">·</span><span>DICOM</span><span class="sep">/</span>PACS administration</div>
+  <h1>Radiology transaction<span class="thin">handbook</span></h1>
+  <p class="hero-lede">Every radiology study is the product of two conversations running in parallel: <strong>HL7 carries the identity and the intent</strong>, <strong>DICOM carries the pixels and the acknowledgement</strong>. Almost every ticket you will ever work is a break at one of the seams between them. This guide walks the whole chain in order, with the roles, field names and status codes you need to prove where it broke.</p>
+  <div class="hero-meta">
+    <span><b>Audience</b> PACS admins · imaging informatics · healthcare IT</span>
+    <span><b>Scope</b> HL7 v2.3–2.5.1 · DICOM PS3 · DICOMweb PS3.18 · IHE RAD</span>
+    <span><b>Structure</b> Part 0 orientation · I HL7 · II DICOM · III operations</span>
+  </div>
+</header>
+
+<details class="mnav">
+  <summary>Jump to a section</summary>
+  <ol>
+    <li><a href="#actors">Who talks to whom</a></li>
+    <li><a href="#timeline">Timeline: register → read</a></li>
+    <li><a href="#lifecycle">Order-to-image lifecycle</a></li>
+    <li><a href="#hl7-mech">HL7 structure &amp; MLLP</a></li>
+    <li><a href="#hl7-roles">Senders, receivers, acks</a></li>
+    <li><a href="#adt">ADT</a></li>
+    <li><a href="#orm">ORM / OMI</a></li>
+    <li><a href="#oru">ORU</a></li>
+    <li><a href="#dicom-model">DICOM model, UIDs, VRs</a></li>
+    <li><a href="#scu-scp">SCU and SCP roles</a></li>
+    <li><a href="#assoc">Association negotiation</a></li>
+    <li><a href="#dimse">DIMSE services</a></li>
+    <li><a href="#qr">Query / Retrieve</a></li>
+    <li><a href="#mwl">MWL, MPPS, commitment</a></li>
+    <li><a href="#dicomweb">DICOMweb RS services</a></li>
+    <li><a href="#tags">Tag reference</a></li>
+    <li><a href="#transfer">Transfer syntaxes</a></li>
+    <li><a href="#mapping">HL7 → DICOM mapping</a></li>
+    <li><a href="#network">Ports, time, bandwidth</a></li>
+    <li><a href="#troubleshoot">Troubleshooting playbook</a></li>
+    <li><a href="#status">Status &amp; reject codes</a></li>
+    <li><a href="#identity">Identity repair &amp; IOCM</a></li>
+    <li><a href="#security">Security &amp; audit</a></li>
+    <li><a href="#selfcheck">Self-check</a></li>
+  </ol>
+</details>
+
+<div class="chain-frame">
+  <div class="chain-cap"><span>Infographic 1 — the signal chain</span><span>Who initiates, who responds</span></div>
+  <ol class="chain">
+    <li class="node">
+      <div class="node-box"><div class="who">HIS / EMR</div><div class="what">Registers the patient, owns the MRN</div><div class="role">HL7 SENDER</div></div>
+      <div class="hop hop--hl7">→ ADT^A04/A08</div>
+    </li>
+    <li class="node">
+      <div class="node-box"><div class="who">RIS / Order Filler</div><div class="what">Schedules, mints the accession</div><div class="role">HL7 RECEIVER + SENDER</div></div>
+      <div class="hop hop--hl7">→ ORM^O01</div>
+    </li>
+    <li class="node">
+      <div class="node-box"><div class="who">Interface engine</div><div class="what">Translates, routes, re-maps codes</div><div class="role">HL7 BOTH</div></div>
+      <div class="hop hop--hl7">→ ORM^O01</div>
+    </li>
+    <li class="node">
+      <div class="node-box"><div class="who">Worklist provider</div><div class="what">Serves the scheduled step</div><div class="role">MWL <b>SCP</b></div></div>
+      <div class="hop hop--dcm">→ C-FIND</div>
+    </li>
+    <li class="node">
+      <div class="node-box"><div class="who">Modality</div><div class="what">Pulls demographics, acquires, sends</div><div class="role">MWL/STORE <b>SCU</b></div></div>
+      <div class="hop hop--dcm">→ C-STORE</div>
+    </li>
+    <li class="node">
+      <div class="node-box"><div class="who">PACS / VNA</div><div class="what">Archives, commits, serves priors</div><div class="role">STORE/Q-R <b>SCP</b></div></div>
+      <div class="hop hop--dcm">→ C-MOVE</div>
+    </li>
+    <li class="node">
+      <div class="node-box"><div class="who">Reading &amp; report</div><div class="what">Diagnosis returns as text, not pixels</div><div class="role">Q-R <b>SCU</b> → HL7 SENDER</div></div>
+      <div class="hop hop--hl7">→ ORU^R01</div>
+    </li>
+  </ol>
+  <div class="legend">
+    <span><i class="i-hl7"></i>HL7 v2 over MLLP — who and why</span>
+    <span><i class="i-dcm"></i>DICOM over TCP — what and where</span>
+  </div>
+</div>
+
+<section id="actors">
+  <p class="eyebrow"><b>01</b> · System map</p>
+  <h2>Who talks to whom</h2>
+  <p class="lede">Before you can debug a transaction you have to know which box is authoritative for the field that is wrong, and which end of the connection initiates. Ownership disputes cause more broken studies than networking does.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Actor</th><th>IHE role</th><th>Authoritative for</th><th>HL7 role</th><th>DICOM role</th></tr></thead>
+    <tbody>
+      <tr><td><b>HIS / EMR</b></td><td>ADT / Patient Registration</td><td>MRN, legal name, DOB, sex, encounter number</td><td class="ka">Sender (ADT)</td><td class="t-dim">—</td></tr>
+      <tr><td><b>CPOE</b></td><td>Order Placer</td><td>Placer order number, indication, priority</td><td class="ka">Sender (ORM)</td><td class="t-dim">—</td></tr>
+      <tr><td><b>RIS</b></td><td>Order Filler / DSS</td><td>Accession, procedure code, schedule, exam status</td><td class="ka">Both</td><td>MWL <b>SCP</b>, MPPS <b>SCP</b></td></tr>
+      <tr><td><b>Interface engine</b></td><td>—</td><td>Nothing — but rewrites everything</td><td class="ka">Both</td><td class="t-dim">— (some do DICOM routing)</td></tr>
+      <tr><td><b>Modality</b></td><td>Acquisition Modality</td><td>Study/Series/SOP UIDs, acquisition parameters</td><td class="t-dim">—</td><td>MWL <b>SCU</b>, Storage <b>SCU</b>, MPPS <b>SCU</b>, Commit <b>SCU</b></td></tr>
+      <tr><td><b>PACS</b></td><td>Image Manager / Archive</td><td>Storage of record, query results, availability</td><td class="ka">Receiver (ADT/ORM/ORU)</td><td>Storage <b>SCP</b>, Q/R <b>SCP</b>, Commit <b>SCP</b>, and Storage <b>SCU</b> when forwarding</td></tr>
+      <tr><td><b>VNA</b></td><td>Image Archive</td><td>Long-term retention, cross-department objects</td><td class="ka">Receiver</td><td>Storage <b>SCP</b>, Q/R <b>SCP</b>, DICOMweb origin server</td></tr>
+      <tr><td><b>Diagnostic workstation</b></td><td>Image Display</td><td>Presentation states, key images, measurements</td><td class="t-dim">— (often reads RIS worklist)</td><td>Q/R <b>SCU</b>, Storage <b>SCU</b> (GSPS/KO), Storage <b>SCP</b> for C-MOVE returns</td></tr>
+      <tr><td><b>Routing / broker</b></td><td>Importer / Gateway</td><td>Nothing; transforms in flight</td><td class="ka">Sometimes</td><td>Storage <b>SCP</b> inbound + Storage <b>SCU</b> outbound</td></tr>
+      <tr><td><b>AI / CAD</b></td><td>Evidence Creator</td><td>Its own findings objects</td><td class="t-dim">—</td><td>Storage <b>SCP</b> in, Storage <b>SCU</b> out; increasingly UPS-RS + STOW-RS</td></tr>
+      <tr><td><b>Dictation / speech</b></td><td>Report Creator</td><td>Report text and status</td><td class="ka">Sender (ORU)</td><td class="t-dim">— (may store SR)</td></tr>
+      <tr><td><b>Zero-footprint viewer</b></td><td>Image Display</td><td>—</td><td class="t-dim">—</td><td>DICOMweb <b>user agent</b> (QIDO + WADO)</td></tr>
+      <tr><td><b>Dose registry</b></td><td>Dose Information Reporter</td><td>CTDIvol, DLP, exposure index</td><td class="t-dim">—</td><td>Storage <b>SCP</b> for RDSR</td></tr>
+    </tbody>
+    <caption>Notice how many systems are both SCU and SCP. "Is this box a client or a server?" is the wrong question — the right one is "for <em>which service</em>, in <em>which direction</em>?"</caption>
+  </table>
+  </div>
+
+  <div class="panel panel--alert">
+    <h4>The three keys that hold the chain together</h4>
+    <p>Ninety percent of reconciliation failures are a mismatch in one of these. Learn them cold.</p>
+    <ul>
+      <li><span class="badge badge--hl7">PID-3</span> <span class="badge badge--dcm">(0010,0020)</span> <b>Patient ID / MRN</b> — joins images to the person. Break it and you get an orphan patient record.</li>
+      <li><span class="badge badge--hl7">OBR-18</span> <span class="badge badge--dcm">(0008,0050)</span> <b>Accession Number</b> — joins images to the order and to the report. Break it and the study arrives but never matches the report.</li>
+      <li><span class="badge badge--hl7">ZDS-1</span> <span class="badge badge--dcm">(0020,000D)</span> <b>Study Instance UID</b> — the globally unique handle for the study. Break it and you get duplicate or split studies.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="timeline">
+  <p class="eyebrow"><b>02</b> · Infographic 2</p>
+  <h2>One exam, end to end, on the clock</h2>
+  <p class="lede">A routine outpatient CT abdomen/pelvis, traced from the moment the order is placed to the moment the signed report lands in the chart. Every arrow is a real transaction. Watch which system initiates each one — the roles swap more often than people expect.</p>
+
+  <div class="tl-frame">
+    <div class="tl-cap"><span>Timeline — registration &amp; scheduling → acquisition → archive → read</span><span>Amber = HL7 · Cyan = DICOM · Hollow = human</span></div>
+
+    <div class="phasebar">
+      <div class="phase" data-p="hl7"><span class="ph-t">Day −6</span><span class="ph-n">Order</span></div>
+      <div class="phase" data-p="hl7"><span class="ph-t">Day −6</span><span class="ph-n">Schedule</span></div>
+      <div class="phase" data-p="dcm"><span class="ph-t">Day −1</span><span class="ph-n">Prefetch</span></div>
+      <div class="phase" data-p="hl7"><span class="ph-t">09:58</span><span class="ph-n">Register</span></div>
+      <div class="phase" data-p="dcm"><span class="ph-t">10:26</span><span class="ph-n">Acquire</span></div>
+      <div class="phase" data-p="dcm"><span class="ph-t">10:49</span><span class="ph-n">Archive</span></div>
+      <div class="phase" data-p="both"><span class="ph-t">14:02</span><span class="ph-n">Read &amp; report</span></div>
+    </div>
+
+    <ol class="tl">
+      <li class="tl-item" data-p="human">
+        <div class="tl-time"><b>Day −6</b>11:03</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">A clinician decides to image</div>
+          <div class="tl-who">Referring physician <span class="ar">·</span> in the EMR</div>
+          <p>The indication is entered — flank pain, rule out calculus. Clinical decision support may score the order here. Nothing has crossed an interface yet.</p>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="hl7">
+        <div class="tl-time"><b>Day −6</b>11:05</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">Order is transmitted</div>
+          <div class="tl-who">CPOE <span class="ar">→</span> RIS <span class="ar">·</span> sender → receiver over MLLP</div>
+          <p>An <code>ORM^O01</code> with <code>ORC-1 = NW</code> carries the placer order number, the procedure code and the indication. The RIS acks with <code>MSA-1 = AA</code>. If it acks <code>AE</code>, the order silently never exists.</p>
+          <div class="tl-tags"><span class="badge badge--hl7">ORM^O01 · NW</span><span class="badge">IHE RAD-2</span></div>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="hl7">
+        <div class="tl-time"><b>Day −6</b>11:06</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">RIS schedules it and mints the identifiers</div>
+          <div class="tl-who">RIS <span class="ar">→</span> PACS, MWL provider <span class="ar">·</span> fan-out through the interface engine</div>
+          <p>This is the single most consequential moment in the chain. The RIS assigns the <b>accession number</b>, a filler order number, the room and the time slot, and generates the <b>Study Instance UID</b> that everything downstream will key on. It ships as <code>ORM^O01</code> with <code>ORC-1 = SC</code> and a <code>ZDS</code> segment. PACS creates a pre-registered, image-less study.</p>
+          <div class="tl-tags"><span class="badge badge--hl7">ORM^O01 · SC</span><span class="badge badge--hl7">ZDS-1 = Study UID</span><span class="badge">IHE RAD-4</span></div>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="dcm">
+        <div class="tl-time"><b>Day −1</b>02:14</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">Priors are prefetched overnight</div>
+          <div class="tl-who">PACS <span class="badge badge--scu">SCU</span> <span class="ar">→</span> VNA <span class="badge badge--scp">SCP</span></div>
+          <p>A rule fires off tomorrow's schedule: find this patient's previous abdominal imaging and pull it to fast storage. PACS runs a <code>C-FIND</code> at STUDY level on the MRN, then a <code>C-MOVE</code> for the matches. <b>Here PACS is the client</b> — the same box that will be a server twenty minutes into the exam.</p>
+          <div class="tl-tags"><span class="badge badge--dcm">C-FIND</span><span class="badge badge--dcm">C-MOVE</span></div>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="hl7">
+        <div class="tl-time"><b>Day 0</b>09:58</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">Patient arrives and is registered</div>
+          <div class="tl-who">HIS <span class="ar">→</span> RIS, PACS <span class="ar">·</span> <code>ADT^A04</code></div>
+          <p>Demographics are confirmed at the desk. If the name was misspelled at booking, the correction rides in now as <code>ADT^A08</code> and must reach PACS, or the images will carry the old spelling forever.</p>
+          <div class="tl-tags"><span class="badge badge--hl7">ADT^A04</span><span class="badge">IHE RAD-1</span></div>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="hl7">
+        <div class="tl-time">10:02</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">Exam status flips to "arrived"</div>
+          <div class="tl-who">RIS <span class="ar">→</span> PACS <span class="ar">·</span> <code>ORM^O01</code>, <code>ORC-1 = SC</code></div>
+          <p>A status-only update. A receiver that mistakes <code>SC</code> for <code>NW</code> creates a duplicate worklist entry right here, and a tech will eventually pick the wrong one.</p>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="dcm">
+        <div class="tl-time">10:26</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">Technologist queries the worklist</div>
+          <div class="tl-who">CT scanner <span class="badge badge--scu">SCU</span> <span class="ar">→</span> MWL provider <span class="badge badge--scp">SCP</span></div>
+          <p>A <code>C-FIND</code> against the Modality Worklist Information Model, filtered on this scanner's AE title, today's date and modality <code>CT</code>. The tech selects the patient rather than typing them — which is the entire reason the previous six steps exist.</p>
+          <div class="tl-tags"><span class="badge badge--dcm">C-FIND · MWL</span><span class="badge">IHE RAD-5</span></div>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="dcm">
+        <div class="tl-time">10:31</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">Acquisition begins</div>
+          <div class="tl-who">CT scanner <span class="badge badge--scu">SCU</span> <span class="ar">→</span> RIS / PACS <span class="badge badge--scp">SCP</span></div>
+          <p><code>MPPS N-CREATE</code> with status <code>IN PROGRESS</code>. The room is now visibly live to schedulers and radiologists, and PACS learns what to expect.</p>
+          <div class="tl-tags"><span class="badge badge--dcm">N-CREATE</span><span class="badge">IHE RAD-6</span></div>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="dcm">
+        <div class="tl-time">10:33<span class="t-dim"> – </span>10:47</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">Images are pushed as they reconstruct</div>
+          <div class="tl-who">CT scanner <span class="badge badge--scu">SCU</span> <span class="ar">→</span> PACS <span class="badge badge--scp">SCP</span></div>
+          <p>One association carries hundreds of <code>C-STORE</code> operations — axial soft tissue, axial bone, coronal and sagittal reformats, each its own series. Every instance gets a status back; a single <code>0xA700</code> here means the archive is out of room.</p>
+          <div class="tl-tags"><span class="badge badge--dcm">C-STORE ×1240</span><span class="badge">IHE RAD-8</span></div>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="dcm">
+        <div class="tl-time">10:49</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">Exam is marked complete</div>
+          <div class="tl-who">CT scanner <span class="badge badge--scu">SCU</span> <span class="ar">→</span> RIS / PACS <span class="badge badge--scp">SCP</span></div>
+          <p><code>MPPS N-SET</code>, status <code>COMPLETED</code>, carrying the list of series and instances actually produced. PACS compares expected against received and can now flag an under-delivered study instead of quietly presenting a partial exam.</p>
+          <div class="tl-tags"><span class="badge badge--dcm">N-SET</span><span class="badge">IHE RAD-7</span></div>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="dcm">
+        <div class="tl-time">10:50</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">Storage commitment — and the roles invert</div>
+          <div class="tl-who">Scanner <span class="badge badge--scu">SCU</span> <span class="ar">→</span> PACS <span class="badge badge--scp">SCP</span>, then PACS <span class="ar">→</span> scanner on a <b>new association</b></div>
+          <p>The scanner sends <code>N-ACTION</code>: "do you take permanent responsibility for these instances?" PACS answers later with <code>N-EVENT-REPORT</code> — and to do that it opens its own connection back to the scanner. Only after event type 1 (all committed) may the console purge locally.</p>
+          <div class="tl-tags"><span class="badge badge--dcm">N-ACTION</span><span class="badge badge--dcm">N-EVENT-REPORT</span><span class="badge">IHE RAD-10</span></div>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="dcm">
+        <div class="tl-time">10:51</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">PACS forwards to the VNA and the dose registry</div>
+          <div class="tl-who">PACS <span class="badge badge--scu">SCU</span> <span class="ar">→</span> VNA <span class="badge badge--scp">SCP</span> <span class="ar">·</span> scanner <span class="ar">→</span> dose registry</div>
+          <p>The archive of record now becomes a client. Separately the scanner sends a Radiation Dose SR to the dose registry, which is a Storage SCP that accepts exactly one SOP class.</p>
+          <div class="tl-tags"><span class="badge badge--dcm">C-STORE</span><span class="badge badge--dcm">RDSR</span></div>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="dcm">
+        <div class="tl-time">10:53</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">AI triage takes a look</div>
+          <div class="tl-who">Router <span class="badge badge--scu">SCU</span> <span class="ar">→</span> algorithm <span class="badge badge--scp">SCP</span>, results back as <span class="badge badge--scu">SCU</span></div>
+          <p>A routing rule matched on <code>(0018,0015) Body Part Examined</code> and modality. The algorithm returns a secondary capture or SR and, if positive, escalates the study's priority on the reading worklist. Newer deployments do this with <b>UPS-RS</b> work items and <b>STOW-RS</b> instead of DIMSE.</p>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="human">
+        <div class="tl-time">14:02</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">Radiologist opens the study</div>
+          <div class="tl-who">Workstation <span class="badge badge--scu">SCU</span> <span class="ar">→</span> PACS <span class="badge badge--scp">SCP</span> <span class="ar">·</span> or WADO-RS over HTTPS</div>
+          <p>A <code>C-FIND</code> populates the study list, a <code>C-MOVE</code> or <code>WADO-RS</code> retrieves pixels, and the hanging protocol lays out current beside prior — driven almost entirely by <code>(0008,103E) Series Description</code>. Note that on <code>C-MOVE</code> <b>the workstation must also be a Storage SCP</b> to receive what it asked for.</p>
+          <div class="tl-tags"><span class="badge badge--dcm">C-FIND</span><span class="badge badge--dcm">C-MOVE / WADO-RS</span><span class="badge">IHE RAD-14 / RAD-16</span></div>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="hl7">
+        <div class="tl-time">14:22</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">Report is signed and distributed</div>
+          <div class="tl-who">Dictation <span class="ar">→</span> RIS <span class="ar">→</span> EMR, PACS <span class="ar">·</span> <code>ORU^R01</code></div>
+          <p>The interpretation travels as a stack of <code>OBX</code> segments with <code>OBR-25 = F</code>, keyed on the same accession number issued at 11:06 six days earlier. If those two strings differ by so much as a leading zero, the loop never closes.</p>
+          <div class="tl-tags"><span class="badge badge--hl7">ORU^R01 · Final</span></div>
+        </div>
+      </li>
+
+      <li class="tl-item" data-p="human">
+        <div class="tl-time">14:23</div><div class="tl-rail"></div>
+        <div class="tl-body">
+          <div class="tl-head">The referring clinician sees the result</div>
+          <div class="tl-who">EMR inbox <span class="ar">·</span> critical findings escalate by phone, not by interface</div>
+          <p>Total elapsed time from order to result: six days, three hours. Total time the images were actually in motion: about fourteen minutes. Everything else is scheduling, queueing and human availability — which is worth remembering when someone blames the network.</p>
+        </div>
+      </li>
+    </ol>
+  </div>
+
+  <div class="grid3">
+    <div class="card"><div class="stat t-hl7">7</div><h4>HL7 messages</h4><p>One order, one schedule, one registration, one status update, one report — plus acknowledgements for each. Any one of them failing silently stops the chain.</p></div>
+    <div class="card"><div class="stat t-dcm">~1,250</div><h4>DICOM operations</h4><p>Overwhelmingly C-STOREs, on a handful of associations. The negotiation happens once; the transfer happens 1,240 times.</p></div>
+    <div class="card"><div class="stat">6</div><h4>Role reversals</h4><p>PACS acts as SCU for prefetch and forwarding, SCP for storage and query. The workstation is an SCU that must also listen as an SCP.</p></div>
+  </div>
+</section>
+
+<section id="lifecycle">
+  <p class="eyebrow"><b>03</b> · IHE Scheduled Workflow</p>
+  <h2>The same chain, as IHE names it</h2>
+  <p class="lede">The timeline above is the story; this is the specification. When a vendor claims "SWF.b compliance," these are the transactions they are claiming to implement, and these numbers are what you cite in an RFP or an integration statement.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">Txn</th><th>Name</th><th>From → To</th><th>Protocol</th><th>Initiator role</th></tr></thead>
+    <tbody>
+      <tr><td class="k">RAD-1</td><td>Patient Registration</td><td>ADT → Order Placer / Filler</td><td class="ka">HL7 ADT</td><td>Sender</td></tr>
+      <tr><td class="k">RAD-2</td><td>Placer Order Management</td><td>Order Placer → Order Filler</td><td class="ka">HL7 ORM</td><td>Sender</td></tr>
+      <tr><td class="k">RAD-3</td><td>Filler Order Management</td><td>Order Filler → Order Placer</td><td class="ka">HL7 ORM</td><td>Sender</td></tr>
+      <tr><td class="k">RAD-4</td><td>Procedure Scheduled</td><td>Order Filler → Image Manager</td><td class="ka">HL7 ORM + ZDS</td><td>Sender</td></tr>
+      <tr><td class="k">RAD-5</td><td>Query Modality Worklist</td><td>Modality → DSS/Order Filler</td><td class="k">DICOM C-FIND</td><td>Modality is <b>SCU</b></td></tr>
+      <tr><td class="k">RAD-6</td><td>Modality PS In Progress</td><td>Modality → Image Mgr / Order Filler</td><td class="k">DICOM N-CREATE</td><td>Modality is <b>SCU</b></td></tr>
+      <tr><td class="k">RAD-7</td><td>Modality PS Completed</td><td>Modality → Image Mgr / Order Filler</td><td class="k">DICOM N-SET</td><td>Modality is <b>SCU</b></td></tr>
+      <tr><td class="k">RAD-8</td><td>Modality Images Stored</td><td>Modality → Image Archive</td><td class="k">DICOM C-STORE</td><td>Modality is <b>SCU</b></td></tr>
+      <tr><td class="k">RAD-10</td><td>Storage Commitment</td><td>Modality ↔ Image Manager</td><td class="k">DICOM N-ACTION / N-EVENT-REPORT</td><td><b>Both directions</b></td></tr>
+      <tr><td class="k">RAD-11</td><td>Image Availability Query</td><td>Order Filler → Image Manager</td><td class="k">DICOM C-FIND</td><td>Order Filler is <b>SCU</b></td></tr>
+      <tr><td class="k">RAD-12</td><td>Patient Update</td><td>ADT → Order Filler / Image Mgr</td><td class="ka">HL7 ADT</td><td>Sender</td></tr>
+      <tr><td class="k">RAD-13</td><td>Procedure Update</td><td>Order Filler → Image Manager</td><td class="ka">HL7 ORM</td><td>Sender</td></tr>
+      <tr><td class="k">RAD-14</td><td>Query Images</td><td>Image Display → Image Archive</td><td class="k">DICOM C-FIND</td><td>Display is <b>SCU</b></td></tr>
+      <tr><td class="k">RAD-16</td><td>Retrieve Images</td><td>Image Display ← Image Archive</td><td class="k">DICOM C-MOVE</td><td>Display is <b>SCU</b>, then <b>SCP</b> to receive</td></tr>
+      <tr><td class="k">RAD-28</td><td>Structured Report Export</td><td>Evidence Creator → Image Manager</td><td class="k">DICOM C-STORE</td><td>Creator is <b>SCU</b></td></tr>
+    </tbody>
+    <caption>Related profiles worth knowing by name: <b>PIR</b> (patient information reconciliation), <b>PDI</b> (portable data — CD/DVD), <b>XDS-I.b</b> (cross-enterprise image sharing), <b>IOCM</b> (imaging object change management), <b>REM</b> (radiation exposure monitoring), <b>ATNA</b> (audit and node authentication), <b>CT</b> (consistent time), <b>MAWF</b> (mammography acquisition workflow).</caption>
+  </table>
+  </div>
+
+  <div class="panel panel--alert">
+    <h4>When the order comes second</h4>
+    <p>Trauma and STAT cases acquire first and register later, so the study lands unmatched under a temporary identity. IHE's fix-up profile is <b>PIR</b>. Practically: the RIS sends the real order, then an update or merge, and PACS re-keys the study onto the correct MRN, accession and Study UID. Make sure your unidentified-patient naming convention is unique per day, or two simultaneous traumas will collide into one patient record.</p>
+  </div>
+</section>
+
+<div class="part part--hl7">
+  <div class="wedge wedge--part"></div>
+  <div class="part-n">Part I</div>
+  <h2>HL7 version 2 — identity, intent and result</h2>
+  <p class="part-lede">Everything in this part is delimited text over a raw TCP socket. HL7 tells the imaging chain <em>who</em> the patient is, <em>what</em> was asked for, and <em>what the answer was</em>. It never carries a pixel.</p>
+</div>
+
+<section id="hl7-mech">
+  <p class="eyebrow"><span class="amb">04</span> · Encoding and transport</p>
+  <h2>Message structure and MLLP</h2>
+  <p class="lede">HL7 v2 has no schema enforcement at the wire level. That is why interfaces drift, why every site's build is slightly different, and why you will spend real time counting pipes.</p>
+
+  <h3>The hierarchy</h3>
+  <p>A <b>message</b> is a series of <b>segments</b>, one per line, terminated by carriage return (<code>\r</code>, 0x0D — <em>not</em> LF, and not CRLF). Each segment begins with a three-character name and divides into <b>fields</b>, which divide into <b>components</b>, which divide into <b>subcomponents</b>. Fields can also <b>repeat</b>.</p>
+
+  <div class="msg">
+    <div class="msg-head"><span>Delimiters — declared in MSH-1 and MSH-2</span><span>Default set</span></div>
+<pre><span class="seg">MSH</span>|^~\&amp;|...
+
+  <span class="hi">|</span>  field separator        MSH-1 <span class="cmt">— literally the 4th character of the message</span>
+  <span class="hi">^</span>  component separator    <span class="cmt">DOE^JOHN^Q → family^given^middle</span>
+  <span class="hi">~</span>  repetition separator   <span class="cmt">one field, multiple values</span>
+  <span class="hi">\</span>  escape character
+  <span class="hi">&amp;</span>  subcomponent separator
+
+  Escape sequences you will meet inside text fields:
+    <span class="hi">\F\</span> literal |     <span class="hi">\S\</span> literal ^     <span class="hi">\T\</span> literal &amp;
+    <span class="hi">\R\</span> literal ~     <span class="hi">\E\</span> literal \
+    <span class="hi">\.br\</span> line break  <span class="cmt">◄ the one that mangles reports</span>
+    <span class="hi">\X0D\</span> hex-escaped character
+    <span class="hi">\H\ \N\</span> start / end highlighting</pre>
+    <div class="msg-foot"><b>Counting fields:</b> in every segment except MSH, field 1 is the first value after the segment name. In <b>MSH the separator itself is MSH-1</b> and the encoding characters are MSH-2, so <code>MSH-9</code> is the ninth token counted that way. Off-by-one here is the single most common mapping error in the industry.</div>
+  </div>
+
+  <h3>Reading a segment grammar</h3>
+  <p>HL7 specifications and vendor interface documents describe message structure with a compact notation. You need to be able to read it in a conformance conversation:</p>
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">Notation</th><th>Meaning</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td class="ka">SEG</td><td>Required, once</td><td><code>MSH</code></td></tr>
+      <tr><td class="ka">[SEG]</td><td>Optional</td><td><code>[PV1]</code></td></tr>
+      <tr><td class="ka">{SEG}</td><td>Required, repeats</td><td><code>{OBX}</code></td></tr>
+      <tr><td class="ka">[{SEG}]</td><td>Optional, repeats</td><td><code>[{NTE}]</code></td></tr>
+      <tr><td class="ka">R / RE / O / C / X</td><td>Field usage: required · required-but-may-be-empty · optional · conditional · not supported</td><td>Column in every vendor spec</td></tr>
+      <tr><td class="ka">Z-segments</td><td>Locally defined, begin with Z. Never standard, always negotiated</td><td><code>ZDS</code> carries Study Instance UID</td></tr>
+    </tbody>
+    <caption>An <code>ORU^R01</code> is roughly <code>MSH [{NTE}] {PID [PD1] [{NTE}] [PV1] {ORC OBR [{NTE}] {[OBX] [{NTE}]}}}</code> — nested repetition is why naive line-by-line parsers break on multi-order messages.</caption>
+  </table>
+  </div>
+
+  <h3>HL7 data types you will actually parse</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">Type</th><th>Name</th><th>Components you care about</th></tr></thead>
+    <tbody>
+      <tr><td class="ka">CX</td><td>Extended composite ID</td><td><code>ID ^ ^ ^ AssigningAuthority ^ IdentifierTypeCode</code> — this is PID-3. Component 5 is how you find the <code>MR</code> repetition</td></tr>
+      <tr><td class="ka">XPN</td><td>Extended person name</td><td><code>Family ^ Given ^ Middle ^ Suffix ^ Prefix ^ Degree ^ NameTypeCode</code> — component 7 <code>L</code> = legal</td></tr>
+      <tr><td class="ka">XCN</td><td>Extended composite ID + name</td><td><code>ID ^ Family ^ Given ^ Middle ^ Suffix ^ Prefix ^ Degree</code> — used for every physician field</td></tr>
+      <tr><td class="ka">CE / CWE</td><td>Coded element</td><td><code>Identifier ^ Text ^ CodingSystem</code> — OBR-4 procedure codes. CWE replaces CE in 2.5+</td></tr>
+      <tr><td class="ka">TS / DTM</td><td>Timestamp</td><td><code>YYYYMMDDHHMMSS[.S][+/-ZZZZ]</code>. Truncation to 8 chars is legal, which is why dates arrive with and without times</td></tr>
+      <tr><td class="ka">HD</td><td>Hierarchic designator</td><td><code>NamespaceID ^ UniversalID ^ UniversalIDType</code> — sending/receiving facility, assigning authority</td></tr>
+      <tr><td class="ka">EI</td><td>Entity identifier</td><td><code>EntityIdentifier ^ NamespaceID ^ UniversalID ^ UniversalIDType</code> — order numbers</td></tr>
+      <tr><td class="ka">TQ</td><td>Timing / quantity</td><td>OBR-27. Component 4 = start datetime, component 6 = priority</td></tr>
+      <tr><td class="ka">XAD / XTN</td><td>Address / telecom</td><td>Rarely mapped into DICOM, frequently required by the EMR</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Transport: MLLP</h3>
+  <p>HL7 v2 rides on <b>Minimal Lower Layer Protocol</b> — a plain, usually long-lived TCP connection with framing bytes around each message, because the protocol carries no length header of its own.</p>
+
+  <div class="msg">
+    <div class="msg-head"><span>MLLP frame</span><span>One message in flight at a time per connection</span></div>
+<pre>&lt;VT&gt; <span class="hi">0x0B</span>   ...HL7 message, segments separated by 0x0D...   <span class="hi">0x1C</span> &lt;FS&gt;  <span class="hi">0x0D</span> &lt;CR&gt;
+ └ start block                                          └ end block  └ carriage return
+
+Typical exchange on one socket:
+
+  Sender                                 Receiver
+    │  TCP connect (kept open for hours)     │
+    │ ─────────────────────────────────────► │
+    │  0x0B  MSH|…ORM^O01…  0x1C 0x0D        │
+    │ ─────────────────────────────────────► │
+    │  0x0B  MSH|…ACK…MSA|AA|MSG00187  0x1C 0x0D
+    │ ◄───────────────────────────────────── │
+    │  next message only after the ack       │</pre>
+    <div class="msg-foot"><b>Debugging:</b> a sender that "connects fine but nothing arrives" is nearly always emitting unframed HL7, or using LF instead of CR as the segment terminator. In Wireshark use <code>hl7</code> or <code>tcp.port == 2575</code> and read the raw bytes — the 0x0B / 0x1C pair is visible immediately. MLLP has no TLS of its own; wrap it in a tunnel or use MLLPS on a dedicated port.</div>
+  </div>
+</section>
+
+<section id="hl7-roles">
+  <p class="eyebrow"><span class="amb">05</span> · Roles and reliability</p>
+  <h2>Senders, receivers, acknowledgements and queues</h2>
+  <p class="lede">HL7's role model is much simpler than DICOM's — there is an initiator and a responder, and that is all. What is <em>not</em> simple is what happens when the responder says no, or says nothing.</p>
+
+  <div class="grid2">
+    <div class="panel panel--hl7">
+      <h4>The two roles</h4>
+      <ul>
+        <li><b>Sending application</b> (MSH-3 / MSH-4) opens the TCP connection, frames the message, and waits for an acknowledgement before sending the next one.</li>
+        <li><b>Receiving application</b> (MSH-5 / MSH-6) listens on a port, parses, processes, and returns an <code>ACK</code>.</li>
+      </ul>
+      <p>Unlike DICOM, the direction of the TCP connection and the direction of the data are always the same. This is why HL7 crosses firewalls more easily than C-MOVE does.</p>
+    </div>
+    <div class="panel panel--alert">
+      <h4>Where the simplicity ends</h4>
+      <p>Most real systems are <b>both</b> sender and receiver, on <b>different ports</b>, often over <b>different connections in each direction</b>. A RIS receives ADT on 2575 and sends ORM out on 6661. Firewall rules must be written per channel, per direction — a single "allow HL7" rule between two hosts is a sign nobody mapped the flows.</p>
+    </div>
+  </div>
+
+  <h3>Acknowledgement modes</h3>
+  <p>MSH-15 (accept ack type) and MSH-16 (application ack type) choose between two modes. Leave both empty and you get <b>original mode</b>: one ack, meaning "received and processed."</p>
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">MSA-1</th><th>Mode</th><th>Meaning</th><th>What you do about it</th></tr></thead>
+    <tbody>
+      <tr><td class="ka">AA</td><td>Original</td><td>Application Accept</td><td>Nothing. Message consumed.</td></tr>
+      <tr><td class="ka">AE</td><td>Original</td><td>Application Error</td><td>Content problem — unknown procedure code, unparseable date, missing required field. Read MSA-3 and any <code>ERR</code> segment. <b>The sender will usually not retry</b>, so this message is lost unless someone reprocesses it.</td></tr>
+      <tr><td class="ka">AR</td><td>Original</td><td>Application Reject</td><td>The receiver cannot process at all — service down, wrong version, unknown facility. The sender should retry.</td></tr>
+      <tr><td class="ka">CA</td><td>Enhanced</td><td>Commit Accept</td><td>"I received it and framed it correctly." <b>Not</b> "I processed it." A second, application-level ack follows.</td></tr>
+      <tr><td class="ka">CE / CR</td><td>Enhanced</td><td>Commit Error / Reject</td><td>Failed at the transport or parse layer</td></tr>
+    </tbody>
+    <caption>MSA-2 echoes MSH-10, the message control ID. That is your correlation key when reading logs on both sides of an interface. Insist that vendors log MSH-10 — some log only their internal sequence numbers, which makes cross-system tracing impossible.</caption>
+  </table>
+  </div>
+
+  <div class="panel panel--alert">
+    <h4>The silent-failure pattern worth memorising</h4>
+    <p>An <code>AE</code> looks like a successful exchange at the network layer: connection fine, ack returned, no alarm. But the order does not exist downstream. Techs discover it at the scanner when the worklist is empty, hours later. <b>Alert on AE and AR counts, not just on queue depth and connection state.</b> A healthy-looking interface that has returned four hundred AEs overnight is an outage.</p>
+  </div>
+
+  <h3>Queueing, retries and ordering</h3>
+  <ul>
+    <li><b>Order matters.</b> An <code>A08</code> demographic update applied before the <code>A04</code> that created the patient produces a mess. Interface engines preserve order per channel; parallel channels for the same patient stream do not.</li>
+    <li><b>Retry policy</b> should be bounded and alerting. An unbounded retry against a receiver returning <code>AE</code> will loop forever without anyone noticing.</li>
+    <li><b>Queue depth</b> is your leading indicator. Baseline it during a normal Monday morning so you know what abnormal looks like.</li>
+    <li><b>Replay capability</b> is essential. When PACS is down for four hours, you need to reprocess the held messages in order, and you need to know exactly which ones were consumed before the outage.</li>
+    <li><b>Duplicate suppression</b> — a sender that never got an ack will resend. Receivers should be idempotent on MSH-10.</li>
+  </ul>
+
+  <div class="panel panel--hl7">
+    <h4>What to demand in an interface specification</h4>
+    <ul>
+      <li>Which trigger events are sent, and which are <em>not</em></li>
+      <li>Field-level table: segment, sequence, data type, usage (R/RE/O/C/X), and an example value</li>
+      <li>Exactly where the accession number lives, byte for byte</li>
+      <li>Acknowledgement mode and behaviour on error</li>
+      <li>Character set declared in MSH-18 and actually emitted</li>
+      <li>Behaviour on cancel, reschedule, merge and correction — not just on the happy path</li>
+    </ul>
+  </div>
+</section>
+
+<section id="adt">
+  <p class="eyebrow"><span class="amb">06</span> · Admit, Discharge, Transfer</p>
+  <h2>ADT — the identity feed</h2>
+  <p class="lede">ADT is not about beds, as far as imaging is concerned. It is the feed that keeps the patient identity in PACS identical to the identity in the medical record. Subscribe to too few events and demographics rot; subscribe to too many and you flood the archive with encounter noise.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">Event</th><th>Trigger</th><th>Why PACS cares</th></tr></thead>
+    <tbody>
+      <tr><td class="ka">A01</td><td>Admit inpatient</td><td>Creates the encounter; PV1-19 visit number links inpatient exams</td></tr>
+      <tr><td class="ka">A02</td><td>Transfer</td><td>Location change — matters if prefetch or worklists key on ward</td></tr>
+      <tr><td class="ka">A03</td><td>Discharge</td><td>Common trigger for archiving, dose reporting, releasing prefetched priors</td></tr>
+      <tr><td class="ka">A04</td><td>Register outpatient</td><td><b>The dominant event in imaging.</b> Most outpatient radiology patients are registered, never admitted</td></tr>
+      <tr><td class="ka">A05</td><td>Pre-admit</td><td>Lets you prefetch priors before the patient arrives</td></tr>
+      <tr><td class="ka">A08</td><td>Update patient information</td><td><b>The workhorse correction.</b> Spelling, DOB, sex. If PACS ignores A08 you edit demographics by hand forever</td></tr>
+      <tr><td class="ka">A11</td><td>Cancel admit</td><td>Registration made in error</td></tr>
+      <tr><td class="ka">A12 / A13</td><td>Cancel transfer / cancel discharge</td><td>Reverses A02 / A03</td></tr>
+      <tr><td class="ka">A18</td><td>Merge patient information</td><td>Older merge event; still seen in 2.3 interfaces</td></tr>
+      <tr><td class="ka">A40</td><td>Merge patient — identifier list</td><td><b>The modern merge.</b> MRG-1 carries the incorrect MRN, PID-3 the surviving one. PACS must move every study</td></tr>
+      <tr><td class="ka">A41 / A42 / A45</td><td>Merge account / visit, move visit</td><td>Encounter-level merges; relevant only if you key on visit number</td></tr>
+      <tr><td class="ka">A47</td><td>Change patient identifier list</td><td>The MRN itself is renumbered — rare and painful</td></tr>
+      <tr><td class="ka">A31</td><td>Update person information</td><td>Demographic update outside an encounter; some HIS send this instead of A08</td></tr>
+      <tr><td class="ka">A28 / A29</td><td>Add / delete person information</td><td>Person-level rather than encounter-level records</td></tr>
+    </tbody>
+    <caption>Minimum useful subscription for a PACS: A01, A04, A05, A08, A11, A40. Add A02/A03 only if something in your workflow genuinely keys off location or discharge.</caption>
+  </table>
+  </div>
+
+  <h3>An A08 in the wild</h3>
+  <div class="msg">
+    <div class="msg-head"><span>ADT^A08 — update patient information</span><span>HL7 2.5.1</span></div>
+<pre><span class="seg">MSH</span>|^~\&amp;|EPIC|MERCY|PACS|RAD|20260811093000||<span class="hi">ADT^A08^ADT_A01</span>|<span class="hi">MSG00042</span>|P|2.5.1||||||<span class="hi">UNICODE UTF-8</span>
+<span class="seg">EVN</span>|A08|20260811092955|||OPERATOR123
+<span class="seg">PID</span>|1||<span class="hi">10045522^^^MERCY^MR</span>~999887777^^^USA^SS||<span class="hi">RIVERA^MARIA^L^^^^L</span>||<span class="hi">19710304</span>|<span class="hi">F</span>|||88 ELM ST^^AUSTIN^TX^78701||^PRN^PH^^^512^5550142|||M||<span class="hi">ACC88231</span>
+<span class="seg">PV1</span>|1|<span class="hi">O</span>|RAD^CT^01||||1234^CHEN^WEI^^^^MD|5678^PARK^SUNG^^^^MD||RAD|||||||||<span class="hi">V20260811-0093</span></pre>
+    <div class="msg-foot">
+      <b>PID-3</b> is a repeating CX list: <code>ID^^^assigningAuthority^typeCode</code>. Select the repetition where the type is <code>MR</code> — never blindly the first, or the day someone adds an SSN repeat in front, you will key studies on a social security number.
+      <b>PID-5.7</b> = <code>L</code> marks the legal name; alias repeats may follow.
+      <b>PV1-2</b> patient class: <code>I</code> inpatient, <code>O</code> outpatient, <code>E</code> emergency, <code>P</code> preadmit, <code>R</code> recurring, <code>B</code> obstetrics.
+      <b>MSH-18</b> declares the character set — here UTF-8, which must be translated into DICOM's <span class="t-dcm">(0008,0005)</span> as <code>ISO_IR 192</code>.
+    </div>
+  </div>
+
+  <h3>A merge, dissected</h3>
+  <div class="msg">
+    <div class="msg-head"><span>ADT^A40 — merge patient identifier list</span><span>The most destructive message in your interface</span></div>
+<pre><span class="seg">MSH</span>|^~\&amp;|EPIC|MERCY|PACS|RAD|20260811110000||<span class="hi">ADT^A40^ADT_A39</span>|MSG00551|P|2.5.1
+<span class="seg">EVN</span>|A40|20260811105958
+<span class="seg">PID</span>|1||<span class="hi">10045522^^^MERCY^MR</span>||RIVERA^MARIA^L||19710304|F      <span class="cmt">◄ SURVIVING identity</span>
+<span class="seg">MRG</span>|<span class="hi">10099814^^^MERCY^MR</span>                                     <span class="cmt">◄ identity to be RETIRED</span></pre>
+    <div class="msg-foot">Everything filed under <code>MRG-1</code> must move to <code>PID-3</code>. In DICOM terms that means rewriting <span class="t-dcm">(0010,0020)</span> and usually <span class="t-dcm">(0010,0010)</span> on every object, updating the archive database, and invalidating every downstream copy — VNA, EMR viewer cache, dose registry, XDS-I registry, teaching file, any burned CD.</div>
+  </div>
+
+  <div class="panel panel--alert">
+    <h4>Two things to verify before you trust your merge handling</h4>
+    <ul>
+      <li>Does PACS <b>forward</b> the change downstream, or does the VNA still hold the pre-merge MRN? Test with a real merge in a non-production pair and query the VNA afterwards.</li>
+      <li>Does the modality's local cache, the CD-burner queue, or the AI vendor's copy still hold the old identity? Anything you cannot update, you must be able to enumerate.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="orm">
+  <p class="eyebrow"><span class="amb">07</span> · Order message</p>
+  <h2>ORM^O01 and its successor OMI^O23</h2>
+  <p class="lede">This is the message that becomes a worklist entry. Every field the technologist does not have to type comes from here, and every field mapped wrong here becomes a manual correction later.</p>
+
+  <div class="msg">
+    <div class="msg-head"><span>ORM^O01 — new order, scheduled</span><span>RIS → PACS / MWL provider · IHE RAD-4</span></div>
+<pre><span class="seg">MSH</span>|^~\&amp;|RIS|MERCY|PACS|RAD|20260805110600||<span class="hi">ORM^O01</span>|MSG00187|P|2.3.1
+<span class="seg">PID</span>|1||<span class="hi">10045522^^^MERCY^MR</span>||RIVERA^MARIA^L||19710304|F
+<span class="seg">PV1</span>|1|O|RAD^CT^01||||1234^CHEN^WEI^^^^MD|5678^PARK^SUNG^^^^MD
+<span class="seg">ORC</span>|<span class="hi">SC</span>|<span class="hi">PL8891234</span>|<span class="hi">FL5567890</span>||<span class="hi">SC</span>||^^^20260811103000^^R||20260805110600|||1234^CHEN^WEI^^^^MD
+<span class="seg">OBR</span>|1|PL8891234|FL5567890|<span class="hi">CT7150^CT ABDOMEN PELVIS W CONTRAST^C4</span>|||20260811103000||||||<span class="hi">Flank pain, r/o stone</span>||||<span class="hi">ACC20260811-0417</span>|||||<span class="hi">CT</span>|SC||^^^20260811103000^^R|||||||||||||||CT01
+<span class="seg">ZDS</span>|<span class="hi">1.2.840.113619.2.55.3.604688119.868.1754912700.417^100^Application^DICOM</span></pre>
+    <div class="msg-foot">Highlighted fields are the ones a PACS administrator maps, tests and defends. Everything else can usually pass through untouched.</div>
+  </div>
+
+  <h3>Field by field</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">HL7</th><th>Field</th><th>Example</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="ka">ORC-1</td><td>Order control</td><td class="mono">NW</td><td>The verb of the message — table below</td></tr>
+      <tr><td class="ka">ORC-2 / OBR-2</td><td>Placer order number</td><td class="mono">PL8891234</td><td>Assigned by the ordering system → <span class="t-dcm">(0040,2016)</span></td></tr>
+      <tr><td class="ka">ORC-3 / OBR-3</td><td>Filler order number</td><td class="mono">FL5567890</td><td>Assigned by the RIS → <span class="t-dcm">(0040,2017)</span>. <b>Some vendors put the accession here instead of OBR-18</b></td></tr>
+      <tr><td class="ka">ORC-5</td><td>Order status</td><td class="mono">SC</td><td>SC scheduled · IP in progress · CM complete · CA cancelled · DC discontinued</td></tr>
+      <tr><td class="ka">ORC-9</td><td>Date/time of transaction</td><td class="mono">20260805110600</td><td>When the order event happened, not when the exam is</td></tr>
+      <tr><td class="ka">ORC-12 / OBR-16</td><td>Ordering provider</td><td class="mono">1234^CHEN^WEI</td><td>→ Requesting Physician <span class="t-dcm">(0032,1032)</span>; referring goes to <span class="t-dcm">(0008,0090)</span></td></tr>
+      <tr><td class="ka">ORC-13</td><td>Enterer's location</td><td class="mono">RAD^CT^01</td><td>Sometimes the only clue to the ordering department</td></tr>
+      <tr><td class="ka">OBR-4</td><td>Universal service ID</td><td class="mono">CT7150^CT ABD PELV W^C4</td><td><b>Procedure code.</b> Drives hanging protocols, body-part mapping, prefetch. Component 3 is the coding system (C4 = CPT-4, or a local scheme)</td></tr>
+      <tr><td class="ka">OBR-7</td><td>Observation date/time</td><td class="mono">20260811103000</td><td>Exam date/time — becomes SPS start when OBR-27/36 are absent</td></tr>
+      <tr><td class="ka">OBR-13</td><td>Relevant clinical info</td><td class="mono">Flank pain, r/o stone</td><td>Reason for study — radiologists genuinely need this on the worklist</td></tr>
+      <tr><td class="ka">OBR-15</td><td>Specimen source</td><td class="mono">—</td><td>Lab field; occasionally abused to carry contrast or laterality</td></tr>
+      <tr><td class="ka">OBR-18</td><td>Placer field 1</td><td class="mono">ACC20260811-0417</td><td><b>Accession number by convention</b> → <span class="t-dcm">(0008,0050)</span>. Not guaranteed — confirm per interface</td></tr>
+      <tr><td class="ka">OBR-19</td><td>Placer field 2</td><td class="mono">RP-88231</td><td>Frequently the requested procedure ID <span class="t-dcm">(0040,1001)</span></td></tr>
+      <tr><td class="ka">OBR-20 / 21</td><td>Filler field 1 / 2</td><td class="mono">—</td><td>Vendor-specific; sometimes the scheduled procedure step ID</td></tr>
+      <tr><td class="ka">OBR-24</td><td>Diagnostic serv sect ID</td><td class="mono">CT</td><td>→ Modality <span class="t-dcm">(0008,0060)</span>. Often needs translation (RAD→CR, NUC→NM)</td></tr>
+      <tr><td class="ka">OBR-25</td><td>Result status</td><td class="mono">SC</td><td>On an order, still scheduled</td></tr>
+      <tr><td class="ka">OBR-27</td><td>Quantity / timing</td><td class="mono">^^^20260811103000^^R</td><td>Component 4 = start datetime, component 6 = priority (S STAT, A ASAP, R routine, P preop, C callback)</td></tr>
+      <tr><td class="ka">OBR-30</td><td>Transportation mode</td><td class="mono">WALK / PORT / CART</td><td>Drives portable workflow and room assignment</td></tr>
+      <tr><td class="ka">OBR-31</td><td>Reason for study</td><td class="mono">R10.9^Abdominal pain^I10</td><td>Coded indication; feeds decision support and appropriateness reporting</td></tr>
+      <tr><td class="ka">OBR-34</td><td>Technician</td><td class="mono">—</td><td></td></tr>
+      <tr><td class="ka">OBR-36</td><td>Scheduled date/time</td><td class="mono">20260811103000</td><td>Where some RIS put the schedule instead of OBR-27</td></tr>
+      <tr><td class="ka">OBR-44</td><td>Procedure code</td><td class="mono">74177^CT ABD PELV W^C4</td><td>In 2.5.1 the CPT commonly moves here from OBR-4</td></tr>
+      <tr><td class="ka">ZDS-1</td><td>Study Instance UID</td><td class="mono">1.2.840.113619…</td><td>Non-standard segment, blessed by IHE Radiology</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Order control codes you must handle</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">ORC-1</th><th>Meaning</th><th>Correct receiver behaviour</th></tr></thead>
+    <tbody>
+      <tr><td class="ka">NW</td><td>New order</td><td>Create the worklist entry and the pre-registered study</td></tr>
+      <tr><td class="ka">SC</td><td>Status changed</td><td>Update in place — do <b>not</b> create a second entry</td></tr>
+      <tr><td class="ka">XO</td><td>Change order</td><td>Modify the existing order (procedure, time, room). Match on accession, then update</td></tr>
+      <tr><td class="ka">CA</td><td>Cancel order</td><td>Remove from worklist. If images already exist, flag for review rather than delete</td></tr>
+      <tr><td class="ka">DC</td><td>Discontinue</td><td>Exam partially done then stopped — keep what arrived</td></tr>
+      <tr><td class="ka">OC</td><td>Order cancelled (filler confirms)</td><td>Acknowledgement of a cancel; usually no action</td></tr>
+      <tr><td class="ka">CM</td><td>Order completed</td><td>Often the trigger to expect no further images</td></tr>
+      <tr><td class="ka">SN / NA</td><td>Send / number assigned</td><td>Filler reporting the number it assigned to a placer's order</td></tr>
+      <tr><td class="ka">RO</td><td>Replacement order</td><td>Supersedes a previous order — must not leave the original on the worklist</td></tr>
+    </tbody>
+    <caption>The classic bug: an interface treats <code>XO</code> as <code>NW</code>, and every rescheduled exam produces a duplicate worklist entry that a tech eventually picks the wrong one from.</caption>
+  </table>
+  </div>
+
+  <h3>OMI^O23 — the modern imaging order</h3>
+  <p>HL7 2.5.1 deprecates <code>ORM^O01</code> and splits it into <code>OMG^O19</code> (general clinical order) and <code>OMI^O23</code> (imaging order). OMI is worth pushing for on new interfaces because it removes the two ugliest hacks in radiology integration.</p>
+  <div class="msg">
+    <div class="msg-head"><span>OMI^O23 — the IPC segment</span><span>Imaging Procedure Control</span></div>
+<pre><span class="seg">MSH</span>|^~\&amp;|RIS|MERCY|PACS|RAD|20260805110600||<span class="hi">OMI^O23^OMI_O23</span>|MSG00188|P|2.5.1
+<span class="seg">PID</span>|1||10045522^^^MERCY^MR||RIVERA^MARIA^L||19710304|F
+<span class="seg">ORC</span>|SC|PL8891234|FL5567890||SC
+<span class="seg">OBR</span>|1|PL8891234|FL5567890|CT7150^CT ABDOMEN PELVIS W CONTRAST^C4
+<span class="seg">IPC</span>|<span class="hi">ACC20260811-0417</span>|<span class="hi">RP-88231</span>|<span class="hi">1.2.840.113619.2.55.3.604688119.868.1754912700.417</span>|<span class="hi">SPS-88231-1</span>|<span class="hi">CT</span>|<span class="hi">CT_SCANNER_01</span>|CT01|CT7150^CT ABD PELV W^C4
+       │              │            │                          │           │    │             │
+    IPC-1          IPC-2        IPC-3                      IPC-4      IPC-5 IPC-6        IPC-7
+   Accession    Requested    <b>Study Instance UID</b>          Scheduled  Modality  Station    Station
+                Procedure ID                                 Step ID              AE Title     Name</pre>
+    <div class="msg-foot">Everything the worklist needs, in defined standard fields: <b>no ZDS z-segment</b> for the Study UID, and <b>no convention-by-habit</b> for the accession number. If you are specifying a greenfield interface, ask for OMI.</div>
+  </div>
+
+  <div class="panel panel--hl7">
+    <h4>One order, several procedure steps</h4>
+    <p>"CT chest/abdomen/pelvis" may be one Requested Procedure that becomes one Study Instance UID, or three, depending on how your RIS models it. Decide deliberately: one study with several series is far easier for radiologists to read and for hanging protocols to lay out than three studies that must be manually linked. Whatever you choose, the modality must produce a Study Instance UID matching what the RIS pre-registered — otherwise PACS holds a second, unmatched study.</p>
+  </div>
+</section>
+
+<section id="oru">
+  <p class="eyebrow"><span class="amb">08</span> · Result message</p>
+  <h2>ORU^R01 — the report comes home</h2>
+  <p class="lede">ORU carries the radiologist's interpretation back to the RIS, the EMR, and often to PACS so the report can be displayed beside the images. It is keyed on the accession number that went out on the order — which is why accession discipline matters more than any other single mapping decision.</p>
+
+  <div class="msg">
+    <div class="msg-head"><span>ORU^R01 — final report</span><span>Dictation → RIS → EMR / PACS</span></div>
+<pre><span class="seg">MSH</span>|^~\&amp;|POWERSCRIBE|MERCY|EPIC|MERCY|20260811142200||<span class="hi">ORU^R01</span>|MSG00931|P|2.3.1
+<span class="seg">PID</span>|1||10045522^^^MERCY^MR||RIVERA^MARIA^L||19710304|F
+<span class="seg">ORC</span>|RE|PL8891234|FL5567890
+<span class="seg">OBR</span>|1|PL8891234|FL5567890|CT7150^CT ABDOMEN PELVIS W CONTRAST^C4|||20260811103000|||||||||<span class="hi">ACC20260811-0417</span>||||||CT|<span class="hi">F</span>|||||||<span class="hi">9911^OKAFOR^ADA^^^^MD</span>
+<span class="seg">OBX</span>|1|<span class="hi">TX</span>|<span class="hi">TECHNIQUE</span>||Axial images through the abdomen and pelvis after IV contrast.||||||F
+<span class="seg">OBX</span>|2|TX|<span class="hi">COMPARISON</span>||CT abdomen 14 March 2024.||||||F
+<span class="seg">OBX</span>|3|TX|<span class="hi">FINDINGS</span>||A 4 mm nonobstructing calculus is present in the left||||||F
+<span class="seg">OBX</span>|4|TX|FINDINGS||renal lower pole. No hydronephrosis. Appendix normal.||||||F
+<span class="seg">OBX</span>|5|TX|<span class="hi">IMPRESSION</span>||1. Small nonobstructing left renal calculus.||||||F
+<span class="seg">OBX</span>|6|TX|IMPRESSION||2. No acute intra-abdominal process.||||||<span class="hi">F</span></pre>
+    <div class="msg-foot"><b>Report text is not one field.</b> It is a stack of OBX segments reassembled in OBX-1 order. Line breaks inside OBX-5 are escaped as <code>\.br\</code>. If reports arrive in PACS as an unreadable wall of text, that escape sequence is almost always the culprit.</div>
+  </div>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">Field</th><th>Name</th><th>Values that matter</th></tr></thead>
+    <tbody>
+      <tr><td class="ka">OBR-22</td><td>Results report / status change datetime</td><td>The timestamp your turnaround dashboards should use</td></tr>
+      <tr><td class="ka">OBR-25</td><td>Result status</td><td><code>O</code> ordered · <code>I</code> in progress · <code>S</code> scheduled · <code>P</code> preliminary · <code>R</code> entered not verified · <code>F</code> <b>final</b> · <code>C</code> <b>corrected</b> · <code>X</code> cannot be obtained</td></tr>
+      <tr><td class="ka">OBR-32</td><td>Principal result interpreter</td><td>The signing radiologist — drives credit, RVU reporting and peer review</td></tr>
+      <tr><td class="ka">OBR-33 / 35</td><td>Assistant interpreter / transcriptionist</td><td>Resident or fellow attribution in teaching settings</td></tr>
+      <tr><td class="ka">OBX-2</td><td>Value type</td><td><code>TX</code> free text · <code>FT</code> formatted · <code>ST</code> string · <code>NM</code> numeric · <code>CE</code> coded · <code>ED</code> encapsulated (embedded PDF) · <code>RP</code> reference pointer (URL to the report)</td></tr>
+      <tr><td class="ka">OBX-3</td><td>Observation identifier</td><td>Section label — FINDINGS, IMPRESSION, TECHNIQUE, COMPARISON. Sometimes LOINC coded</td></tr>
+      <tr><td class="ka">OBX-5</td><td>Observation value</td><td>The actual text line</td></tr>
+      <tr><td class="ka">OBX-11</td><td>Observation result status</td><td><code>P</code> preliminary · <code>F</code> final · <code>C</code> correction · <code>X</code> cannot obtain · <code>D</code> deleted</td></tr>
+      <tr><td class="ka">OBX-14</td><td>Date/time of observation</td><td>When observed, not when sent</td></tr>
+      <tr><td class="ka">NTE</td><td>Notes and comments</td><td>Addenda and critical-result communication notes often land here</td></tr>
+    </tbody>
+    <caption>A corrected report (<code>C</code>) must <b>replace</b>, not append. Systems that append leave the original wrong impression visible above the correction — a genuine patient-safety defect worth testing for explicitly during validation.</caption>
+  </table>
+  </div>
+
+  <div class="grid2">
+    <div class="panel panel--hl7">
+      <h4>Getting the report into PACS</h4>
+      <p>Three patterns, in ascending order of fidelity:</p>
+      <ul>
+        <li><b>HL7 ORU into the PACS database</b> — shown in a text pane. Simple, universal, no DICOM object created, does not travel with the study.</li>
+        <li><b>Encapsulated PDF</b> <span class="badge badge--dcm">…1.1.104.1</span> — the report becomes a real DICOM object inside the study. Travels on CD and to the VNA.</li>
+        <li><b>DICOM Structured Report</b> — Basic Text SR, or Enhanced/Comprehensive SR for measurement-bearing reports. Machine-readable, but only worth the effort if something downstream parses it.</li>
+      </ul>
+    </div>
+    <div class="panel panel--dcm">
+      <h4>Other objects created at read time</h4>
+      <ul>
+        <li><b>GSPS</b> — Grayscale Softcopy Presentation State <span class="badge badge--dcm">…1.1.11.1</span>. Window/level, zoom, annotations and shutters, stored separately from the pixels.</li>
+        <li><b>KOS</b> — Key Object Selection <span class="badge badge--dcm">…1.1.88.59</span>. "These are the key images." Also the manifest object in XDS-I.</li>
+        <li><b>RDSR</b> — Radiation Dose SR <span class="badge badge--dcm">…1.1.67</span>. Feeds the dose registry.</li>
+        <li><b>SEG / RTSTRUCT</b> — segmentations from AI or planning tools.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<div class="part part--dcm">
+  <div class="wedge wedge--part"></div>
+  <div class="part-n">Part II</div>
+  <h2>DICOM — pixels, objects and negotiated conversations</h2>
+  <p class="part-lede">DICOM is both a file format and a network protocol, and the network half is far more negotiated than most people expect. Nothing moves until two nodes agree on who they are, which object types they will exchange, in which encoding, and which of them is playing which role.</p>
+</div>
+
+<section id="dicom-model">
+  <p class="eyebrow"><b>09</b> · PS3.3 / PS3.5</p>
+  <h2>The data model, UIDs and value representations</h2>
+  <p class="lede">A DICOM object is a flat list of attributes that encodes a four-level hierarchy. Understanding that the hierarchy exists <em>only</em> because certain UIDs agree with each other is what makes split studies, duplicate series and orphaned instances comprehensible.</p>
+
+  <div class="msg">
+    <div class="msg-head"><span>Information model — the four levels</span><span>Each level defined by an identifier carried in every instance</span></div>
+<pre><span class="seg-d">PATIENT</span>  <span class="hi-d">(0010,0020)</span> Patient ID          <span class="cmt">— not a UID; a local identifier. This is why merges are hard.</span>
+   │
+   └─ <span class="seg-d">STUDY</span>   <span class="hi-d">(0020,000D)</span> Study Instance UID   <span class="cmt">— one exam. Ideally minted by the RIS.</span>
+        │      <span class="hi-d">(0008,0050)</span> Accession Number     <span class="cmt">— the RIS/HL7 handle for the same thing.</span>
+        │
+        └─ <span class="seg-d">SERIES</span>  <span class="hi-d">(0020,000E)</span> Series Instance UID  <span class="cmt">— one acquisition or reconstruction.</span>
+             │        <span class="hi-d">(0008,0060)</span> Modality          <span class="cmt">— fixed per series, not per study.</span>
+             │        <span class="hi-d">(0020,0052)</span> Frame of Reference UID <span class="cmt">— spatial link between series.</span>
+             │
+             └─ <span class="seg-d">INSTANCE</span>  <span class="hi-d">(0008,0018)</span> SOP Instance UID  <span class="cmt">— one image / object. Unique forever.</span>
+                          <span class="hi-d">(0008,0016)</span> SOP Class UID     <span class="cmt">— what kind of object it is.</span></pre>
+    <div class="msg-foot">A "study" is not a folder anywhere. It is simply the set of instances that happen to share a Study Instance UID. Two modalities that generate different Study UIDs for one exam create two studies, and no amount of matching demographics will merge them automatically.</div>
+  </div>
+
+  <h3>Terminology that trips people up</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th>Term</th><th>What it actually means</th></tr></thead>
+    <tbody>
+      <tr><td><b>IOD</b> — Information Object Definition</td><td>The blueprint for a type of object: which modules and attributes a CT Image must contain. Defined in PS3.3</td></tr>
+      <tr><td><b>Module</b></td><td>A named group of related attributes (Patient module, General Study module, Image Pixel module) reused across IODs</td></tr>
+      <tr><td><b>Attribute type</b></td><td><code>1</code> required, non-empty · <code>1C</code> conditionally required, non-empty · <code>2</code> required, may be empty · <code>2C</code> conditionally required, may be empty · <code>3</code> optional</td></tr>
+      <tr><td><b>SOP Class</b> — Service-Object Pair</td><td>An IOD plus the services allowed on it. "CT Image Storage" = the CT Image IOD + the Storage service</td></tr>
+      <tr><td><b>SOP Instance</b></td><td>One actual object conforming to a SOP Class</td></tr>
+      <tr><td><b>Abstract syntax</b></td><td>The SOP Class UID, as named during association negotiation</td></tr>
+      <tr><td><b>Transfer syntax</b></td><td>The encoding rules — byte order, explicit/implicit VR, compression</td></tr>
+      <tr><td><b>Presentation context</b></td><td>One abstract syntax paired with one or more proposed transfer syntaxes. The unit of negotiation</td></tr>
+      <tr><td><b>Composite vs normalized</b></td><td>Composite objects describe real-world things assembled from many entities (images) and use C-services. Normalized objects describe one entity (MPPS, Storage Commitment, Print) and use N-services</td></tr>
+      <tr><td><b>Conformance Statement</b></td><td>The vendor document listing every SOP class supported, in which role, with which transfer syntaxes. <b>Ask for it before purchase, not after go-live</b></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>UIDs</h3>
+  <p>A UID is a dotted-decimal string, maximum <b>64 characters</b>, globally unique and permanent. It begins with an organizational root registered to a vendor or institution, followed by locally generated suffixes.</p>
+  <ul>
+    <li><code>1.2.840.10008.…</code> is the DICOM Standard's own root — every standard SOP Class, transfer syntax and information model lives under it. <b>Never generate your own UID under this root.</b></li>
+    <li><code>1.2.840.113619.…</code>, <code>1.3.12.2.1107.…</code>, <code>1.3.6.1.4.1.…</code> are vendor and enterprise roots. If your organisation generates UIDs (anonymisation, routers, AI pipelines), obtain a registered root rather than inventing one.</li>
+    <li>Legal characters are digits and dots only. No leading zeros within a component, no trailing dot. Padded to even length with a NULL byte, not a space.</li>
+  </ul>
+
+  <div class="panel panel--alert">
+    <h4>The rule people break</h4>
+    <p>If you change the pixel data, you must issue a <b>new SOP Instance UID</b>. If you change the meaning of the study — different patient, different exam — you generally need new Study and Series UIDs too. Re-using a SOP Instance UID for different content means two archives can hold different images under the same identifier and never detect the conflict. Anonymisation tools that "keep the UIDs to make matching easier" create exactly this trap.</p>
+  </div>
+
+  <h3>Value representations</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">VR</th><th>Name</th><th>Max length</th><th>Notes and traps</th></tr></thead>
+    <tbody>
+      <tr><td class="k">AE</td><td>Application Entity</td><td>16</td><td>AE titles. Case-sensitive; trailing spaces not significant</td></tr>
+      <tr><td class="k">AS</td><td>Age String</td><td>4</td><td><code>nnnD/W/M/Y</code>, e.g. <code>045Y</code></td></tr>
+      <tr><td class="k">AT</td><td>Attribute Tag</td><td>4</td><td>A tag used as a value, e.g. in de-identification lists</td></tr>
+      <tr><td class="k">CS</td><td>Code String</td><td>16</td><td>Uppercase, digits, space, underscore only</td></tr>
+      <tr><td class="k">DA</td><td>Date</td><td>8</td><td><code>YYYYMMDD</code>. No separators, no time</td></tr>
+      <tr><td class="k">DS</td><td>Decimal String</td><td>16</td><td>Numbers stored as <em>text</em> — beware locale commas</td></tr>
+      <tr><td class="k">DT</td><td>Date Time</td><td>26</td><td><code>YYYYMMDDHHMMSS.FFFFFF&amp;ZZXX</code></td></tr>
+      <tr><td class="k">FL / FD</td><td>Float / Double</td><td>4 / 8</td><td>True binary floats</td></tr>
+      <tr><td class="k">IS</td><td>Integer String</td><td>12</td><td>Also text. Leading zeros are legal and cause string-compare bugs</td></tr>
+      <tr><td class="k">LO</td><td>Long String</td><td>64</td><td>Descriptions, institution names</td></tr>
+      <tr><td class="k">LT</td><td>Long Text</td><td>10240</td><td>May contain line breaks</td></tr>
+      <tr><td class="k">OB / OW / OF</td><td>Other Byte / Word / Float</td><td>—</td><td>Pixel data and binary blobs</td></tr>
+      <tr><td class="k">PN</td><td>Person Name</td><td>64 per group</td><td><code>Family^Given^Middle^Prefix^Suffix</code>, up to three groups separated by <code>=</code> for alphabetic, ideographic, phonetic</td></tr>
+      <tr><td class="k">SH</td><td>Short String</td><td>16</td><td><b>Accession number lives here.</b> Truncation risk</td></tr>
+      <tr><td class="k">SQ</td><td>Sequence</td><td>—</td><td>A nested list of datasets. Worklist and MPPS are built almost entirely from these</td></tr>
+      <tr><td class="k">ST</td><td>Short Text</td><td>1024</td><td></td></tr>
+      <tr><td class="k">TM</td><td>Time</td><td>16</td><td><code>HHMMSS.FFFFFF</code></td></tr>
+      <tr><td class="k">UI</td><td>Unique Identifier</td><td>64</td><td>NULL-padded to even length</td></tr>
+      <tr><td class="k">UL / US / SL / SS</td><td>Integers</td><td>4 / 2 / 4 / 2</td><td>True binary integers</td></tr>
+      <tr><td class="k">UN</td><td>Unknown</td><td>—</td><td>What you get when a private tag survives a transcoding that lost its dictionary</td></tr>
+      <tr><td class="k">UR</td><td>URI / URL</td><td>—</td><td>Used by DICOMweb-aware objects</td></tr>
+      <tr><td class="k">UT</td><td>Unlimited Text</td><td>2<sup>32</sup>−2</td><td>Report bodies in SR objects</td></tr>
+    </tbody>
+    <caption>Implicit VR encoding does not carry the VR on the wire at all — the receiver looks it up in its dictionary. That is why a private tag traversing an implicit-VR link often arrives as <code>UN</code> and becomes unreadable to the next hop. Odd-numbered groups are private and described by a Private Creator element at <code>(gggg,00xx)</code>; group <code>0002</code> is always Explicit VR Little Endian regardless of the dataset's transfer syntax.</caption>
+  </table>
+  </div>
+
+  <h3>SOP Classes you will meet</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th>Object</th><th class="mono">SOP Class UID</th></tr></thead>
+    <tbody>
+      <tr><td>Verification (DICOM echo)</td><td class="k">1.2.840.10008.1.1</td></tr>
+      <tr><td>CR Image Storage</td><td class="k">1.2.840.10008.5.1.4.1.1.1</td></tr>
+      <tr><td>Digital X-Ray — For Presentation</td><td class="k">1.2.840.10008.5.1.4.1.1.1.1</td></tr>
+      <tr><td>Digital X-Ray — For Processing</td><td class="k">1.2.840.10008.5.1.4.1.1.1.1.1</td></tr>
+      <tr><td>Digital Mammography X-Ray — For Presentation</td><td class="k">1.2.840.10008.5.1.4.1.1.1.2</td></tr>
+      <tr><td>CT Image Storage</td><td class="k">1.2.840.10008.5.1.4.1.1.2</td></tr>
+      <tr><td>Enhanced CT Image Storage</td><td class="k">1.2.840.10008.5.1.4.1.1.2.1</td></tr>
+      <tr><td>Ultrasound Multi-frame Image Storage</td><td class="k">1.2.840.10008.5.1.4.1.1.3.1</td></tr>
+      <tr><td>MR Image Storage</td><td class="k">1.2.840.10008.5.1.4.1.1.4</td></tr>
+      <tr><td>Enhanced MR Image Storage</td><td class="k">1.2.840.10008.5.1.4.1.1.4.1</td></tr>
+      <tr><td>Ultrasound Image Storage</td><td class="k">1.2.840.10008.5.1.4.1.1.6.1</td></tr>
+      <tr><td>Secondary Capture Image Storage</td><td class="k">1.2.840.10008.5.1.4.1.1.7</td></tr>
+      <tr><td>Grayscale Softcopy Presentation State</td><td class="k">1.2.840.10008.5.1.4.1.1.11.1</td></tr>
+      <tr><td>X-Ray Angiographic Image Storage</td><td class="k">1.2.840.10008.5.1.4.1.1.12.1</td></tr>
+      <tr><td>Breast Tomosynthesis Image Storage</td><td class="k">1.2.840.10008.5.1.4.1.1.13.1.3</td></tr>
+      <tr><td>Nuclear Medicine Image Storage</td><td class="k">1.2.840.10008.5.1.4.1.1.20</td></tr>
+      <tr><td>Radiation Dose SR</td><td class="k">1.2.840.10008.5.1.4.1.1.67</td></tr>
+      <tr><td>Basic Text SR</td><td class="k">1.2.840.10008.5.1.4.1.1.88.11</td></tr>
+      <tr><td>Key Object Selection Document</td><td class="k">1.2.840.10008.5.1.4.1.1.88.59</td></tr>
+      <tr><td>Encapsulated PDF Storage</td><td class="k">1.2.840.10008.5.1.4.1.1.104.1</td></tr>
+      <tr><td>PET Image Storage</td><td class="k">1.2.840.10008.5.1.4.1.1.128</td></tr>
+      <tr><td>Segmentation Storage</td><td class="k">1.2.840.10008.5.1.4.1.1.66.4</td></tr>
+      <tr><td>Modality Worklist Information Model — FIND</td><td class="k">1.2.840.10008.5.1.4.31</td></tr>
+      <tr><td>Study Root Q/R — FIND / MOVE / GET</td><td class="k">1.2.840.10008.5.1.4.1.2.2.1 / .2 / .3</td></tr>
+      <tr><td>Patient Root Q/R — FIND / MOVE / GET</td><td class="k">1.2.840.10008.5.1.4.1.2.1.1 / .2 / .3</td></tr>
+      <tr><td>Storage Commitment Push Model</td><td class="k">1.2.840.10008.1.20.1</td></tr>
+      <tr><td>Modality Performed Procedure Step</td><td class="k">1.2.840.10008.3.1.2.3.3</td></tr>
+      <tr><td>Unified Procedure Step — Push</td><td class="k">1.2.840.10008.5.1.4.34.6.1</td></tr>
+    </tbody>
+    <caption>When a modality is upgraded and studies suddenly stop arriving, the cause is very often a new SOP class — Enhanced CT, tomosynthesis, RDSR — that the archive was never configured to accept.</caption>
+  </table>
+  </div>
+</section>
+
+<section id="scu-scp">
+  <p class="eyebrow"><b>10</b> · The role model</p>
+  <h2>SCU and SCP — who asks, who answers</h2>
+  <p class="lede">These two acronyms cause more confusion in PACS administration than anything else in DICOM, because people try to attach them to boxes. They attach to <em>services</em>, and a single box plays both roles within the same hour — sometimes within the same association.</p>
+
+  <div class="grid2">
+    <div class="panel panel--dcm">
+      <h4>Service Class User — SCU</h4>
+      <p>The <b>client</b>. The SCU <em>invokes</em> an operation: it asks for something to be stored, queried, retrieved, created or updated. It issues the request and waits for a status back.</p>
+      <p>Think: <em>"I am the one with a request."</em></p>
+    </div>
+    <div class="panel panel--dcm">
+      <h4>Service Class Provider — SCP</h4>
+      <p>The <b>server</b>. The SCP <em>performs</em> the operation and returns a status. It listens on a TCP port, maintains an allow-list of AE titles, and is the one whose logs actually explain a failure.</p>
+      <p>Think: <em>"I am the one who has to do the work."</em></p>
+    </div>
+  </div>
+
+  <div class="panel panel--alert">
+    <h4>Three rules that resolve most confusion</h4>
+    <ol>
+      <li><b>Roles are per service, not per system.</b> A PACS is a Storage SCP when receiving from a scanner and a Storage SCU when forwarding to the VNA. Ask "SCU of what?"</li>
+      <li><b>Only an SCP needs a listening port and an AE allow-list.</b> If a device is purely an SCU it needs no inbound firewall rule at all. This is exactly why C-MOVE surprises people — it forces the requester to also be an SCP.</li>
+      <li><b>By default the association requester is the SCU</b> and the acceptor is the SCP, for every presentation context proposed. Changing that requires explicit <b>SCP/SCU Role Selection</b> negotiation, which is what makes C-GET work.</li>
+    </ol>
+  </div>
+
+  <h3>Role assignment by service</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th>Service</th><th>SCU (asks)</th><th>SCP (answers)</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="k">Verification (C-ECHO)</td><td>Whoever is testing</td><td>Whoever is being tested</td><td>Every SCP must support it. Your first diagnostic in any ticket</td></tr>
+      <tr><td class="k">Storage (C-STORE)</td><td>Modality, router, workstation sending GSPS, AI node returning results, PACS forwarding to VNA</td><td>PACS, VNA, dose registry, AI node receiving work, <b>workstation receiving a C-MOVE</b></td><td>The most common service by volume. Direction of data = direction of the request</td></tr>
+      <tr><td class="k">Modality Worklist (C-FIND)</td><td><b>Modality</b></td><td>RIS or worklist broker</td><td>Never reversed. The scanner always asks</td></tr>
+      <tr><td class="k">Query/Retrieve — FIND</td><td>Workstation, PACS prefetch engine, RIS availability check</td><td>PACS, VNA</td><td>Metadata only, no pixels</td></tr>
+      <tr><td class="k">Query/Retrieve — MOVE</td><td>Workstation or PACS requesting</td><td>Archive holding the images</td><td><b>The archive then becomes a Storage SCU</b> to a third AE, which must be a Storage SCP</td></tr>
+      <tr><td class="k">Query/Retrieve — GET</td><td>Workstation</td><td>Archive</td><td>Images return on the <em>same</em> association — the requester must accept the Storage role via role negotiation</td></tr>
+      <tr><td class="k">MPPS (N-CREATE / N-SET)</td><td><b>Modality</b></td><td>RIS and/or PACS</td><td>Both may be configured as destinations</td></tr>
+      <tr><td class="k">Storage Commitment (N-ACTION)</td><td><b>Modality</b> (or PACS committing to VNA)</td><td>Archive</td><td>Request direction</td></tr>
+      <tr><td class="k">Storage Commitment (N-EVENT-REPORT)</td><td><b>Archive</b></td><td><b>Modality</b></td><td><b>Roles invert.</b> The archive opens a new association back. The modality must be reachable and listening</td></tr>
+      <tr><td class="k">Print (N-CREATE / N-ACTION)</td><td>Workstation or modality</td><td>DICOM printer / print server</td><td>Legacy but still present in some departments</td></tr>
+      <tr><td class="k">UPS (Unified Procedure Step)</td><td>Whoever creates or claims a work item</td><td>The worklist manager</td><td>Push, Pull, Watch and Event SOP classes each define roles separately</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Role negotiation, and why C-GET exists</h3>
+  <p>Inside the association request, each presentation context can carry an <b>SCP/SCU Role Selection</b> item declaring that the requester also wishes to act as SCP for that abstract syntax. This is the mechanism that lets a single association carry a request in one direction and objects in the other.</p>
+
+  <div class="msg">
+    <div class="msg-head"><span>C-MOVE vs C-GET — the same retrieval, two topologies</span><span>Why one needs a firewall change and the other does not</span></div>
+<pre><span class="seg-d">C-MOVE</span>  — two associations, one inbound to the requester
+
+   Workstation                        Archive                    Workstation
+   (Q/R MOVE <span class="hi-d">SCU</span>)                    (Q/R MOVE <span class="hi-d">SCP</span>)             (Storage <span class="hi-d">SCP</span>)
+        │  1. C-MOVE-RQ  dest = WS_AE01     │                            │
+        │ ────────────────────────────────► │                            │
+        │                                   │  2. <b>new association</b>       │
+        │                                   │ ─────────────────────────► │
+        │                                   │     C-STORE × n            │
+        │                                   │     (archive = Storage <span class="hi-d">SCU</span>) │
+        │  3. C-MOVE-RSP  sub-op counts     │                            │
+        │ ◄──────────────────────────────── │                            │
+
+   Requires: archive knows WS_AE01 → IP:port, <b>and</b> firewall permits archive → workstation.
+
+
+<span class="seg-d">C-GET</span>   — one association, no inbound connection
+
+   Workstation                        Archive
+   (Q/R GET <span class="hi-d">SCU</span>, Storage <span class="hi-d">SCP</span>)         (Q/R GET <span class="hi-d">SCP</span>, Storage <span class="hi-d">SCU</span>)
+        │  A-ASSOCIATE-RQ                   │
+        │    ctx: Study Root GET            │
+        │    ctx: CT Image Storage          │
+        │      + <b>Role Selection: SCP=1</b>      │   <span class="cmt">◄ "I will also receive"</span>
+        │ ────────────────────────────────► │
+        │  C-GET-RQ                         │
+        │ ────────────────────────────────► │
+        │  C-STORE-RQ × n  (same assoc)     │
+        │ ◄──────────────────────────────── │
+        │  C-GET-RSP                        │
+        │ ◄──────────────────────────────── │
+
+   Requires: nothing inbound. Works through NAT and one-way firewall rules.</pre>
+    <div class="msg-foot">C-GET is strictly friendlier to modern networks, but support is uneven — many archives and older workstations implement C-MOVE only. Check the Conformance Statement for "Query/Retrieve Information Model — GET" before designing around it. Where neither is workable, <b>WADO-RS</b> solves the same problem over HTTPS.</div>
+  </div>
+
+  <h3>What this means when you configure a device</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th>If the device is…</th><th>It needs…</th><th>Common misconfiguration</th></tr></thead>
+    <tbody>
+      <tr><td>Storage <b>SCU</b> only (simple modality)</td><td>Destination AE title, IP, port. No inbound rule</td><td>Wrong <em>called</em> AE title → rejection reason 7</td></tr>
+      <tr><td>Storage <b>SCP</b> (archive, AI node)</td><td>Listening port, AE allow-list entry for every sender, accepted SOP classes and transfer syntaxes</td><td>New sender not added to the allow-list → rejection reason 3</td></tr>
+      <tr><td>Q/R <b>SCU</b> using C-MOVE</td><td>To also run a Storage <b>SCP</b> listener, and to be registered on the archive as a move destination</td><td>Registered with the wrong port, or not registered at all → query works, retrieve never arrives</td></tr>
+      <tr><td>MWL <b>SCU</b> (modality)</td><td>Worklist provider address plus the query filter that matches how the RIS populates the SPS</td><td>Station AE title mismatch → empty worklist on one scanner only</td></tr>
+      <tr><td>Commitment <b>SCU</b> (modality)</td><td>To be reachable <em>inbound</em> for the N-EVENT-REPORT</td><td>Commitment never returns; techs delete on faith or never delete at all</td></tr>
+      <tr><td>Both (router, PACS, VNA)</td><td>Two sets of everything, documented separately by direction</td><td>One firewall rule written for "DICOM between A and B" that covers only one direction</td></tr>
+    </tbody>
+    <caption>Maintain one table with a row per AE: AE title, IP, port, role per service, owner, and the systems it is permitted to talk to. It is the single most valuable artifact a PACS administrator keeps, and the first thing a security audit asks for.</caption>
+  </table>
+  </div>
+</section>
+
+<section id="assoc">
+  <p class="eyebrow"><b>11</b> · PS3.7 / PS3.8</p>
+  <h2>Association negotiation, in detail</h2>
+  <p class="lede">Most "network" faults in DICOM are really failed negotiations. The upper-layer protocol is verbose about why it said no — you simply have to know where to look.</p>
+
+  <div class="msg">
+    <div class="msg-head"><span>A full association, annotated</span><span>SCU = requester · SCP = acceptor</span></div>
+<pre>  <span class="seg-d">SCU</span>                                                   <span class="seg-d">SCP</span>
+   │  TCP connect to host:11112                           │
+   │ ───────────────────────────────────────────────────► │
+   │                                                      │
+   │  <span class="hi-d">A-ASSOCIATE-RQ</span>  (PDU type 01)                       │
+   │    Calling AE Title  : CT_SCANNER_01                 │  <span class="cmt">who I am</span>
+   │    Called  AE Title  : PACS_ARCHIVE                  │  <span class="cmt">who I think you are</span>
+   │    Application Ctx   : 1.2.840.10008.3.1.1.1         │  <span class="cmt">always this value</span>
+   │    Presentation Ctx 1 (id 1, odd)                    │
+   │       Abstract syntax: CT Image Storage              │
+   │       Transfer syntax: Explicit VR LE                │
+   │                       JPEG 2000 Lossless             │
+   │                       Implicit VR LE                 │
+   │    Presentation Ctx 2 (id 3)                         │
+   │       Abstract syntax: Enhanced CT Image Storage     │
+   │    User Information                                  │
+   │       Max PDU length      : 16384                    │  <span class="cmt">raise on fast links</span>
+   │       Implementation Class UID / Version Name        │  <span class="cmt">names the software</span>
+   │       Async operations window (optional)             │
+   │       SCP/SCU Role Selection (optional)              │  <span class="cmt">needed for C-GET</span>
+   │ ───────────────────────────────────────────────────► │
+   │                                                      │
+   │  <span class="hi-d">A-ASSOCIATE-AC</span>  (PDU type 02)                       │
+   │    Ctx 1: result 0  <span class="t-dcm">ACCEPTED</span> — Explicit VR LE       │  <span class="cmt">SCP picks exactly ONE</span>
+   │    Ctx 3: result 3  <span class="t-alert">REJECTED</span> — abstract syntax not supported
+   │ ◄─────────────────────────────────────────────────── │
+   │                                                      │
+   │  <span class="hi-d">P-DATA-TF</span> (PDU type 04): C-STORE-RQ + dataset       │
+   │ ───────────────────────────────────────────────────► │
+   │  <span class="hi-d">P-DATA-TF</span>: C-STORE-RSP  status 0x0000              │
+   │ ◄─────────────────────────────────────────────────── │
+   │            … repeated for every instance …           │
+   │                                                      │
+   │  <span class="hi-d">A-RELEASE-RQ</span> (05)  /  <span class="hi-d">A-RELEASE-RP</span> (06)              │
+   │ ◄──────────────────────────────────────────────────► │
+
+  Alternatives to A-ASSOCIATE-AC:
+    <span class="hi-d">A-ASSOCIATE-RJ</span> (03)  — refused before any data moved
+    <span class="hi-d">A-ABORT</span>        (07)  — either side tears it down mid-conversation</pre>
+    <div class="msg-foot"><b>Read this when a modality "can't send."</b> If context 3 is rejected, the scanner will happily send its ordinary CT and silently drop its Enhanced CT — the association succeeded, so nothing looks broken until a series is missing. Always check <em>which contexts were accepted</em>, not just whether the association opened.</div>
+  </div>
+
+  <h3>Presentation context result codes</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">Result</th><th>Meaning</th><th>What to do</th></tr></thead>
+    <tbody>
+      <tr><td class="k">0</td><td>Acceptance</td><td>Nothing — note which transfer syntax was chosen</td></tr>
+      <tr><td class="k">1</td><td>User rejection</td><td>The receiving application declined. Usually a policy or licensing limit</td></tr>
+      <tr><td class="k">2</td><td>No reason (provider rejection)</td><td>Check the SCP log; the detail is there</td></tr>
+      <tr><td class="k">3</td><td><b>Abstract syntax not supported</b></td><td>Configure that SOP class on the archive. The most common cause of missing series after an upgrade</td></tr>
+      <tr><td class="k">4</td><td><b>Transfer syntaxes not supported</b></td><td>The SCP does not speak any encoding the SCU proposed. Add the syntax, or make the SCU transcode</td></tr>
+    </tbody>
+    <caption>Presentation context IDs are always odd, and a sender may propose the same abstract syntax several times with different transfer syntax lists — that is how a modality offers "compressed if you can, uncompressed if you must."</caption>
+  </table>
+  </div>
+
+  <h3>Three things every DICOM node needs</h3>
+  <div class="grid3">
+    <div class="card"><div class="stat t-dcm">AE Title</div><h4>Identity</h4><p>Max 16 characters, case-sensitive. Both ends must have each other's AE title configured. Adopt a naming convention and never reuse a retired one — old entries in an archive's allow-list are a security finding.</p></div>
+    <div class="card"><div class="stat t-dcm">IP : Port</div><h4>Address</h4><p>Static IP or a reserved DHCP lease. Use DNS names only if you are certain every device resolves them; many modalities cache forever or ignore DNS entirely.</p></div>
+    <div class="card"><div class="stat t-dcm">Contexts</div><h4>Capability</h4><p>Which SOP classes and transfer syntaxes each side supports, in which role. Published in the vendor's DICOM Conformance Statement.</p></div>
+  </div>
+
+  <div class="panel panel--dcm">
+    <h4>Tuning knobs that matter on real links</h4>
+    <ul>
+      <li><b>Max PDU length</b> — 16 KB is a conservative default. Raising it to 64–128 KB materially improves throughput on high-latency links by reducing round trips.</li>
+      <li><b>Asynchronous operations window</b> — allows multiple outstanding operations on one association instead of strict request/response lockstep. Supported unevenly; test rather than assume.</li>
+      <li><b>Simultaneous associations</b> — bulk migrations and busy archives need this raised, but each one costs memory on the SCP. Coordinate the number with the vendor.</li>
+      <li><b>Association idle timeout</b> — too short and long reconstructions get torn down mid-study; too long and dead sockets accumulate.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="dimse">
+  <p class="eyebrow"><b>12</b> · DIMSE</p>
+  <h2>The DIMSE services, one by one</h2>
+  <p class="lede">DIMSE — DICOM Message Service Element — is the set of operations carried inside an association. C-services act on <b>composite</b> objects (images, made of many real-world entities). N-services act on <b>normalized</b> objects (a procedure step, a commitment request, a print job).</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">Service</th><th>Type</th><th>SCU → SCP</th><th>What it does</th><th>Where you see it</th></tr></thead>
+    <tbody>
+      <tr><td class="k">C-ECHO</td><td>Composite</td><td>Tester → tested node</td><td>Verification. "Are you alive and will you talk to me?"</td><td>The first test in every ticket</td></tr>
+      <tr><td class="k">C-STORE</td><td>Composite</td><td>Sender → receiver</td><td>Push one composite instance; one request and one status per object</td><td>Modality → PACS; PACS → VNA; router → AI</td></tr>
+      <tr><td class="k">C-FIND</td><td>Composite</td><td>Querier → archive</td><td>Query. Returns matching attributes as a series of pending responses, then a final status. <b>Never pixels</b></td><td>Worklist, Q/R, prefetch, availability checks</td></tr>
+      <tr><td class="k">C-MOVE</td><td>Composite</td><td>Requester → archive</td><td>"Send these instances to AE <em>X</em>." The archive opens a second association to X and becomes a Storage SCU</td><td>Workstation retrieving priors</td></tr>
+      <tr><td class="k">C-GET</td><td>Composite</td><td>Requester → archive</td><td>Retrieve over the <em>same</em> association; requires role negotiation</td><td>Firewalled and NAT'd links</td></tr>
+      <tr><td class="k">C-CANCEL</td><td>Composite</td><td>Requester → archive</td><td>Abort an in-flight FIND, MOVE or GET</td><td>User closes a slow query</td></tr>
+      <tr><td class="k">N-CREATE</td><td>Normalized</td><td>Modality → RIS/PACS</td><td>Create a managed object instance</td><td>MPPS "in progress", print job</td></tr>
+      <tr><td class="k">N-SET</td><td>Normalized</td><td>Modality → RIS/PACS</td><td>Update a managed object</td><td>MPPS "completed"</td></tr>
+      <tr><td class="k">N-GET</td><td>Normalized</td><td>Requester → provider</td><td>Read attributes of a managed object</td><td>Printer status, UPS work item</td></tr>
+      <tr><td class="k">N-ACTION</td><td>Normalized</td><td>Modality → archive</td><td>Request an action on an object</td><td>Storage commitment request; print</td></tr>
+      <tr><td class="k">N-EVENT-REPORT</td><td>Normalized</td><td><b>Archive → modality</b></td><td>Asynchronous notification, on a new association</td><td>Storage commitment result; UPS state change</td></tr>
+      <tr><td class="k">N-DELETE</td><td>Normalized</td><td>Requester → provider</td><td>Delete a managed object</td><td>Print session cleanup</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>C-STORE in practice</h3>
+  <ul>
+    <li>One association typically carries an entire study — the negotiation cost is paid once, then hundreds of store operations follow.</li>
+    <li>Each instance gets its own status. A study can be <b>partially</b> stored, which is why comparing instance counts on both ends is a real diagnostic step and not paranoia.</li>
+    <li>The SCP may <b>coerce</b> attributes on receipt — rewriting patient name or accession to match its own records — and signals this with status <code>0xB000</code>. Coercion rules are a common source of "PACS shows a different name than the scanner."</li>
+    <li>A Storage SCP that accepts an object is asserting only that it received it, not that it will keep it. That assertion is Storage Commitment's job.</li>
+  </ul>
+
+  <h3>C-FIND in practice</h3>
+  <ul>
+    <li>The SCU sends one dataset containing <b>matching keys</b> (populated = filter) and <b>return keys</b> (empty = "send me this attribute").</li>
+    <li>The SCP replies with a stream of <code>0xFF00</code> pending responses, one per match, then a single <code>0x0000</code> success.</li>
+    <li>An empty result set is a <em>successful</em> query returning zero matches — it is not an error, which is why "the worklist is empty" produces no error anywhere in the logs.</li>
+  </ul>
+</section>
+
+<section id="qr">
+  <p class="eyebrow"><b>13</b> · Query/Retrieve</p>
+  <h2>Query models and matching rules</h2>
+  <p class="lede">Q/R has two information models and a small matching grammar. Knowing both lets you reproduce any user-reported query problem from a command line in about thirty seconds.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Level</th><th>Unique key required</th><th>Typical return keys</th></tr></thead>
+    <tbody>
+      <tr><td><b>PATIENT</b></td><td class="k">(0010,0020) Patient ID</td><td>Name, DOB, sex, number of related studies</td></tr>
+      <tr><td><b>STUDY</b></td><td class="k">(0020,000D) Study Instance UID</td><td>Study date/time, accession, description, modalities in study, number of series</td></tr>
+      <tr><td><b>SERIES</b></td><td class="k">(0020,000E) Series Instance UID</td><td>Modality, series number, description, number of instances</td></tr>
+      <tr><td><b>IMAGE</b></td><td class="k">(0008,0018) SOP Instance UID</td><td>Instance number, SOP class</td></tr>
+    </tbody>
+    <caption><b>Study Root</b> starts at STUDY and is what almost everything uses. <b>Patient Root</b> starts at PATIENT and requires the Patient ID on every query — useful for patient-centric browsing, awkward for anything else.</caption>
+  </table>
+  </div>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Matching type</th><th>Syntax</th><th>Example</th></tr></thead>
+    <tbody>
+      <tr><td>Single value</td><td>Exact string</td><td><code>PatientID=10045522</code></td></tr>
+      <tr><td>Universal</td><td>Zero-length value</td><td><code>StudyDescription=</code> → "return this attribute for every match"</td></tr>
+      <tr><td>Wildcard</td><td><code>*</code> any run, <code>?</code> one character</td><td><code>PatientName=RIVERA*</code></td></tr>
+      <tr><td>Range</td><td><code>lo-hi</code> on dates and times</td><td><code>StudyDate=20260101-20260131</code>, <code>StudyDate=-20260101</code></td></tr>
+      <tr><td>List of UIDs</td><td>Backslash separated</td><td><code>ModalitiesInStudy=CT\MR</code></td></tr>
+      <tr><td>Sequence matching</td><td>Nested dataset inside an SQ</td><td>How you filter a worklist by <code>ScheduledProcedureStepSequence[0].Modality</code></td></tr>
+    </tbody>
+    <caption>Not every archive supports every matching type on every attribute. Wildcards on Patient Name are near-universal; ranges on Study Time are not. The Conformance Statement lists supported matching per key — and it is one of the few parts of that document people actually need.</caption>
+  </table>
+  </div>
+
+  <div class="panel panel--alert">
+    <h4>Relational versus hierarchical queries</h4>
+    <p>A <b>hierarchical</b> query requires the unique key of every level above the one you are querying — to list series you must supply the Study Instance UID. A <b>relational</b> query lets you skip levels, for example asking for all series with a given description across the whole archive. Relational support is optional and often disabled for performance. If a workstation's search behaves differently against two archives, this is usually why.</p>
+  </div>
+</section>
+
+<section id="mwl">
+  <p class="eyebrow"><b>14</b> · Workflow services</p>
+  <h2>Worklist, MPPS and storage commitment</h2>
+  <p class="lede">These three services separate a functioning department from one that runs on typed names and hope. They are also the three most commonly left unconfigured after a go-live.</p>
+
+  <h3>Modality Worklist</h3>
+  <p><span class="badge badge--scu">SCU</span> the modality &nbsp; <span class="badge badge--scp">SCP</span> the RIS or a worklist broker. A C-FIND against the Modality Worklist Information Model: the modality sends a query with a few keys populated and the rest empty; the SCP returns one dataset per matching Scheduled Procedure Step.</p>
+
+  <div class="msg">
+    <div class="msg-head"><span>A worklist response, abbreviated</span><span>SPS attributes live inside a sequence</span></div>
+<pre><span class="hi-d">(0010,0010)</span> PN  Patient's Name                RIVERA^MARIA^L
+<span class="hi-d">(0010,0020)</span> LO  Patient ID                     10045522
+<span class="hi-d">(0010,0030)</span> DA  Patient's Birth Date           19710304
+<span class="hi-d">(0010,0040)</span> CS  Patient's Sex                  F
+<span class="hi-d">(0010,1030)</span> DS  Patient's Weight               68            <span class="cmt">◄ required for PET SUV</span>
+<span class="hi-d">(0008,0050)</span> SH  Accession Number               ACC20260811-0417
+<span class="hi-d">(0020,000D)</span> UI  Study Instance UID             1.2.840.113619.2.55.3…
+<span class="hi-d">(0032,1032)</span> PN  Requesting Physician           CHEN^WEI
+<span class="hi-d">(0032,1060)</span> LO  Requested Procedure Descr.     CT ABDOMEN PELVIS W CONTRAST
+<span class="hi-d">(0040,1001)</span> SH  Requested Procedure ID         RP-88231
+<span class="hi-d">(0040,1003)</span> SH  Requested Procedure Priority   ROUTINE
+<span class="hi-d">(0038,0300)</span> LO  Current Patient Location       RAD-OPD
+<span class="hi-d">(0040,0100)</span> SQ  <span class="seg-d">Scheduled Procedure Step Sequence</span>
+   └ <span class="hi-d">(0008,0060)</span> CS  Modality                    CT             <span class="cmt">◄ modality filters on this</span>
+     <span class="hi-d">(0040,0001)</span> AE  Scheduled Station AE Title  CT_SCANNER_01  <span class="cmt">◄ and on this</span>
+     <span class="hi-d">(0040,0002)</span> DA  SPS Start Date              20260811       <span class="cmt">◄ and on this</span>
+     <span class="hi-d">(0040,0003)</span> TM  SPS Start Time              103000
+     <span class="hi-d">(0040,0006)</span> PN  Scheduled Performing Phys.  OKAFOR^ADA
+     <span class="hi-d">(0040,0007)</span> LO  SPS Description             CT ABD/PELV W
+     <span class="hi-d">(0040,0009)</span> SH  Scheduled Procedure Step ID SPS-88231-1
+     <span class="hi-d">(0040,0010)</span> SH  Scheduled Station Name      CT01
+     <span class="hi-d">(0040,0011)</span> SH  SPS Location                RADIOLOGY-B
+     <span class="hi-d">(0040,0008)</span> SQ  Scheduled Protocol Code Sequence</pre>
+    <div class="msg-foot"><b>"The worklist is empty" checklist:</b> the modality's query filter — usually station AE title, today's date and modality — must match what the SCP holds. A step scheduled for tomorrow, with modality <code>RAD</code> instead of <code>CT</code>, or with a typo in the station AE title, is present in the database and invisible on the scanner. Query it yourself with <code>findscu -W</code> and no filters to prove the record exists, then add filters one at a time until it disappears.</div>
+  </div>
+
+  <h3>Modality Performed Procedure Step</h3>
+  <p><span class="badge badge--scu">SCU</span> the modality &nbsp; <span class="badge badge--scp">SCP</span> the RIS, PACS, or both. MPPS turns imaging into a status-tracked workflow: <code>N-CREATE</code> opens the step, <code>N-SET</code> closes it.</p>
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">Tag</th><th>Attribute</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td class="k">(0040,0252)</td><td>Performed Procedure Step Status</td><td><code>IN PROGRESS</code> → <code>COMPLETED</code> or <code>DISCONTINUED</code>. Never goes backwards</td></tr>
+      <tr><td class="k">(0040,0253)</td><td>Performed Procedure Step ID</td><td>Modality-assigned handle for the step</td></tr>
+      <tr><td class="k">(0040,0244)/(0040,0245)</td><td>PPS Start Date / Time</td><td>Real acquisition start — the basis of honest room-utilisation reporting</td></tr>
+      <tr><td class="k">(0040,0250)/(0040,0251)</td><td>PPS End Date / Time</td><td></td></tr>
+      <tr><td class="k">(0040,0254)</td><td>PPS Description</td><td></td></tr>
+      <tr><td class="k">(0040,0260)</td><td>Performed Protocol Code Sequence</td><td>What was actually done, versus what was ordered</td></tr>
+      <tr><td class="k">(0040,0270)</td><td>Scheduled Step Attributes Sequence</td><td>Carries Study Instance UID, accession and requested procedure ID <b>back</b> — this is how the RIS correlates performed to scheduled</td></tr>
+      <tr><td class="k">(0040,0340)</td><td>Performed Series Sequence</td><td>The series and referenced instances actually produced</td></tr>
+      <tr><td class="k">(0040,0281)</td><td>PPS Discontinuation Reason Code Seq</td><td>Why an exam was abandoned — patient could not tolerate, equipment failure</td></tr>
+    </tbody>
+    <caption>What MPPS buys you: exam status without a phone call, automatic detection of incomplete studies, honest room turnaround metrics, and a clean signal for unscheduled exams needing reconciliation.</caption>
+  </table>
+  </div>
+
+  <h3>Storage Commitment</h3>
+  <p>The safety interlock before anyone deletes anything from a modality — and the clearest example of roles inverting mid-transaction.</p>
+  <ol>
+    <li>Modality (<span class="badge badge--scu">SCU</span>) sends <code>N-ACTION</code> to the archive (<span class="badge badge--scp">SCP</span>) with a Transaction UID <span class="t-dcm">(0008,1195)</span> and a Referenced SOP Sequence <span class="t-dcm">(0008,1199)</span> listing every instance.</li>
+    <li>The archive returns an immediate acknowledgement <em>of the request</em> — this is not yet a commitment.</li>
+    <li>Later, the archive (<span class="badge badge--scu">now SCU</span>) opens a <b>new association back to the modality</b> and sends <code>N-EVENT-REPORT</code>. Event Type ID <b>1</b> = all instances committed. Event Type ID <b>2</b> = some failed, listed in <span class="t-dcm">(0008,1198)</span> with a reason in <span class="t-dcm">(0008,1197)</span>.</li>
+    <li>Only now may the modality purge its local copy.</li>
+  </ol>
+  <div class="panel panel--dcm">
+    <h4>The commitment gotcha</h4>
+    <p>Because the result arrives on an association the archive initiates, this has the same firewall shape as C-MOVE. If commitment "never comes back," check that the archive can reach the modality's listening port and that the modality's AE title is registered on the archive as a commitment destination. Some implementations return the report on the original association instead — check the Conformance Statement rather than assuming.</p>
+  </div>
+</section>
+
+<section id="dicomweb">
+  <p class="eyebrow"><b>15</b> · PS3.18</p>
+  <h2>DICOMweb — QIDO-RS, WADO-RS, STOW-RS, UPS-RS</h2>
+  <p class="lede">DICOMweb does what DIMSE does, over REST on port 443. It exists because zero-footprint viewers, mobile apps, cloud archives and AI services cannot practically be C-MOVE destinations. The role vocabulary changes too: instead of SCU and SCP, PS3.18 speaks of the <b>user agent</b> (the client making the request) and the <b>origin server</b> (the service holding the data).</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Service</th><th>Expands to</th><th>DIMSE equivalent</th><th>User agent</th><th>Origin server</th></tr></thead>
+    <tbody>
+      <tr><td class="k">QIDO-RS</td><td>Query based on ID for DICOM Objects</td><td>C-FIND</td><td>Viewer, AI service, index builder</td><td>PACS, VNA, cloud archive</td></tr>
+      <tr><td class="k">WADO-RS</td><td>Web Access to DICOM Objects — RESTful</td><td>C-MOVE / C-GET</td><td>Viewer</td><td>Archive</td></tr>
+      <tr><td class="k">STOW-RS</td><td>Store Over the Web</td><td>C-STORE</td><td>Uploader, AI result writer, image-share portal</td><td>Archive</td></tr>
+      <tr><td class="k">UPS-RS</td><td>Unified Procedure Step — RESTful</td><td>MWL + MPPS combined</td><td>Worker claiming a task</td><td>Worklist manager</td></tr>
+      <tr><td class="k">WADO-URI</td><td>The original single-object URL service</td><td>—</td><td>Legacy viewers</td><td>Archive</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>QIDO-RS — querying</h3>
+  <div class="msg">
+    <div class="msg-head"><span>QIDO-RS</span><span>GET · returns JSON or XML metadata, never pixels</span></div>
+<pre>GET /studies?PatientID=10045522&amp;includefield=00081030&amp;limit=25
+GET /studies?StudyDate=20260101-20260131&amp;ModalitiesInStudy=CT
+GET /studies/{studyUID}/series?Modality=CT
+GET /studies/{studyUID}/series/{seriesUID}/instances
+
+Accept: application/dicom+json          <span class="cmt">◄ the default and the one to use</span>
+Accept: multipart/related; type="application/dicom+xml"
+
+Query parameters:
+  {attribute}={value}   matching key, by keyword or by hex tag
+  includefield=         extra attributes to return; <b>includefield=all</b> for everything
+  fuzzymatching=true    name matching leniency, if supported
+  limit= / offset=      paging — always page large result sets
+
+Response  200 OK   — array of JSON objects keyed by tag:
+  [{ "0020000D": { "vr":"UI", "Value":["1.2.840.113619…"] },
+     "00080050": { "vr":"SH", "Value":["ACC20260811-0417"] },
+     "00100010": { "vr":"PN", "Value":[{"Alphabetic":"RIVERA^MARIA^L"}] } }]
+Response  204 No Content — <b>zero matches. Not an error</b>, same trap as C-FIND</pre>
+    <div class="msg-foot">Note the JSON shape: attributes are keyed by the eight-hex-digit tag with no parentheses or comma, each carrying its VR and a <code>Value</code> array. Person names are objects with <code>Alphabetic</code>, <code>Ideographic</code> and <code>Phonetic</code> members, mirroring DICOM's three PN component groups.</div>
+  </div>
+
+  <h3>WADO-RS — retrieving</h3>
+  <div class="msg">
+    <div class="msg-head"><span>WADO-RS</span><span>GET · the resource hierarchy mirrors the information model</span></div>
+<pre>GET /studies/{studyUID}                                  <span class="cmt">whole study, multipart</span>
+GET /studies/{studyUID}/series/{seriesUID}
+GET /studies/{studyUID}/series/{seriesUID}/instances/{sopUID}
+GET /studies/{studyUID}/series/{seriesUID}/instances/{sopUID}/frames/1,2,3
+GET /studies/{studyUID}/metadata                         <span class="cmt">attributes, no pixel data</span>
+GET /studies/{studyUID}/series/{seriesUID}/rendered?viewport=512,512&amp;window=40,400
+GET /studies/{studyUID}/thumbnail
+GET /{bulkdataURI}                                       <span class="cmt">large values referenced from metadata</span>
+
+Accept headers select what comes back:
+  multipart/related; type="application/dicom"                     <span class="cmt">Part 10 objects</span>
+  multipart/related; type="application/octet-stream"              <span class="cmt">raw frames</span>
+  multipart/related; type="image/jpeg"                            <span class="cmt">compressed frames</span>
+  application/dicom+json                                          <span class="cmt">metadata</span>
+  image/jpeg, image/png                                           <span class="cmt">rendered</span>
+  transfer-syntax parameter to request a specific encoding
+
+Status codes:
+  200 OK        complete
+  206 Partial   some instances could not be returned
+  404 Not Found no such study/series/instance
+  406 Not Acceptable  the archive cannot produce the media type you asked for</pre>
+    <div class="msg-foot"><b>The frame-level retrieve is the point.</b> A viewer can pull slice 240 of an 800-slice CT without transferring the other 799 — something C-MOVE simply cannot do. <code>/metadata</code> plus bulk data URIs lets a client build a study list and load pixels lazily.</div>
+  </div>
+
+  <h3>STOW-RS — storing</h3>
+  <div class="msg">
+    <div class="msg-head"><span>STOW-RS</span><span>POST · multipart upload</span></div>
+<pre>POST /studies                     <span class="cmt">store instances, any study</span>
+POST /studies/{studyUID}          <span class="cmt">constrain to one study; mismatches are rejected</span>
+
+Content-Type: multipart/related; type="application/dicom"; boundary=…
+  — one part per SOP Instance —
+
+Or metadata plus bulk data:
+Content-Type: multipart/related; type="application/dicom+json"
+
+Response 200 — a DICOM JSON dataset containing:
+  <b>(0008,1199)</b> ReferencedSOPSequence  — instances accepted
+  <b>(0008,1198)</b> FailedSOPSequence      — instances rejected, with
+  <b>(0008,1197)</b> FailureReason          — e.g. 0xC000 cannot understand,
+                                          0xA700 out of resources,
+                                          0x0110 processing failure
+Response 202 Accepted — <b>partial success. Read the response body</b>, do not assume
+Response 409 Conflict — the instances contradict the target study</pre>
+    <div class="msg-foot">A <code>202</code> is where uploads quietly lose objects. Treat any STOW integration that does not parse <code>FailedSOPSequence</code> as unverified, because it will report success while dropping instances.</div>
+  </div>
+
+  <h3>UPS-RS — the modern worklist</h3>
+  <p>Unified Procedure Step generalises MWL and MPPS into a single work-item model with a lifecycle: <code>SCHEDULED</code> → <code>IN PROGRESS</code> → <code>COMPLETED</code> or <code>CANCELED</code>. A worker <b>claims</b> a work item with a transaction UID, so two AI nodes cannot process the same study twice.</p>
+  <div class="msg">
+    <div class="msg-head"><span>UPS-RS</span><span>Where AI orchestration is heading</span></div>
+<pre>POST   /workitems                       create a work item
+GET    /workitems?ProcedureStepState=SCHEDULED   search
+PUT    /workitems/{uid}/state           claim / change state (needs transaction UID)
+POST   /workitems/{uid}/cancelrequest   request cancellation
+POST   /workitems/{uid}/subscribers/{aetitle}    subscribe to notifications</pre>
+    <div class="msg-foot">The corresponding DIMSE SOP classes are UPS Push, UPS Pull, UPS Watch and UPS Event. If you are evaluating AI platforms, ask whether they use UPS or a proprietary queue — the difference determines whether you can ever swap vendors.</div>
+  </div>
+
+  <div class="grid2">
+    <div class="panel panel--dcm">
+      <h4>Where DICOMweb wins</h4>
+      <ul>
+        <li>Traverses proxies, NAT and TLS-inspecting firewalls like any other web traffic</li>
+        <li>Standard authentication — OAuth 2.0 bearer tokens, mutual TLS — instead of AE-title allow-lists</li>
+        <li>Retrieve a single frame instead of an entire series</li>
+        <li>Cacheable at the proxy or CDN layer for priors</li>
+        <li>Every developer already has tooling: <code>curl</code>, browser dev tools, standard HTTP logging</li>
+      </ul>
+    </div>
+    <div class="panel panel--alert">
+      <h4>Where it doesn't</h4>
+      <ul>
+        <li>Modalities overwhelmingly still speak DIMSE only — you will run both for years</li>
+        <li>Per-request HTTP overhead is real on very large studies without proper multipart handling and connection reuse</li>
+        <li>Vendor implementations vary in which query parameters, <code>includefield</code> options and media types they honour</li>
+        <li>An AE-title allow-list is a crude control, but it is a control; a REST endpoint without proper authorisation is an open archive on the internet</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="tags">
+  <p class="eyebrow"><b>16</b> · Reference</p>
+  <h2>The tags you actually use</h2>
+  <p class="lede">Not the full dictionary — the working set. These are the attributes that appear in tickets, routing rules, hanging protocols, anonymisation profiles and reconciliation scripts.</p>
+
+  <div class="filter">
+    <input id="tagq" type="search" placeholder="Filter by tag, name or note — e.g. 0008,0050 or accession" aria-label="Filter tags">
+    <button class="chip" data-cat="all" aria-pressed="true">All</button>
+    <button class="chip" data-cat="meta" aria-pressed="false">Meta</button>
+    <button class="chip" data-cat="patient" aria-pressed="false">Patient</button>
+    <button class="chip" data-cat="study" aria-pressed="false">Study</button>
+    <button class="chip" data-cat="series" aria-pressed="false">Series</button>
+    <button class="chip" data-cat="image" aria-pressed="false">Image</button>
+    <button class="chip" data-cat="acq" aria-pressed="false">Acquisition</button>
+    <button class="chip" data-cat="wl" aria-pressed="false">Worklist / MPPS</button>
+    <span class="count" id="tagcount"></span>
+  </div>
+
+  <div class="tw">
+  <table id="tagtable">
+    <thead><tr><th class="mono">Tag</th><th class="mono">VR</th><th>Attribute</th><th>What it is for</th></tr></thead>
+    <tbody>
+      <tr data-cat="meta"><td class="k">(0002,0002)</td><td class="mono">UI</td><td>Media Storage SOP Class UID</td><td>Object type as recorded in the file header</td></tr>
+      <tr data-cat="meta"><td class="k">(0002,0010)</td><td class="mono">UI</td><td>Transfer Syntax UID</td><td><b>Check this first</b> when an image won't open or won't forward</td></tr>
+      <tr data-cat="meta"><td class="k">(0002,0012)</td><td class="mono">UI</td><td>Implementation Class UID</td><td>Identifies the writing software — traces which device produced a malformed object</td></tr>
+      <tr data-cat="meta"><td class="k">(0002,0013)</td><td class="mono">SH</td><td>Implementation Version Name</td><td>Vendor software version — gold for "this started after the upgrade"</td></tr>
+      <tr data-cat="meta"><td class="k">(0002,0016)</td><td class="mono">AE</td><td>Source Application Entity Title</td><td>Which AE wrote the file</td></tr>
+      <tr data-cat="patient"><td class="k">(0010,0010)</td><td class="mono">PN</td><td>Patient's Name</td><td><code>Family^Given^Middle^Prefix^Suffix</code></td></tr>
+      <tr data-cat="patient"><td class="k">(0010,0020)</td><td class="mono">LO</td><td>Patient ID</td><td>The MRN. Primary reconciliation key</td></tr>
+      <tr data-cat="patient"><td class="k">(0010,0021)</td><td class="mono">LO</td><td>Issuer of Patient ID</td><td>Namespace for the MRN — essential in multi-facility archives</td></tr>
+      <tr data-cat="patient"><td class="k">(0010,0030)</td><td class="mono">DA</td><td>Patient's Birth Date</td><td>Secondary matching key; often the tiebreaker in duplicate detection</td></tr>
+      <tr data-cat="patient"><td class="k">(0010,0040)</td><td class="mono">CS</td><td>Patient's Sex</td><td>M, F or O only</td></tr>
+      <tr data-cat="patient"><td class="k">(0010,1010)</td><td class="mono">AS</td><td>Patient's Age</td><td>At time of study, e.g. <code>055Y</code></td></tr>
+      <tr data-cat="patient"><td class="k">(0010,1020)</td><td class="mono">DS</td><td>Patient's Size</td><td>Height in metres</td></tr>
+      <tr data-cat="patient"><td class="k">(0010,1030)</td><td class="mono">DS</td><td>Patient's Weight</td><td>Kilograms. <b>Missing weight breaks PET SUV entirely</b></td></tr>
+      <tr data-cat="patient"><td class="k">(0010,2160)</td><td class="mono">SH</td><td>Ethnic Group</td><td>Often blanked in de-identification profiles</td></tr>
+      <tr data-cat="patient"><td class="k">(0010,21C0)</td><td class="mono">US</td><td>Pregnancy Status</td><td>Safety-relevant; frequently empty</td></tr>
+      <tr data-cat="patient"><td class="k">(0010,2000)</td><td class="mono">LO</td><td>Medical Alerts</td><td></td></tr>
+      <tr data-cat="patient"><td class="k">(0010,2110)</td><td class="mono">LO</td><td>Allergies</td><td>Contrast allergy — worth surfacing on the worklist</td></tr>
+      <tr data-cat="patient"><td class="k">(0010,4000)</td><td class="mono">LT</td><td>Patient Comments</td><td>Free text — a notorious hiding place for PHI during anonymisation</td></tr>
+      <tr data-cat="study"><td class="k">(0020,000D)</td><td class="mono">UI</td><td>Study Instance UID</td><td>Globally unique study identifier</td></tr>
+      <tr data-cat="study"><td class="k">(0008,0050)</td><td class="mono">SH</td><td>Accession Number</td><td>The RIS handle. 16 characters max</td></tr>
+      <tr data-cat="study"><td class="k">(0008,0020)</td><td class="mono">DA</td><td>Study Date</td><td>Query and prefetch key</td></tr>
+      <tr data-cat="study"><td class="k">(0008,0030)</td><td class="mono">TM</td><td>Study Time</td><td></td></tr>
+      <tr data-cat="study"><td class="k">(0008,0090)</td><td class="mono">PN</td><td>Referring Physician's Name</td><td>Report distribution and results routing</td></tr>
+      <tr data-cat="study"><td class="k">(0008,1030)</td><td class="mono">LO</td><td>Study Description</td><td>What radiologists and hanging protocols read. Your de facto procedure name</td></tr>
+      <tr data-cat="study"><td class="k">(0020,0010)</td><td class="mono">SH</td><td>Study ID</td><td>Local, non-unique. Not a substitute for the Study Instance UID</td></tr>
+      <tr data-cat="study"><td class="k">(0008,0061)</td><td class="mono">CS</td><td>Modalities in Study</td><td>Multi-valued; returned at STUDY-level C-FIND</td></tr>
+      <tr data-cat="study"><td class="k">(0008,0080)</td><td class="mono">LO</td><td>Institution Name</td><td>Routing rules and multi-site filtering</td></tr>
+      <tr data-cat="study"><td class="k">(0008,1010)</td><td class="mono">SH</td><td>Station Name</td><td>Which physical device produced it — first check for a device-specific defect</td></tr>
+      <tr data-cat="study"><td class="k">(0008,1040)</td><td class="mono">LO</td><td>Institutional Department Name</td><td></td></tr>
+      <tr data-cat="study"><td class="k">(0008,1050)</td><td class="mono">PN</td><td>Performing Physician's Name</td><td></td></tr>
+      <tr data-cat="study"><td class="k">(0008,1060)</td><td class="mono">PN</td><td>Name of Physician(s) Reading Study</td><td></td></tr>
+      <tr data-cat="study"><td class="k">(0008,1070)</td><td class="mono">PN</td><td>Operators' Name</td><td>Technologist — used in QA and repeat-rate analysis</td></tr>
+      <tr data-cat="study"><td class="k">(0032,1032)</td><td class="mono">PN</td><td>Requesting Physician</td><td>Distinct from Referring</td></tr>
+      <tr data-cat="study"><td class="k">(0032,1060)</td><td class="mono">LO</td><td>Requested Procedure Description</td><td>Came from the order</td></tr>
+      <tr data-cat="study"><td class="k">(0008,0005)</td><td class="mono">CS</td><td>Specific Character Set</td><td><code>ISO_IR 100</code>, <code>ISO_IR 192</code> (UTF-8). Wrong value = mangled accented names</td></tr>
+      <tr data-cat="study"><td class="k">(0012,0062)</td><td class="mono">CS</td><td>Patient Identity Removed</td><td><code>YES</code> on de-identified objects; paired with (0012,0063) method</td></tr>
+      <tr data-cat="series"><td class="k">(0020,000E)</td><td class="mono">UI</td><td>Series Instance UID</td><td></td></tr>
+      <tr data-cat="series"><td class="k">(0008,0060)</td><td class="mono">CS</td><td>Modality</td><td>CT, MR, CR, DX, MG, US, XA, RF, NM, PT, OT, SR, PR, KO, SEG, DOC</td></tr>
+      <tr data-cat="series"><td class="k">(0020,0011)</td><td class="mono">IS</td><td>Series Number</td><td>Ordering in the viewer</td></tr>
+      <tr data-cat="series"><td class="k">(0008,103E)</td><td class="mono">LO</td><td>Series Description</td><td><b>The single most important field for hanging protocols.</b> Inconsistency here is why layouts break after a protocol change</td></tr>
+      <tr data-cat="series"><td class="k">(0018,0015)</td><td class="mono">CS</td><td>Body Part Examined</td><td>Routing, prefetch and AI triage rules key on this</td></tr>
+      <tr data-cat="series"><td class="k">(0018,1030)</td><td class="mono">LO</td><td>Protocol Name</td><td>Scanner protocol as configured on the device</td></tr>
+      <tr data-cat="series"><td class="k">(0018,5100)</td><td class="mono">CS</td><td>Patient Position</td><td>HFS, HFP, FFS, FFP — a wrong value flips left/right in 3D</td></tr>
+      <tr data-cat="series"><td class="k">(0020,0060)</td><td class="mono">CS</td><td>Laterality</td><td>L or R. Critical in mammography and extremity imaging</td></tr>
+      <tr data-cat="series"><td class="k">(0008,0068)</td><td class="mono">CS</td><td>Presentation Intent Type</td><td><code>FOR PRESENTATION</code> vs <code>FOR PROCESSING</code> — raw processing images should usually not reach the reading workstation</td></tr>
+      <tr data-cat="image"><td class="k">(0008,0018)</td><td class="mono">UI</td><td>SOP Instance UID</td><td>Unique per object, forever</td></tr>
+      <tr data-cat="image"><td class="k">(0008,0016)</td><td class="mono">UI</td><td>SOP Class UID</td><td>Must match the negotiated presentation context</td></tr>
+      <tr data-cat="image"><td class="k">(0020,0013)</td><td class="mono">IS</td><td>Instance Number</td><td></td></tr>
+      <tr data-cat="image"><td class="k">(0020,0032)</td><td class="mono">DS</td><td>Image Position (Patient)</td><td>x/y/z of the first voxel in mm — 3D reconstruction depends on it</td></tr>
+      <tr data-cat="image"><td class="k">(0020,0037)</td><td class="mono">DS</td><td>Image Orientation (Patient)</td><td>Direction cosines of the row and column</td></tr>
+      <tr data-cat="image"><td class="k">(0020,0052)</td><td class="mono">UI</td><td>Frame of Reference UID</td><td>Ties series together spatially — required for fusion and cross-referencing</td></tr>
+      <tr data-cat="image"><td class="k">(0028,0010)</td><td class="mono">US</td><td>Rows</td><td>Image height in pixels</td></tr>
+      <tr data-cat="image"><td class="k">(0028,0011)</td><td class="mono">US</td><td>Columns</td><td>Image width in pixels</td></tr>
+      <tr data-cat="image"><td class="k">(0028,0030)</td><td class="mono">DS</td><td>Pixel Spacing</td><td>mm between pixel centres — measurements are wrong without it</td></tr>
+      <tr data-cat="image"><td class="k">(0028,0004)</td><td class="mono">CS</td><td>Photometric Interpretation</td><td>MONOCHROME1 (inverted), MONOCHROME2, RGB, PALETTE COLOR, YBR_FULL_422</td></tr>
+      <tr data-cat="image"><td class="k">(0028,0002)</td><td class="mono">US</td><td>Samples per Pixel</td><td>1 grayscale, 3 colour</td></tr>
+      <tr data-cat="image"><td class="k">(0028,0100)</td><td class="mono">US</td><td>Bits Allocated</td><td>8 or 16 — space per pixel</td></tr>
+      <tr data-cat="image"><td class="k">(0028,0101)</td><td class="mono">US</td><td>Bits Stored</td><td>12 for most CT/CR, 16 for some MR</td></tr>
+      <tr data-cat="image"><td class="k">(0028,0103)</td><td class="mono">US</td><td>Pixel Representation</td><td>0 unsigned, 1 two's-complement signed. Wrong value renders CT as noise</td></tr>
+      <tr data-cat="image"><td class="k">(0028,1050)</td><td class="mono">DS</td><td>Window Center</td><td>Default window/level presets</td></tr>
+      <tr data-cat="image"><td class="k">(0028,1051)</td><td class="mono">DS</td><td>Window Width</td><td></td></tr>
+      <tr data-cat="image"><td class="k">(0028,1052)</td><td class="mono">DS</td><td>Rescale Intercept</td><td>Usually −1024 on CT: HU = pixel × slope + intercept</td></tr>
+      <tr data-cat="image"><td class="k">(0028,1053)</td><td class="mono">DS</td><td>Rescale Slope</td><td></td></tr>
+      <tr data-cat="image"><td class="k">(0028,0008)</td><td class="mono">IS</td><td>Number of Frames</td><td>&gt;1 means multi-frame — ultrasound cine, enhanced CT/MR</td></tr>
+      <tr data-cat="image"><td class="k">(0028,2110)</td><td class="mono">CS</td><td>Lossy Image Compression</td><td><code>00</code> never lossy, <code>01</code> lossy at some point. <b>Once 01, always 01</b></td></tr>
+      <tr data-cat="image"><td class="k">(0028,2112)</td><td class="mono">DS</td><td>Lossy Image Compression Ratio</td><td></td></tr>
+      <tr data-cat="image"><td class="k">(7FE0,0010)</td><td class="mono">OB/OW</td><td>Pixel Data</td><td>The actual image, encapsulated when compressed</td></tr>
+      <tr data-cat="acq"><td class="k">(0018,0050)</td><td class="mono">DS</td><td>Slice Thickness</td><td>mm</td></tr>
+      <tr data-cat="acq"><td class="k">(0018,0088)</td><td class="mono">DS</td><td>Spacing Between Slices</td><td>Overlap or gap between reconstructions</td></tr>
+      <tr data-cat="acq"><td class="k">(0018,0060)</td><td class="mono">DS</td><td>KVP</td><td>Tube voltage</td></tr>
+      <tr data-cat="acq"><td class="k">(0018,1151)</td><td class="mono">IS</td><td>X-Ray Tube Current</td><td>mA</td></tr>
+      <tr data-cat="acq"><td class="k">(0018,1152)</td><td class="mono">IS</td><td>Exposure</td><td>mAs</td></tr>
+      <tr data-cat="acq"><td class="k">(0018,1210)</td><td class="mono">SH</td><td>Convolution Kernel</td><td>CT reconstruction filter — bone vs soft tissue series</td></tr>
+      <tr data-cat="acq"><td class="k">(0018,9345)</td><td class="mono">FD</td><td>CTDIvol</td><td>Dose index; feeds the dose registry</td></tr>
+      <tr data-cat="acq"><td class="k">(0018,0080)</td><td class="mono">DS</td><td>Repetition Time (TR)</td><td>MR</td></tr>
+      <tr data-cat="acq"><td class="k">(0018,0081)</td><td class="mono">DS</td><td>Echo Time (TE)</td><td>MR</td></tr>
+      <tr data-cat="acq"><td class="k">(0018,0087)</td><td class="mono">DS</td><td>Magnetic Field Strength</td><td>Tesla</td></tr>
+      <tr data-cat="acq"><td class="k">(0018,1164)</td><td class="mono">DS</td><td>Imager Pixel Spacing</td><td>Detector spacing on projection radiography</td></tr>
+      <tr data-cat="acq"><td class="k">(0018,1405)</td><td class="mono">IS</td><td>Relative X-Ray Exposure</td><td>Related to exposure index in DR QA programs</td></tr>
+      <tr data-cat="acq"><td class="k">(0054,1001)</td><td class="mono">CS</td><td>Units</td><td>PET pixel units, e.g. BQML — required for SUV</td></tr>
+      <tr data-cat="wl"><td class="k">(0040,0100)</td><td class="mono">SQ</td><td>Scheduled Procedure Step Sequence</td><td>Container for everything the modality filters on</td></tr>
+      <tr data-cat="wl"><td class="k">(0040,0001)</td><td class="mono">AE</td><td>Scheduled Station AE Title</td><td>Which scanner the exam appears on</td></tr>
+      <tr data-cat="wl"><td class="k">(0040,0002)</td><td class="mono">DA</td><td>SPS Start Date</td><td>Default worklist filter is "today"</td></tr>
+      <tr data-cat="wl"><td class="k">(0040,0003)</td><td class="mono">TM</td><td>SPS Start Time</td><td></td></tr>
+      <tr data-cat="wl"><td class="k">(0040,0009)</td><td class="mono">SH</td><td>Scheduled Procedure Step ID</td><td>Correlates worklist to MPPS</td></tr>
+      <tr data-cat="wl"><td class="k">(0040,0010)</td><td class="mono">SH</td><td>Scheduled Station Name</td><td>Human-readable room</td></tr>
+      <tr data-cat="wl"><td class="k">(0040,1001)</td><td class="mono">SH</td><td>Requested Procedure ID</td><td>RIS procedure handle</td></tr>
+      <tr data-cat="wl"><td class="k">(0040,1003)</td><td class="mono">SH</td><td>Requested Procedure Priority</td><td>STAT / HIGH / ROUTINE</td></tr>
+      <tr data-cat="wl"><td class="k">(0040,2016)</td><td class="mono">LO</td><td>Placer Order Number</td><td>From ORC-2 / OBR-2</td></tr>
+      <tr data-cat="wl"><td class="k">(0040,2017)</td><td class="mono">LO</td><td>Filler Order Number</td><td>From ORC-3 / OBR-3</td></tr>
+      <tr data-cat="wl"><td class="k">(0040,0252)</td><td class="mono">CS</td><td>Performed Procedure Step Status</td><td>IN PROGRESS / COMPLETED / DISCONTINUED</td></tr>
+      <tr data-cat="wl"><td class="k">(0040,0270)</td><td class="mono">SQ</td><td>Scheduled Step Attributes Sequence</td><td>Carries the accession and Study UID back on MPPS</td></tr>
+      <tr data-cat="wl"><td class="k">(0040,0340)</td><td class="mono">SQ</td><td>Performed Series Sequence</td><td>What the modality says it actually produced</td></tr>
+      <tr data-cat="wl"><td class="k">(0008,1195)</td><td class="mono">UI</td><td>Transaction UID</td><td>Storage commitment correlation</td></tr>
+      <tr data-cat="wl"><td class="k">(0008,1199)</td><td class="mono">SQ</td><td>Referenced SOP Sequence</td><td>Instances submitted for commitment / accepted by STOW</td></tr>
+      <tr data-cat="wl"><td class="k">(0008,1198)</td><td class="mono">SQ</td><td>Failed SOP Sequence</td><td>Instances refused, with (0008,1197) Failure Reason</td></tr>
+      <tr data-cat="wl"><td class="k">(0038,0010)</td><td class="mono">LO</td><td>Admission ID</td><td>From PV1-19</td></tr>
+      <tr data-cat="wl"><td class="k">(0038,0300)</td><td class="mono">LO</td><td>Current Patient Location</td><td>From PV1-3</td></tr>
+    </tbody>
+  </table>
+  </div>
+</section>
+
+<section id="transfer">
+  <p class="eyebrow"><b>17</b> · Encoding</p>
+  <h2>Transfer syntaxes and compression</h2>
+  <p class="lede">The transfer syntax is the encoding contract for a dataset: byte order, whether the VR is written explicitly, and how pixel data is compressed. Negotiation failures and "the image is corrupt" reports usually trace back here.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">UID</th><th>Transfer syntax</th><th>Use</th></tr></thead>
+    <tbody>
+      <tr><td class="k">1.2.840.10008.1.2</td><td><b>Implicit VR Little Endian</b></td><td><b>The default.</b> Every SCP must support it. VR is not on the wire — private tags degrade to UN</td></tr>
+      <tr><td class="k">1.2.840.10008.1.2.1</td><td>Explicit VR Little Endian</td><td>Safe, universal, uncompressed. What you use when you want nothing to go wrong</td></tr>
+      <tr><td class="k">1.2.840.10008.1.2.1.99</td><td>Deflated Explicit VR LE</td><td>Whole dataset zlib-deflated — helps on slow WAN links</td></tr>
+      <tr><td class="k">1.2.840.10008.1.2.2</td><td>Explicit VR Big Endian <span class="badge">retired</span></td><td>Legacy. Encountering it means something very old is on your network</td></tr>
+      <tr><td class="k">1.2.840.10008.1.2.4.50</td><td>JPEG Baseline (Process 1)</td><td>8-bit <b>lossy</b>. Ultrasound, visible light, screenshots</td></tr>
+      <tr><td class="k">1.2.840.10008.1.2.4.51</td><td>JPEG Extended (Process 2 &amp; 4)</td><td>12-bit lossy</td></tr>
+      <tr><td class="k">1.2.840.10008.1.2.4.57</td><td>JPEG Lossless (Process 14)</td><td>Older lossless</td></tr>
+      <tr><td class="k">1.2.840.10008.1.2.4.70</td><td><b>JPEG Lossless, First-Order Prediction (14 SV1)</b></td><td>The traditional lossless workhorse — widely supported</td></tr>
+      <tr><td class="k">1.2.840.10008.1.2.4.80</td><td>JPEG-LS Lossless</td><td>Better ratio than .70, less universal</td></tr>
+      <tr><td class="k">1.2.840.10008.1.2.4.81</td><td>JPEG-LS Near-Lossless</td><td></td></tr>
+      <tr><td class="k">1.2.840.10008.1.2.4.90</td><td><b>JPEG 2000 Lossless Only</b></td><td>Modern lossless standard. Best ratio of the common lossless options</td></tr>
+      <tr><td class="k">1.2.840.10008.1.2.4.91</td><td>JPEG 2000 (lossy allowed)</td><td>Lossy — must set <span class="t-dcm">(0028,2110)</span> to <code>01</code></td></tr>
+      <tr><td class="k">1.2.840.10008.1.2.4.100</td><td>MPEG2 Main Profile @ Main Level</td><td>Cine</td></tr>
+      <tr><td class="k">1.2.840.10008.1.2.4.102</td><td>MPEG-4 AVC/H.264 High Profile 4.1</td><td>Cine, endoscopy, ultrasound video</td></tr>
+      <tr><td class="k">1.2.840.10008.1.2.5</td><td>RLE Lossless</td><td>Simple run-length; poor ratios, trivially implemented</td></tr>
+    </tbody>
+    <caption>Two facts to hold on to: transcoding lossy→lossless restores nothing, and <span class="t-dcm">(0028,2110)</span> is a one-way flag that must follow the image for the rest of its life.</caption>
+  </table>
+  </div>
+
+  <div class="grid2">
+    <div class="panel panel--dcm">
+      <h4>Setting a compression policy</h4>
+      <ul>
+        <li><b>Diagnostic primary read:</b> lossless only, unless your regulator and your radiologists have both signed off on a specific ratio per modality.</li>
+        <li><b>Mammography:</b> most jurisdictions require lossless for primary interpretation. Check local rules before touching this.</li>
+        <li><b>Clinical review, mobile, EMR viewer:</b> lossy is generally acceptable — label it in the viewer so nobody reads from it.</li>
+        <li><b>Decompress before AI:</b> some algorithms are validated on uncompressed data only.</li>
+      </ul>
+    </div>
+    <div class="panel panel--alert">
+      <h4>The negotiation trap</h4>
+      <p>If your archive advertises only Implicit VR LE and a modality sends JPEG 2000, the association still succeeds — the SCP accepts the presentation context with the transfer syntax <em>it</em> chose, and the SCU must either transcode or abandon that context. Some modalities transcode silently (fine), some drop the series (not fine). Verify by comparing instance counts on both ends after a test study, not by watching the association open.</p>
+    </div>
+  </div>
+</section>
+
+<div class="part">
+  <div class="wedge wedge--part"></div>
+  <div class="part-n">Part III</div>
+  <h2>Integration, infrastructure and operations</h2>
+  <p class="part-lede">Where the two protocols meet, where the packets actually travel, and what you do at two in the morning when a study is on the wrong patient.</p>
+</div>
+
+<section id="mapping">
+  <p class="eyebrow"><b>18</b> · <span class="amb">HL7</span> → <span class="t-dcm">DICOM</span></p>
+  <h2>The seam: order fields to worklist attributes</h2>
+  <p class="lede">This table is the crossing point between the two halves of this guide. Print it. When a study lands with a wrong field, you walk this table backwards — from the DICOM tag, to the HL7 field, to the system that owns it.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>HL7 source</th><th>DICOM tag</th><th>Attribute</th><th>Failure mode when mismapped</th></tr></thead>
+    <tbody>
+      <tr><td class="ka">PID-5</td><td class="k">(0010,0010)</td><td>Patient's Name</td><td>Both use <code>^</code>, but DICOM PN has five components in a strict order. Prefix/suffix collisions produce "SMITH^JOHN^^MD^" oddities</td></tr>
+      <tr><td class="ka">PID-3</td><td class="k">(0010,0020)</td><td>Patient ID</td><td>Wrong CX repetition selected → studies filed under an SSN or a visit number</td></tr>
+      <tr><td class="ka">PID-3.4</td><td class="k">(0010,0021)</td><td>Issuer of Patient ID</td><td>Omitted in multi-facility environments → MRN collisions between sites</td></tr>
+      <tr><td class="ka">PID-7</td><td class="k">(0010,0030)</td><td>Patient's Birth Date</td><td>HL7 may send <code>YYYYMMDDHHMM</code>; DICOM DA is exactly 8 characters → truncation or rejection</td></tr>
+      <tr><td class="ka">PID-8</td><td class="k">(0010,0040)</td><td>Patient's Sex</td><td>DICOM accepts M, F, O only. U, N, X and blank must be translated</td></tr>
+      <tr><td class="ka">MSH-18</td><td class="k">(0008,0005)</td><td>Specific Character Set</td><td>UTF-8 in HL7 must become <code>ISO_IR 192</code> in DICOM, or accented names mangle</td></tr>
+      <tr><td class="ka">OBR-18 <span class="t-dim">(or IPC-1)</span></td><td class="k">(0008,0050)</td><td>Accession Number</td><td>SH, 16 characters. Longer accessions get silently truncated and never match the report</td></tr>
+      <tr><td class="ka">ZDS-1 <span class="t-dim">(or IPC-3)</span></td><td class="k">(0020,000D)</td><td>Study Instance UID</td><td>Not passed through → modality generates its own → PACS holds two studies for one exam</td></tr>
+      <tr><td class="ka">OBR-19 <span class="t-dim">(or IPC-2)</span></td><td class="k">(0040,1001)</td><td>Requested Procedure ID</td><td>Missing → MPPS and worklist cannot be correlated</td></tr>
+      <tr><td class="ka">— <span class="t-dim">(IPC-4)</span></td><td class="k">(0040,0009)</td><td>Scheduled Procedure Step ID</td><td>Missing → the RIS cannot match the performed step to the scheduled one</td></tr>
+      <tr><td class="ka">OBR-4</td><td class="k">(0032,1060)</td><td>Requested Procedure Description</td><td>Free-text description drifts from the code; hanging protocols break</td></tr>
+      <tr><td class="ka">OBR-4.1</td><td class="k">(0032,1064)</td><td>Requested Procedure Code Sequence</td><td>Sending description without the code makes downstream analytics impossible</td></tr>
+      <tr><td class="ka">OBR-24 <span class="t-dim">(or IPC-5)</span></td><td class="k">(0008,0060)</td><td>Modality (in the SPS)</td><td>Must be a DICOM-defined value. <code>RAD</code>, <code>XRAY</code>, <code>SCAN</code> are not; the modality filters on this and gets nothing back</td></tr>
+      <tr><td class="ka">OBR-27.4 / OBR-7 / OBR-36</td><td class="k">(0040,0002)/(0040,0003)</td><td>SPS Start Date / Time</td><td>Timezone or format drift → the exam is scheduled yesterday and vanishes from the worklist</td></tr>
+      <tr><td class="ka">Config <span class="t-dim">(or IPC-6)</span></td><td class="k">(0040,0001)</td><td>Scheduled Station AE Title</td><td>The room-to-AE-title table. Wrong here and the exam appears on the wrong scanner's worklist</td></tr>
+      <tr><td class="ka">Config <span class="t-dim">(or IPC-7)</span></td><td class="k">(0040,0010)</td><td>Scheduled Station Name</td><td>Human-readable room label; techs filter on it</td></tr>
+      <tr><td class="ka">OBR-27.6</td><td class="k">(0040,1003)</td><td>Requested Procedure Priority</td><td>STAT exams that arrive as ROUTINE do not get read first</td></tr>
+      <tr><td class="ka">ORC-12 / OBR-16</td><td class="k">(0032,1032)</td><td>Requesting Physician</td><td>Confused with Referring <span class="t-dcm">(0008,0090)</span> — different people in many workflows</td></tr>
+      <tr><td class="ka">PV1-8</td><td class="k">(0008,0090)</td><td>Referring Physician's Name</td><td>Report routing goes to the wrong inbox</td></tr>
+      <tr><td class="ka">OBR-13</td><td class="k">(0040,1002)</td><td>Reason for the Requested Procedure</td><td>Dropped → radiologist reads without the indication</td></tr>
+      <tr><td class="ka">ORC-2 / OBR-2</td><td class="k">(0040,2016)</td><td>Placer Order Number</td><td>Order reconciliation across systems fails</td></tr>
+      <tr><td class="ka">ORC-3 / OBR-3</td><td class="k">(0040,2017)</td><td>Filler Order Number</td><td>Same</td></tr>
+      <tr><td class="ka">PV1-19</td><td class="k">(0038,0010)</td><td>Admission ID</td><td>Inpatient correlation lost</td></tr>
+      <tr><td class="ka">PV1-3</td><td class="k">(0038,0300)</td><td>Current Patient Location</td><td>Drives portable-exam routing and prefetch</td></tr>
+      <tr><td class="ka">OBX (height/weight)</td><td class="k">(0010,1020)/(0010,1030)</td><td>Patient's Size / Weight</td><td>Missing weight makes PET SUV uncomputable and skews dose modelling</td></tr>
+    </tbody>
+    <caption>Length and character-set limits are the quiet killers. DICOM SH is 16 characters, LO is 64, PN is 64 per component group, CS is 16 and uppercase-only. Test an accented name and an over-length accession on day one of every new interface.</caption>
+  </table>
+  </div>
+</section>
+
+<section id="network">
+  <p class="eyebrow"><b>19</b> · Infrastructure</p>
+  <h2>Ports, time, bandwidth and storage</h2>
+  <p class="lede">Imaging is the largest data flow in most hospitals and the least tolerant of clock drift. These are the infrastructure facts you will be asked for in a change-control meeting.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">Port</th><th>Protocol</th><th>Role that needs it open inbound</th></tr></thead>
+    <tbody>
+      <tr><td class="k">104/tcp</td><td>DICOM (well-known)</td><td>Any <b>SCP</b>. Below 1024, so needs privilege on Unix — one reason many systems avoid it</td></tr>
+      <tr><td class="k">11112/tcp</td><td>DICOM (registered)</td><td>The modern default for DIMSE listeners</td></tr>
+      <tr><td class="k">2761/tcp</td><td>DICOM ISCL</td><td>Legacy secure transport</td></tr>
+      <tr><td class="k">2762/tcp</td><td>DICOM TLS</td><td>Registered port for TLS-secured DIMSE</td></tr>
+      <tr><td class="k">2575/tcp</td><td>HL7 MLLP</td><td>The HL7 <b>receiver</b>. 6661, 6000 and 5000-range are also common in the wild</td></tr>
+      <tr><td class="k">443/tcp</td><td>DICOMweb, FHIR, viewers</td><td>The DICOMweb <b>origin server</b></td></tr>
+      <tr><td class="k">80/8080/tcp</td><td>DICOMweb, admin UIs</td><td>Should not carry PHI unencrypted</td></tr>
+      <tr><td class="k">123/udp</td><td>NTP</td><td>Everything. Non-negotiable</td></tr>
+      <tr><td class="k">53/udp</td><td>DNS</td><td>Some modalities cache forever, or ignore DNS entirely</td></tr>
+      <tr><td class="k">514 / 6514</td><td>Syslog / TLS syslog</td><td>ATNA audit repository</td></tr>
+    </tbody>
+    <caption>Remember the asymmetry: a pure Storage SCU needs <b>no</b> inbound rule. A C-MOVE requester and a storage-commitment requester both do, because the archive connects back to them.</caption>
+  </table>
+  </div>
+
+  <h3>Time synchronisation</h3>
+  <div class="panel panel--alert">
+    <p><b>Every device must take time from the same NTP source.</b> IHE makes this a profile in its own right — <b>CT (Consistent Time)</b> — recommending synchronisation within one second of the community time source.</p>
+    <ul>
+      <li>Clock drift breaks MWL date filters — an exam scheduled "today" disappears from a scanner that thinks it is yesterday.</li>
+      <li>It makes MPPS-derived turnaround times meaningless and occasionally negative.</li>
+      <li>It corrupts audit trails to the point of being useless in an investigation.</li>
+      <li>Studies sort wrongly in the reading worklist, so priors look like current exams.</li>
+    </ul>
+  </div>
+
+  <h3>Bandwidth and storage planning</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th>Modality</th><th>Typical study size</th><th>Comment</th></tr></thead>
+    <tbody>
+      <tr><td>CR / DX</td><td class="mono">10 – 40 MB</td><td>Few large images</td></tr>
+      <tr><td>Mammography 2D</td><td class="mono">80 – 250 MB</td><td>Four high-resolution views</td></tr>
+      <tr><td>Digital breast tomosynthesis</td><td class="mono">1 – 3 GB</td><td><b>The single biggest capacity shock</b> most departments encounter</td></tr>
+      <tr><td>CT routine</td><td class="mono">100 – 500 MB</td><td>Thin-slice and multi-phase go much higher</td></tr>
+      <tr><td>CT angio / thin slice</td><td class="mono">1 – 4 GB</td><td>Thousands of instances</td></tr>
+      <tr><td>MR</td><td class="mono">50 – 400 MB</td><td>Many series, small images</td></tr>
+      <tr><td>Ultrasound with cine</td><td class="mono">20 – 500 MB</td><td>Video clips dominate</td></tr>
+      <tr><td>NM / PET-CT</td><td class="mono">100 MB – 1.5 GB</td><td>PET plus its CT</td></tr>
+      <tr><td>XA / cardiac cine</td><td class="mono">300 MB – 2 GB</td><td></td></tr>
+    </tbody>
+  </table>
+  </div>
+  <div class="grid2">
+    <div class="card">
+      <h4>Transfer time, quickly</h4>
+      <p>1 Gbps ≈ 125 MB/s theoretical, realistically 70–100 MB/s. A 500 MB CT is roughly <b>5–7 seconds</b> on gigabit, <b>50–60 seconds</b> on 100 Mbps, and <b>7 minutes</b> on a 10 Mbps site link. Size the WAN for peak simultaneous studies, not the daily average.</p>
+    </div>
+    <div class="card">
+      <h4>Annual storage, quickly</h4>
+      <p><code>studies/year × average MB/study × copies</code>. 120,000 studies at 250 MB average with two copies is about <b>60 TB per year</b> before compression and before the tomosynthesis line item. Study size inflates faster than volume does.</p>
+    </div>
+  </div>
+  <div class="panel panel--dcm">
+    <h4>Network hygiene that pays off</h4>
+    <ul>
+      <li><b>Separate the imaging VLAN</b> from general clinical traffic; QoS-mark DICOM if the WAN is contended.</li>
+      <li><b>Static addressing or reserved DHCP</b> for every modality. AE-title-to-IP tables do not follow a lease renewal.</li>
+      <li><b>Watch MTU on tunnels.</b> Large PDUs plus a reduced-MTU VPN and blocked ICMP produces the classic "small studies transfer, big studies hang" — path MTU discovery is silently failing.</li>
+      <li><b>Raise the max PDU size</b> and allow more simultaneous associations for bulk migration.</li>
+      <li><b>Test the failover path before you need it</b> — including whether the DR archive uses a different AE title, because every modality would then need reconfiguring.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="troubleshoot">
+  <p class="eyebrow"><b>20</b> · Operations</p>
+  <h2>Troubleshooting playbook</h2>
+  <p class="lede">Work the chain in order. Establish which hop last saw the study, then prove the next hop <em>rejected</em> it rather than never receiving it. Almost every ticket resolves in one of the rows below.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th>Symptom</th><th>Most likely cause</th><th>First thing to check</th></tr></thead>
+    <tbody>
+      <tr><td><b>Worklist empty on one scanner</b></td><td>Scheduled Station AE Title mismatch, or a modality value that is not a DICOM code</td><td>Run <code>findscu -W</code> yourself with no filters — if the record is there, the modality's query filter is wrong</td></tr>
+      <tr><td><b>Worklist empty on all scanners</b></td><td>HL7 order feed stopped, or the MWL SCP service is down</td><td>Interface engine queue depth and last-message timestamp; then C-ECHO the MWL SCP</td></tr>
+      <tr><td><b>Study in PACS with no patient name</b></td><td>Tech typed the patient manually or used an emergency entry</td><td><span class="t-dcm">(0008,1010)</span> Station Name to identify the room; reconcile via PIR and retrain</td></tr>
+      <tr><td><b>Study arrives, report never attaches</b></td><td>Accession mismatch — leading zeros, truncation past 16 characters, or case</td><td>Compare <span class="t-dcm">(0008,0050)</span> against OBR-18 byte for byte</td></tr>
+      <tr><td><b>Two studies for one exam</b></td><td>Modality generated its own Study Instance UID instead of using the scheduled one</td><td>Whether the worklist actually returned <span class="t-dcm">(0020,000D)</span> and whether the modality honours it</td></tr>
+      <tr><td><b>Some series missing</b></td><td>SOP class not accepted, or presentation context rejected with result 3 or 4</td><td>The SCP's association log: which contexts were accepted. Compare instance counts on both ends</td></tr>
+      <tr><td><b>Modality can't send at all</b></td><td>AE title mismatch, or the SCU is not in the SCP's allow-list</td><td>C-ECHO first. If echo works and store fails, it is contexts, not connectivity</td></tr>
+      <tr><td><b>Query works, retrieve never arrives</b></td><td>C-MOVE destination AE not registered on the archive, or the inbound port is blocked</td><td>The archive's move-destination table, then <code>tcpdump</code> on the workstation's listening port</td></tr>
+      <tr><td><b>Storage commitment never returns</b></td><td>Archive cannot open an association back to the modality</td><td>Firewall archive → modality, and the modality's AE registration on the archive</td></tr>
+      <tr><td><b>Images stuck "in progress" forever</b></td><td>MPPS N-SET COMPLETED never sent</td><td>Whether MPPS is configured at all on that modality; discontinued exams also need a status</td></tr>
+      <tr><td><b>Big studies fail, small ones work</b></td><td>Path MTU discovery over a tunnel, or an idle timeout mid-transfer</td><td>Test progressively larger payloads; check whether ICMP is blocked on the path</td></tr>
+      <tr><td><b>Accented names arrive as garbage</b></td><td><span class="t-dcm">(0008,0005)</span> missing or wrong</td><td>What MSH-18 declares versus what the interface writes into DICOM</td></tr>
+      <tr><td><b>Exams appear on the wrong day</b></td><td>Clock drift or timezone mismatch</td><td>NTP sync on every device in the chain</td></tr>
+      <tr><td><b>Interface engine queue growing</b></td><td>Downstream returning AE/AR, or not acking at all</td><td>MSA-1 values in the ack log, correlated on MSH-10</td></tr>
+      <tr><td><b>STOW-RS upload "succeeds" but objects are missing</b></td><td>HTTP 202 with a populated FailedSOPSequence</td><td>Parse the response body, not just the status code</td></tr>
+      <tr><td><b>Priors don't prefetch</b></td><td>Rule keyed on a field the order didn't populate — body part, procedure code</td><td>The prefetch rule's match criteria against a real recent order</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Command-line toolkit</h3>
+  <p>Two open-source toolkits cover nearly everything: <b>DCMTK</b> and <b>dcm4che</b>. Learn these and you can prove where any DICOM problem lives.</p>
+  <div class="msg">
+    <div class="msg-head"><span>Diagnostics you should be able to type from memory</span><span>DCMTK / dcm4che / curl</span></div>
+<pre><span class="cmt"># 1. Is the node alive and will it accept my AE title?   (you = SCU)</span>
+echoscu -v -aec PACS_ARCHIVE -aet MY_TEST_AE 10.20.30.40 11112
+
+<span class="cmt"># 2. What is on the worklist, unfiltered?                (you = MWL SCU)</span>
+findscu -v -W -k "ScheduledProcedureStepSequence[0].Modality=CT" \
+        -aec MWL_SCP -aet MY_TEST_AE 10.20.30.41 11112
+
+<span class="cmt"># 3. Query the archive for a patient's studies           (you = Q/R SCU)</span>
+findscu -S -k QueryRetrieveLevel=STUDY -k PatientID=10045522 \
+        -k StudyInstanceUID= -k StudyDate= -k AccessionNumber= \
+        -aec PACS_ARCHIVE -aet MY_TEST_AE 10.20.30.40 11112
+
+<span class="cmt"># 4. Send a test object and watch the negotiation        (you = Storage SCU)</span>
+storescu -v -aec PACS_ARCHIVE -aet MY_TEST_AE 10.20.30.40 11112 test.dcm
+
+<span class="cmt"># 5. Become a Storage SCP so a C-MOVE has somewhere to land</span>
+storescp -v -aet MY_TEST_AE 11113
+movescu -S -k QueryRetrieveLevel=STUDY -k StudyInstanceUID=1.2.840… \
+        --move MY_TEST_AE -aec PACS_ARCHIVE -aet MY_TEST_AE 10.20.30.40 11112
+
+<span class="cmt"># 6. Read the header of a file, including private tags</span>
+dcmdump +P 0010 test.dcm
+dcmdump test.dcm | grep -i accession
+
+<span class="cmt"># 7. Exercise DICOMweb without a viewer</span>
+curl -H "Accept: application/dicom+json" \
+     "https://vna.example.org/dicomweb/studies?PatientID=10045522&amp;includefield=all"
+
+<span class="cmt"># 8. Capture the conversation for the vendor</span>
+tcpdump -i any -s 0 -w dicom.pcap host 10.20.30.40 and port 11112
+<span class="cmt">   Wireshark display filters:  dcm   |   hl7   |   tcp.port == 2575</span></pre>
+    <div class="msg-foot">Always test with a <b>dedicated test AE title</b> that is registered but distinct from production, so your experiments appear separately in the archive's logs and can be removed from the allow-list cleanly afterwards.</div>
+  </div>
+</section>
+
+<section id="status">
+  <p class="eyebrow"><b>21</b> · PS3.7 Annex C</p>
+  <h2>Status codes and rejection reasons</h2>
+  <p class="lede">DIMSE responses carry a two-byte status. Vendors log it in hex with no explanation. This table converts it into an action.</p>
+
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">Status</th><th>Meaning</th><th>What it usually is in practice</th></tr></thead>
+    <tbody>
+      <tr><td class="k">0x0000</td><td>Success</td><td>Accepted and stored</td></tr>
+      <tr><td class="k">0xFF00 / 0xFF01</td><td>Pending</td><td>Normal during C-FIND — one response per match, then a final 0x0000</td></tr>
+      <tr><td class="k">0xFE00</td><td>Cancel</td><td>The SCU asked to stop</td></tr>
+      <tr><td class="k">0xB000</td><td>Warning — sub-operations complete, one or more failures</td><td>C-MOVE partially delivered, or attributes coerced on C-STORE. Find out which instances failed</td></tr>
+      <tr><td class="k">0xB006</td><td>Warning — elements discarded</td><td>Stored, but the archive threw attributes away (often private tags)</td></tr>
+      <tr><td class="k">0xB007</td><td>Warning — data set does not match SOP class</td><td>Accepted with reservations; the object is malformed somewhere</td></tr>
+      <tr><td class="k">0xA700 – 0xA7FF</td><td>Refused — out of resources</td><td><b>Archive is full, out of memory, or throttling.</b> Very often literally disk space</td></tr>
+      <tr><td class="k">0xA900 – 0xA9FF</td><td>Error — data set does not match SOP class</td><td>The object claims to be one thing and is encoded as another</td></tr>
+      <tr><td class="k">0xC000 – 0xCFFF</td><td>Error — cannot understand</td><td>Catch-all parse failure. Malformed or truncated object, or unsupported private encoding</td></tr>
+      <tr><td class="k">0x0110</td><td>Processing failure</td><td>Generic server-side error — go to the SCP's own log</td></tr>
+      <tr><td class="k">0x0111</td><td>Duplicate SOP Instance</td><td>Re-sent something already stored. Usually harmless, sometimes a retry loop</td></tr>
+      <tr><td class="k">0x0112</td><td>No such object instance</td><td>Retrieve for something that isn't there</td></tr>
+      <tr><td class="k">0x0117</td><td>Invalid object instance</td><td>Malformed UID</td></tr>
+      <tr><td class="k">0x0122</td><td>SOP class not supported</td><td><b>Configure the SOP class on the archive.</b> The classic post-upgrade failure</td></tr>
+      <tr><td class="k">0x0124</td><td>Not authorized</td><td>AE title known but not permitted for this operation</td></tr>
+      <tr><td class="k">0x0210</td><td>Duplicate invocation</td><td>Message ID reused on one association</td></tr>
+      <tr><td class="k">0x0211</td><td>Unrecognized operation</td><td>Service not supported on that context</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h3>Association rejection (A-ASSOCIATE-RJ)</h3>
+  <div class="tw">
+  <table>
+    <thead><tr><th class="mono">Reason</th><th>Text</th><th>Fix</th></tr></thead>
+    <tbody>
+      <tr><td class="k">1</td><td>No reason given</td><td>Check the SCP log — the real reason is there</td></tr>
+      <tr><td class="k">2</td><td>Application context name not supported</td><td>Rare; a non-conformant implementation</td></tr>
+      <tr><td class="k">3</td><td><b>Calling AE title not recognised</b></td><td>Add the <b>SCU's</b> AE title to the SCP's allow-list. Watch case and trailing spaces</td></tr>
+      <tr><td class="k">7</td><td><b>Called AE title not recognised</b></td><td>The SCU is using the wrong AE title <em>for the server</em>. Fix it on the sender</td></tr>
+      <tr><td class="mono">source 1</td><td>DICOM UL service-user</td><td>The application rejected you — configuration</td></tr>
+      <tr><td class="mono">source 2/3</td><td>DICOM UL service-provider</td><td>Protocol or transport level — version mismatch, temporary congestion, local limit exceeded</td></tr>
+    </tbody>
+    <caption>Reasons 3 and 7 are the two you will see most, and they are opposites: 3 means "I don't know who <em>you</em> are," 7 means "that isn't <em>my</em> name." Knowing which one you got tells you which end to change.</caption>
+  </table>
+  </div>
+</section>
+
+<section id="identity">
+  <p class="eyebrow"><b>22</b> · Data integrity</p>
+  <h2>Identity repair, merges and IOCM</h2>
+  <p class="lede">Studies attached to the wrong patient are the highest-severity defect a PACS administrator handles. Have a documented procedure before you need one, and never fix these quietly.</p>
+
+  <div class="grid2">
+    <div class="panel panel--alert">
+      <h4>Wrong patient on a study</h4>
+      <ol>
+        <li><b>Stop the bleeding</b> — remove the study from the reading worklist so it cannot be interpreted under the wrong identity.</li>
+        <li>Correct it in the <b>owning system first</b> (RIS/HIS), then let the interface drive the change if PACS supports it.</li>
+        <li>If you must edit in PACS, use the vendor's supported reconciliation tool — not a raw database edit — so the change is audited and propagated.</li>
+        <li>Push the correction downstream: VNA, EMR image link, dose registry, AI or research copies, any CD already burned.</li>
+        <li>Log it. Misfiled images are usually a reportable event under your organisation's patient-safety policy.</li>
+      </ol>
+    </div>
+    <div class="panel panel--dcm">
+      <h4>IOCM — Imaging Object Change Management</h4>
+      <p>The IHE profile that makes deletions and corrections propagate. Instead of quietly deleting objects, the archive issues a <b>Key Object Selection document</b> with a title such as <code>Rejected for Quality Reasons</code>, <code>Rejected for Patient Safety Reasons</code> or <code>Incorrect Modality Worklist Entry Selected</code>. Downstream systems consume that document and hide or remove the objects themselves.</p>
+      <p>Without IOCM, a study you deleted from PACS still lives in the VNA, the EMR viewer cache and the teaching file — and will resurface.</p>
+    </div>
+  </div>
+
+  <h3>Duplicates and near-duplicates</h3>
+  <ul>
+    <li><b>Duplicate MRN</b> — the same human registered twice. Resolved with an HL7 <code>A40</code> merge driven from the master patient index, not from PACS.</li>
+    <li><b>Split study</b> — one exam that landed as two Study Instance UIDs. Fixed by re-keying one set of objects onto the surviving Study UID, then rebuilding the series list.</li>
+    <li><b>Reused accession</b> — a RIS that recycles accession numbers annually will silently attach this year's report to last year's images. Verify your accession scheme is unique in time, not just within a year.</li>
+    <li><b>Character-set drift</b> — the same patient stored twice because one system sent <code>MÜLLER</code> and another <code>MULLER</code>. Fix the character set, then merge.</li>
+  </ul>
+
+  <div class="panel panel--hl7">
+    <h4>Before you accept a new interface into production</h4>
+    <ul>
+      <li>Send a patient with an accented name, an apostrophe and a hyphenated surname.</li>
+      <li>Send an accession at the 16-character limit and one that exceeds it.</li>
+      <li>Send an order, then <code>XO</code> it to a new time and room, then <code>CA</code> it.</li>
+      <li>Send an <code>A08</code> that changes the name and confirm images already in PACS update.</li>
+      <li>Send an <code>A40</code> merge and confirm every study moved, including in the VNA.</li>
+      <li>Run one exam end to end without anyone typing a demographic field.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="security">
+  <p class="eyebrow"><b>23</b> · Risk</p>
+  <h2>Security, audit and de-identification</h2>
+  <p class="lede">DICOM was designed for a trusted network that no longer exists. Every imaging object is PHI, and modalities are frequently unpatched appliances running an operating system nobody will let you touch.</p>
+
+  <div class="grid2">
+    <div class="card">
+      <h4>Transport</h4>
+      <p>DIMSE is plaintext by default, and an <b>AE title is an identifier, not an authentication credential</b> — anyone who can reach the port and guess the title is in. Use DICOM TLS where both ends support it, DICOMweb over HTTPS where they don't, and network segmentation everywhere.</p>
+    </div>
+    <div class="card">
+      <h4>Audit — ATNA</h4>
+      <p>The IHE profile pairing node authentication with an audit trail. Systems emit structured audit messages to a central repository over TLS syslog. Combined with Consistent Time, this is what makes "who viewed this patient's images" an answerable question.</p>
+    </div>
+    <div class="card">
+      <h4>De-identification</h4>
+      <p>PS3.15 Annex E defines confidentiality profiles. Removing <span class="t-dcm">(0010,0010)</span> and <span class="t-dcm">(0010,0020)</span> is not sufficient — PHI hides in Study and Series Description, Patient Comments, private tags, and <b>burned into the pixels</b> on ultrasound and secondary capture.</p>
+    </div>
+    <div class="card">
+      <h4>Media and export</h4>
+      <p>CD/DVD export follows the <b>PDI</b> profile. Any export path — burner, portal upload, cloud AI vendor, image-exchange service — needs the same access control and audit as the archive. Export is where PHI leaves your control.</p>
+    </div>
+  </div>
+
+  <div class="panel panel--alert">
+    <h4>Modality-specific realities</h4>
+    <ul>
+      <li>Many scanners run end-of-life operating systems the vendor will not permit you to patch. Compensate with VLAN isolation and strict allow-lists, and document the risk acceptance formally.</li>
+      <li>Default vendor service accounts and shared passwords are common. Inventory them.</li>
+      <li>Remote service access — the vendor's tunnel into your scanner — should be on-demand and logged, not always-on.</li>
+      <li>Backups of the archive are as sensitive as the archive. Encrypt them, and test restores rather than backups.</li>
+    </ul>
+  </div>
+</section>
+
+<section id="selfcheck">
+  <p class="eyebrow"><b>24</b> · Self-check</p>
+  <h2>Test yourself</h2>
+  <p class="lede">If you can answer these without looking, you can hold your own in an incident call.</p>
+
+  <details class="qa"><summary>In a C-MOVE, name every role each of the three systems plays.</summary>
+  <div class="ans"><p>The workstation is the <b>Query/Retrieve MOVE SCU</b> — it issues the request — and must simultaneously be a <b>Storage SCP</b>, because the images arrive on a connection someone else initiates. The archive is the <b>Q/R MOVE SCP</b> for the request and then becomes a <b>Storage SCU</b> when it opens a second association to deliver the objects. If the destination happens to be a third machine, that machine is the Storage SCP and never speaks to the workstation at all.</p></div></details>
+
+  <details class="qa"><summary>Why does C-GET work through NAT when C-MOVE does not?</summary>
+  <div class="ans"><p>C-GET returns the objects on the <b>same association the requester opened</b>, so no inbound connection is ever needed. It achieves this through SCP/SCU Role Selection negotiation: the requester declares in the association request that it will also act as Storage SCP for the relevant abstract syntaxes. C-MOVE instead has the archive open a fresh association to the destination AE, which requires an inbound firewall rule and a routable address — neither of which survives NAT.</p></div></details>
+
+  <details class="qa"><summary>A tech reports one CT scanner's worklist is empty while the other CT works. Where do you look first?</summary>
+  <div class="ans"><p>Scheduled Station AE Title <span class="t-dcm">(0040,0001)</span> and the modality's own query filter. The order is almost certainly present — prove it by running <code>findscu -W</code> with no filters, then add the scanner's filters one at a time until the record disappears. Also check that scanner's clock: a device a day behind queries for the wrong SPS start date and finds nothing.</p></div></details>
+
+  <details class="qa"><summary>Images arrive but the report never attaches. Name the three fields you compare, in order.</summary>
+  <div class="ans"><p>Accession Number first: <span class="t-dcm">(0008,0050)</span> versus OBR-18, checking truncation past 16 characters, leading zeros and case. Then Patient ID: <span class="t-dcm">(0010,0020)</span> versus PID-3, confirming the right CX repetition was taken. Then Study Instance UID <span class="t-dcm">(0020,000D)</span> versus ZDS-1 or IPC-3, in case the study was created twice.</p></div></details>
+
+  <details class="qa"><summary>What does a presentation context result of 4 mean, and how is it different from 3?</summary>
+  <div class="ans"><p>Result <b>4</b> is "transfer syntaxes not supported" — the SCP recognises the SOP class but speaks none of the encodings offered, so add the transfer syntax or make the sender transcode. Result <b>3</b> is "abstract syntax not supported" — the SCP does not handle that SOP class at all, which is what you see when a modality upgrade introduces Enhanced CT or tomosynthesis objects the archive was never configured to accept.</p></div></details>
+
+  <details class="qa"><summary>What does <code>0xA700</code> mean, and what do you check?</summary>
+  <div class="ans"><p>Refused — out of resources. In practice this is nearly always the archive being out of disk space, out of memory, or deliberately throttling. Check free space on the storage tier first, then the archive's service logs. It is a server-side condition, so retrying from the modality will not help.</p></div></details>
+
+  <details class="qa"><summary>Which DICOMweb service replaces which DIMSE service, and what are the two role names?</summary>
+  <div class="ans"><p>QIDO-RS replaces C-FIND, WADO-RS replaces C-MOVE and C-GET, STOW-RS replaces C-STORE, and UPS-RS replaces MWL plus MPPS. PS3.18 calls the client the <b>user agent</b> and the service the <b>origin server</b> — the HTTP equivalents of SCU and SCP. The practical advantage is that all traffic is client-initiated over 443, so there is no C-MOVE-style inbound connection to permit.</p></div></details>
+
+  <details class="qa"><summary>A STOW-RS upload returns HTTP 202. Is that success?</summary>
+  <div class="ans"><p>No — 202 means <b>partial</b>. The response body is a DICOM JSON dataset containing <span class="t-dcm">(0008,1199)</span> ReferencedSOPSequence for what was accepted and <span class="t-dcm">(0008,1198)</span> FailedSOPSequence with a <span class="t-dcm">(0008,1197)</span> failure reason for what was not. An integration that checks only the status code will report success while silently dropping instances.</p></div></details>
+
+  <details class="qa"><summary>An interface treats <code>ORC-1 = XO</code> as <code>NW</code>. What breaks, and when do you notice?</summary>
+  <div class="ans"><p>Every rescheduled exam creates a second worklist entry instead of updating the first. You notice days later, when a technologist selects the stale entry and the study is filed against the wrong scheduled step — wrong room, wrong time, sometimes a wrong accession. Test it during validation by rescheduling an order and confirming exactly one worklist entry survives.</p></div></details>
+
+  <details class="qa"><summary>Storage commitment never comes back from the archive. What is the shape of the problem?</summary>
+  <div class="ans"><p>The same shape as C-MOVE. The modality sent <code>N-ACTION</code> as SCU, but the result arrives via <code>N-EVENT-REPORT</code> on an association the <b>archive</b> initiates back to the modality. So check that the archive can reach the modality's listening port, and that the modality's AE title is registered on the archive as a commitment destination. Until it returns event type 1, nobody should be deleting from the console.</p></div></details>
+
+  <details class="qa"><summary>Why can a lossy-compressed image never be made lossless again, and what records this?</summary>
+  <div class="ans"><p>Lossy compression discards information permanently; transcoding to a lossless syntax afterwards preserves only the already-degraded data. <span class="t-dcm">(0028,2110)</span> is set to <code>01</code> and must stay <code>01</code> for the life of the object, with the ratio in <span class="t-dcm">(0028,2112)</span> and the method in <span class="t-dcm">(0028,2114)</span>. Any system that clears this flag on transcode is producing objects that lie about their own provenance.</p></div></details>
+
+  <details class="qa"><summary>Big studies hang on the WAN while small ones transfer fine. Hypothesis?</summary>
+  <div class="ans"><p>Path MTU discovery failing across a tunnel. The VPN reduces the effective MTU, large DICOM PDUs need fragmentation, and ICMP "fragmentation needed" is filtered somewhere, so the sender never learns to reduce packet size. Small transfers fit inside the working MTU and succeed. Test with progressively larger payloads, verify ICMP type 3 code 4 is permitted, and consider lowering the MSS or the negotiated max PDU size.</p></div></details>
+</section>
+
+<footer>
+  <p><b>How to use this guide.</b> Read it once end to end so you know what exists. After that, treat it as a lookup: start with the timeline in section 02 to identify which hop failed, then jump to the mapping table in section 18, the role table in section 10, or the status codes in section 21.</p>
+  <p style="margin-top:14px">Field positions and code values vary by vendor and by HL7 version. Always confirm against the specific interface specification and the DICOM Conformance Statements for the systems in front of you — this guide tells you what to look for, not what your particular installation will contain.</p>
+  <a class="top" href="#top">↑ Back to top</a>
+</footer>
+
+</main>
+</div>
+
+<script>
+(function(){
+  var links = Array.prototype.slice.call(document.querySelectorAll('#sidenav a'));
+  var map = {};
+  links.forEach(function(a){ map[a.getAttribute('href').slice(1)] = a; });
+  var secs = Array.prototype.slice.call(document.querySelectorAll('section[id]'));
+  if ('IntersectionObserver' in window && links.length){
+    var io = new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){
+          links.forEach(function(a){ a.classList.remove('on'); });
+          if(map[e.target.id]) map[e.target.id].classList.add('on');
+        }
+      });
+    }, {rootMargin:'-10% 0px -80% 0px', threshold:0});
+    secs.forEach(function(s){ io.observe(s); });
+  }
+
+  var q = document.getElementById('tagq');
+  var rows = Array.prototype.slice.call(document.querySelectorAll('#tagtable tbody tr'));
+  var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
+  var counter = document.getElementById('tagcount');
+  var cat = 'all';
+
+  function apply(){
+    var term = (q.value || '').toLowerCase().trim();
+    var shown = 0;
+    rows.forEach(function(r){
+      var okCat = (cat === 'all') || (r.getAttribute('data-cat') === cat);
+      var okTerm = !term || r.textContent.toLowerCase().indexOf(term) > -1;
+      if (okCat && okTerm){ r.classList.remove('hide'); shown++; }
+      else { r.classList.add('hide'); }
+    });
+    counter.textContent = shown + ' of ' + rows.length + ' attributes';
+  }
+
+  if (q){
+    q.addEventListener('input', apply);
+    chips.forEach(function(c){
+      c.addEventListener('click', function(){
+        cat = c.getAttribute('data-cat');
+        chips.forEach(function(x){ x.setAttribute('aria-pressed', x === c ? 'true' : 'false'); });
+        apply();
+      });
+    });
+    apply();
+  }
+})();
+</script>
+</body>
+</html>
