@@ -30,9 +30,18 @@ categorised and counted.
 
 ```
 radiology-handbook.html       radiology IT workflow handbook
+hl7-fhir-converter.html       HL7 v2.5.1 ↔ FHIR R4 converter (client-side)
 mcp/index.html                HL7 v2.5.1 reference MCP server — setup guide
 mcp/server.js                 that server's source, served for download
 ```
+
+`hl7-fhir-converter.html` converts both ways between v2.5.1 messages (ADT, ORM,
+ORU, SIU, ACK) and FHIR R4 message Bundles. It reports a field-level mapping
+trace, everything the mapping does **not** carry over, and a round-trip diff. Its
+segment field names, code tables and message structures are generated from the
+same reference data as `mcp/server.js` — if you change the definitions there,
+regenerate the `HL7_SPEC`, `HL7_TABLES` and `HL7_STRUCTURES` blocks in the
+converter to match.
 
 Beyond the theme toggle and a one-line `no-js` class remover in `<head>`, the
 landing page carries **no custom JavaScript**. Every interaction below is an htmx
