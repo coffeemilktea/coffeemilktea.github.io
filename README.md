@@ -22,7 +22,7 @@ vendor/htmx.min.js            htmx 2.0.7
 tools/theme.js                shared dark/light controller (unchanged)
 ```
 
-Two standalone pages sit outside that shell — self-contained, no htmx, their own
+Three standalone pages sit outside that shell — self-contained, no htmx, their own
 styles. They are listed in `sitemap.xml` and linked from the **Reference** column
 of the landing-page footer, but they are deliberately *not* tool cards: the six
 cards drive the filter counts and the category tabs, so a seventh would have to be
@@ -32,7 +32,14 @@ categorised and counted.
 radiology-handbook.html       radiology IT workflow handbook
 mcp/index.html                HL7 v2.5.1 reference MCP server — setup guide
 mcp/server.js                 that server's source, served for download
+mcp/fhir/index.html           HL7 v2.5.1 → FHIR R4 mapping MCP server — setup guide
+mcp/fhir/server.js            that server's source, served for download
 ```
+
+The two MCP servers are companions rather than versions of each other. The
+reference server answers *what does this segment mean*; the FHIR server answers
+*what does it become in R4*, and converts whole ORM, ADT and ORU messages into a
+transaction Bundle. They listen on 3000 and 3001 so both can run at once.
 
 Beyond the theme toggle and a one-line `no-js` class remover in `<head>`, the
 landing page carries **no custom JavaScript**. Every interaction below is an htmx
