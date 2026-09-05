@@ -17,77 +17,83 @@
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Healthcare Data Tools — Browser-based HL7 &amp; DICOM utilities">
   <meta name="twitter:description" content="Parse HL7 v2.x messages, view and edit DICOM files, generate test data, and simulate modality worklists — entirely in your browser.">
-  <meta name="theme-color" content="#1c211a">
+  <meta name="theme-color" content="#1e1815">
 
   <script src="/tools/theme.js"></script>
   <script src="/vendor/htmx.min.js" defer></script>
 
   <style>
     /* ── Tokens (landing page palette; the tools ship their own theme) ──
-       Tea theme, after the name: ocha (お茶) is Japanese for tea.
-       Dark is "steeped sencha", light is "milk tea". Every foreground here
-       clears WCAG AA against --bg, --surface, and both glass fills. ── */
+       Boba theme (珍珠奶茶): dark is "brown sugar boba" — the drink seen
+       through a dark cup — and light is "milk tea". The accents are the
+       flavour wall of a boba shop: taro, brown sugar, matcha, strawberry,
+       lychee, thai tea. Taro leads because a milk-tea tan accent collides
+       with the warm tints the cards already use; taro sits 200° away and
+       is the most recognisable boba colour there is. Every foreground
+       clears WCAG AA against --bg, --surface and both glass fills; the
+       worst pair is 4.94:1. ── */
     :root {
-      --bg:       #1c211a;  /* wet tea leaf    */
-      --surface:  #161b15;  /* cast-iron pot   */
-      --surface2: #2a3227;  /* damp leaf       */
-      --border:   #3a4536;  /* tea stem        */
-      --accent:   #7fd1ae;  /* jade steam      */
-      --accent2:  #c9a7e8;  /* ume blossom     */
-      --cyan:     #8ed7bf;  /* first-brew mist */
-      --green:    #a8d05a;  /* matcha          */
-      --yellow:   #e6cf7a;  /* genmaicha rice  */
-      --red:      #f2789f;  /* sakura          */
-      --orange:   #dd9a52;  /* hojicha roast   */
-      --text:     #f4f1e4;  /* milk tea cream  */
-      --muted:    #9ba291;  /* dried stem      */
-      --body:     #d5d2c0;  /* steeped cream   */
+      --bg:       #1e1815;  /* steeped pearl   */
+      --surface:  #161110;  /* dark cup        */
+      --surface2: #2e2521;  /* wet tapioca     */
+      --border:   #443831;  /* cane sugar      */
+      --accent:   #c9a0ea;  /* taro            */
+      --accent2:  #f2a0bd;  /* strawberry milk */
+      --cyan:     #8ed4c4;  /* jasmine green   */
+      --green:    #a9c96a;  /* matcha          */
+      --yellow:   #f0cf8a;  /* brown sugar     */
+      --red:      #f0736f;  /* lychee          */
+      --orange:   #eb8a3c;  /* thai tea        */
+      --text:     #f7efe4;  /* milk foam       */
+      --muted:    #a99584;  /* kraft sleeve    */
+      --body:     #e2d6c6;  /* oat milk        */
       --radius:   16px;
       --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-      /* Japanese faces ahead of the generic sans so kana render properly */
-      --font-sans: system-ui, -apple-system, 'Hiragino Kaku Gothic ProN', 'Yu Gothic',
-                   'Noto Sans JP', 'Segoe UI', sans-serif;
+      /* Chinese faces ahead of the generic sans so hanzi render properly */
+      --font-sans: system-ui, -apple-system, 'PingFang SC', 'Hiragino Sans GB',
+                   'Microsoft YaHei', 'Noto Sans SC', 'Segoe UI', sans-serif;
       --shadow:   0 20px 45px rgba(0, 0, 0, .45);
 
-      /* Tea-leaf glyph, used as a mask so it inherits currentColor */
-      --leaf-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 18C6 10 12 4 20 4c0 8-6 14-14 14z' fill='%23000'/%3E%3C/svg%3E");
+      /* Three tapioca pearls, used as a mask so they inherit currentColor.
+         A cluster rather than a lone circle — one dot just reads as a bullet. */
+      --pearl-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='%23000'%3E%3Ccircle cx='8' cy='15.5' r='5.6'/%3E%3Ccircle cx='16' cy='15.5' r='5.6'/%3E%3Ccircle cx='12' cy='7.6' r='5.6'/%3E%3C/g%3E%3C/svg%3E");
 
-      /* Seigaiha (青海波) — the traditional wave-crest motif. Masked, so both
-         the divider band and the texture take their color from currentColor. */
-      --seigaiha-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='24' viewBox='0 0 48 24'%3E%3Cg fill='none' stroke='%23000' stroke-width='1.2'%3E%3Cpath d='M0 24a24 24 0 0 1 48 0M6 24a18 18 0 0 1 36 0M12 24a12 12 0 0 1 24 0M18 24a6 6 0 0 1 12 0'/%3E%3C/g%3E%3C/svg%3E");
+      /* Pearls settled along the bottom of the cup. Replaces the seigaiha
+         wave, which is a Japanese motif and out of register here. */
+      --pearl-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='26' viewBox='0 0 34 26'%3E%3Cg fill='%23000'%3E%3Ccircle cx='8' cy='20' r='6'/%3E%3Ccircle cx='25' cy='21' r='5'/%3E%3Ccircle cx='17' cy='10' r='4'/%3E%3C/g%3E%3C/svg%3E");
 
-      /* ── Glass tokens (re-derived over the warm base) ── */
-      --glass:        rgba(42, 50, 39, 0.50);
-      --glass-strong: rgba(22, 27, 21, 0.66);
-      --glass-border: rgba(244, 241, 228, 0.12);
-      --glass-hi:     rgba(255, 253, 244, 0.14);
+      /* ── Glass tokens (re-derived over the boba base) ── */
+      --glass:        rgba(46, 37, 33, 0.50);
+      --glass-strong: rgba(22, 17, 16, 0.66);
+      --glass-border: rgba(247, 239, 228, 0.12);
+      --glass-hi:     rgba(255, 250, 244, 0.14);
       --glass-blur:   18px;
-      --glass-shadow: 0 8px 32px rgba(0, 0, 0, .28), inset 0 1px 0 rgba(255,253,244,.05);
+      --glass-shadow: 0 8px 32px rgba(0, 0, 0, .30), inset 0 1px 0 rgba(255,250,244,.05);
     }
 
     [data-theme="light"] {
-      --bg:       #eee7d8;  /* genmaicha paper */
-      --surface:  #fbf8f0;  /* milk foam       */
-      --surface2: #dfd5c0;  /* latte           */
-      --border:   #b3a68c;  /* rice straw      */
-      --accent:   #0c6b56;  /* deep sencha     */
-      --accent2:  #6d3f9c;  /* ume             */
-      --cyan:     #0b6178;  /* mizu            */
-      --green:    #3c6417;  /* whisked matcha  */
-      --yellow:   #67520b;  /* toasted barley  */
-      --red:      #a51f4c;  /* dark sakura     */
-      --orange:   #8a4e12;  /* hojicha         */
-      --text:     #2a2a20;
-      --muted:    #5f5a4a;
-      --body:     #46422f;
-      --shadow:   0 20px 45px rgba(74, 60, 34, .13);
+      --bg:       #f3e7d6;  /* milk tea        */
+      --surface:  #fdf8f0;  /* milk foam       */
+      --surface2: #e5d5bf;  /* oat milk        */
+      --border:   #b8a184;  /* kraft           */
+      --accent:   #67399c;  /* deep taro       */
+      --accent2:  #a83464;  /* strawberry      */
+      --cyan:     #2f6f66;  /* jasmine green   */
+      --green:    #4d6b1c;  /* matcha          */
+      --yellow:   #7a5a0e;  /* brown sugar     */
+      --red:      #b03530;  /* lychee          */
+      --orange:   #9c4d13;  /* thai tea        */
+      --text:     #2b211a;
+      --muted:    #5f5244;
+      --body:     #493c2f;
+      --shadow:   0 20px 45px rgba(62, 44, 30, .14);
 
-      --glass:        rgba(255, 253, 247, 0.55);
-      --glass-strong: rgba(255, 253, 247, 0.72);
-      --glass-border: rgba(255, 253, 247, 0.7);
-      --glass-hi:     rgba(255, 255, 252, 0.9);
+      --glass:        rgba(255, 250, 244, 0.55);
+      --glass-strong: rgba(255, 250, 244, 0.72);
+      --glass-border: rgba(255, 250, 244, 0.7);
+      --glass-hi:     rgba(255, 253, 250, 0.9);
       --glass-blur:   18px;
-      --glass-shadow: 0 8px 32px rgba(74, 60, 34, .11), inset 0 1px 0 rgba(255,253,247,.6);
+      --glass-shadow: 0 8px 32px rgba(62, 44, 30, .12), inset 0 1px 0 rgba(255,250,244,.6);
     }
 
     /* ── Base ── */
@@ -135,8 +141,8 @@
       background: var(--accent);
       animation: drift1 24s ease-in-out infinite alternate;
     }
-    /* Genmaicha gold rather than the ume of --accent2: at this size and blur
-       a violet blob washes the whole page lavender and fights the tea. */
+    /* Brown sugar gold, paired with the taro of --accent on b1: together
+       they read as taro milk tea with syrup pulled through it. */
     .aurora .b2 {
       width: 40vw; height: 40vw; top: 30vh; right: -10vw;
       background: var(--yellow);
@@ -422,26 +428,26 @@
       margin-bottom: 8px;
     }
 
-    /* Tea-leaf bullet. Masked rather than inlined so the kicker inside the
-       htmx-loaded quickref partial picks it up too, and so it always tracks
-       the kicker's own color in either theme. */
+    /* Tapioca-pearl bullet. Masked rather than inlined so the kicker inside
+       the htmx-loaded quickref partial picks it up too, and so it always
+       tracks the kicker's own color in either theme. */
     .section-kicker::before {
       content: "";
       width: 12px;
       height: 12px;
       flex: none;
       background: currentColor;
-      -webkit-mask: var(--leaf-glyph) center / contain no-repeat;
-      mask: var(--leaf-glyph) center / contain no-repeat;
+      -webkit-mask: var(--pearl-glyph) center / contain no-repeat;
+      mask: var(--pearl-glyph) center / contain no-repeat;
     }
 
-    /* Japanese counterpart to each kicker, set quieter than the English */
-    .section-kicker .jp {
+    /* Chinese counterpart to each kicker, set quieter than the English */
+    .section-kicker .zh {
       color: var(--muted);
       font-weight: 600;
       letter-spacing: 0.08em;
     }
-    .section-kicker .jp::before {
+    .section-kicker .zh::before {
       content: "·";
       margin-right: 6px;
       opacity: .7;
@@ -597,8 +603,8 @@
       pointer-events: none;
     }
 
-    /* Tea stain: the ring a cup leaves behind, darkening as it steeps on
-       hover. Sits in the corner opposite the ::before sheen. */
+    /* Cup ring: the mark a sweating boba cup leaves on the counter,
+       darkening on hover. Opposite corner from the ::before sheen. */
     .tool-card::after {
       content: "";
       position: absolute;
@@ -953,19 +959,19 @@
       -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
     }
 
-    /* Seigaiha wave crests breaking along the top edge of the footer */
+    /* Tapioca pearls settling along the top edge of the footer */
     .site-footer::before {
       content: "";
       position: absolute;
       left: 0;
       right: 0;
       bottom: 100%;
-      height: 24px;
+      height: 26px;
       color: var(--accent);
       background: currentColor;
-      opacity: .22;
-      -webkit-mask: var(--seigaiha-band) repeat-x bottom / 48px 24px;
-      mask: var(--seigaiha-band) repeat-x bottom / 48px 24px;
+      opacity: .30;
+      -webkit-mask: var(--pearl-band) repeat-x bottom / 34px 26px;
+      mask: var(--pearl-band) repeat-x bottom / 34px 26px;
       pointer-events: none;
     }
 
@@ -1082,8 +1088,8 @@
            Everything else leaves for another app or another origin. -->
       <a class="brand" href="/" hx-boost="true">
         <span class="brand-mark" aria-hidden="true">
-          <!-- Teacup: bowl, handle, saucer, and two curls of steam -->
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12v3.5a6 6 0 0 1-12 0V10z"/><path d="M16 11h1.5a2.2 2.2 0 0 1 0 4.4H16"/><path d="M3 22h14"/><path d="M8 7.5c1-1.2-1-2 0-3.2" stroke-width="1.5"/><path d="M12 7.5c1-1.2-1-2 0-3.2" stroke-width="1.5"/></svg>
+          <!-- Boba cup: tapered cup, lid, straw, and three pearls -->
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7.5h12l-1.3 12.6a1.6 1.6 0 0 1-1.6 1.4H8.9a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M4.6 7.5h14.8"/><path d="M13.6 7.5V3.2l2.9-1.1"/><circle cx="10.2" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="13.8" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="12" cy="19.7" r="1.05" fill="currentColor" stroke="none"/></svg>
         </span>
         Healthcare Data Tools
       </a>
@@ -1151,7 +1157,7 @@
     -->
     <section id="tools" class="tools">
       <div class="container">
-        <h2><span class="section-kicker">The toolkit<span class="jp" lang="ja">道具</span></span>Six tools, zero setup</h2>
+        <h2><span class="section-kicker">The toolkit<span class="zh" lang="zh-Hans">工具</span></span>Six tools, zero setup</h2>
         <p class="section-intro">
           Everything you need to debug, test, and learn HL7 v2.x and DICOM &mdash; each tool is a
           standalone page that works offline once loaded.
@@ -1395,8 +1401,8 @@
         <div class="footer-brand">
           <a class="brand" href="/" hx-boost="true">
             <span class="brand-mark" aria-hidden="true">
-              <!-- Teacup: bowl, handle, saucer, and two curls of steam -->
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h12v3.5a6 6 0 0 1-12 0V10z"/><path d="M16 11h1.5a2.2 2.2 0 0 1 0 4.4H16"/><path d="M3 22h14"/><path d="M8 7.5c1-1.2-1-2 0-3.2" stroke-width="1.5"/><path d="M12 7.5c1-1.2-1-2 0-3.2" stroke-width="1.5"/></svg>
+              <!-- Boba cup: tapered cup, lid, straw, and three pearls -->
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 7.5h12l-1.3 12.6a1.6 1.6 0 0 1-1.6 1.4H8.9a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M4.6 7.5h14.8"/><path d="M13.6 7.5V3.2l2.9-1.1"/><circle cx="10.2" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="13.8" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="12" cy="19.7" r="1.05" fill="currentColor" stroke="none"/></svg>
             </span>
             Healthcare Data Tools
           </a>
