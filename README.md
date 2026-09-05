@@ -1,47 +1,54 @@
 # Healthcare Data Tools
 
-This repository is the landing page for **[coffeemilktea.github.io](https://coffeemilktea.github.io/)** — a home for browser-based, fully client-side tools for DICOM and HL7 medical data standards.
+The landing page for **[coffeemilktea.github.io](https://coffeemilktea.github.io/)** — a home for
+browser-based, fully client-side tools for DICOM and HL7 medical data standards.
 
-The tools themselves are maintained in the **[hl7-dicom-tools](https://github.com/coffeemilktea/hl7-dicom-tools)** repository and served at [`/hl7-dicom-tools/`](https://coffeemilktea.github.io/hl7-dicom-tools/). This repo hosts the landing page, two standalone reference pages, and shared theme assets.
+The six tools themselves live in **[hl7-dicom-tools](https://github.com/coffeemilktea/hl7-dicom-tools)**
+and are served under [`/hl7-dicom-tools/`](https://coffeemilktea.github.io/hl7-dicom-tools/).
+This repo holds the landing page, two standalone reference pages, and the shared theme controller.
+
+No build step, no framework, no CDN. GitHub Pages serves plain files straight from `master`;
+`.nojekyll` turns Jekyll processing off entirely.
 
 ---
 
-## 🧩 How the page is built
-
-The landing page is a static hypermedia page driven by **[htmx](https://htmx.org/) 2.0.7**, vendored at `vendor/htmx.min.js` — no CDN, no build step, no framework. GitHub Pages serves plain files; htmx fetches HTML fragments over the wire and swaps them into the DOM.
+## What's in here
 
 ```
-index.html                    shell + hero + the six tool cards + about + footer
-404.html                      error page; pulls its tool list from a shared fragment
+index.html                    shell, hero, the six tool cards, quick-reference mount, about, footer
+404.html                      error page; pulls its tool list from a shared fragment at load
 partials/
-  tool-links.html             the six tool links, shared by 404.html
-  detail/*.html               one per tool — "Use cases" panel + its own Hide control
+  tool-links.html             the six tool links, shared with 404.html
+  detail/*.html               one per tool — "Use cases" panel, each shipping its own Hide control
   sections/quickref.html      "Which tool do I need?" — fetched on first view
   empty.html                  zero-byte fragment; swapping it in collapses a panel
-vendor/htmx.min.js            htmx 2.0.7
-tools/theme.js                shared dark/light controller (unchanged)
-```
-
-Two standalone pages sit outside that shell — self-contained, no htmx, their own
-styles. They are listed in `sitemap.xml` and linked from the **Reference** column
-of the landing-page footer, but they are deliberately *not* tool cards: the six
-cards drive the filter counts and the category tabs, so a seventh would have to be
-categorised and counted.
-
-```
-radiology-handbook.html       radiology IT workflow handbook
-mcp/index.html                HL7 v2.5.1 reference MCP server — setup guide
+radiology-handbook.html       standalone: radiology IT workflow handbook
+mcp/index.html                standalone: HL7 v2.5.1 reference MCP server setup guide
 mcp/server.js                 that server's source, served for download
+tools/theme.js                shared dark/light controller
+vendor/htmx.min.js            htmx 2.0.7, vendored
+favicon.svg                   boba cup
+robots.txt sitemap.xml        /partials/ is disallowed; sitemap covers both repos' pages
+.nojekyll                     serve files as-is
+CLAUDE.md                     notes for Claude Code
 ```
 
-Beyond the theme toggle and a one-line `no-js` class remover in `<head>`, the
-landing page carries **no custom JavaScript**. Every interaction below is an htmx
-attribute plus CSS.
+The two standalone pages are self-contained — no htmx, their own styles. They're in `sitemap.xml`
+and linked from the footer's **Reference** column, but deliberately are *not* tool cards: the six
+cards drive the filter counts and category tabs, so a seventh would have to be categorised and
+counted.
+
+---
+
+## The landing page is hypermedia
+
+Beyond the theme toggle and a one-line `no-js` class remover in `<head>`, the landing page carries
+**no custom JavaScript**. Every interaction below is an htmx attribute plus CSS.
 
 ### The page filters itself
 
-The category tabs don't fetch pre-built per-category fragments. They re-fetch
-**this page** and `hx-select` the subset they want:
+The category tabs don't fetch pre-built per-category fragments. They re-fetch **this page** and
+`hx-select` the subset they want:
 
 ```html
 <input type="radio" name="view" id="view-hl7"
@@ -49,88 +56,138 @@ The category tabs don't fetch pre-built per-category fragments. They re-fetch
 <label for="view-hl7">HL7 v2.x <span class="filter-count">3</span></label>
 ```
 
-`hx-select` returns every match, not just the first, so the cards in `index.html`
-stay the single source of truth — **no card is ever written twice**, and there are
-no category partials to keep in sync. Shared inherited config (`hx-target`,
-`hx-swap`, `hx-trigger`, `hx-indicator`, `hx-sync`) lives once on the enclosing
-`<fieldset>`; `hx-sync="this:replace"` cancels an in-flight request when you click
-another tab.
+`hx-select` returns every match, not just the first, so the cards in `index.html` stay the single
+source of truth — **no card is ever written twice**, and there are no category partials to keep in
+sync. Shared inherited config (`hx-target`, `hx-swap`, `hx-trigger`, `hx-indicator`, `hx-sync`) lives
+once on the enclosing `<fieldset>`; `hx-sync="this:replace"` cancels an in-flight request when you
+click another tab.
 
-The tabs are real radio inputs, so `:checked` drives the active styling in pure CSS
-and the group stays keyboard-navigable. The live "N shown" readout is a CSS counter
-over `.tool-card` — which is why it sits *after* the grid in the markup, since a
-counter only sees elements that precede it in document order.
+The tabs are real radio inputs, so `:checked` drives the active styling in pure CSS and the group
+stays keyboard-navigable. The live "N shown" readout is a CSS counter over `.tool-card` — which is
+why it sits *after* the grid in the markup, since a counter only sees elements preceding it in
+document order.
 
 ### Panels open and close over the wire
 
-Each card's **Use cases** button `hx-get`s its fragment; the fragment ships its own
-**Hide details** control, which `hx-get`s the zero-byte `partials/empty.html` back
-into the same target. Both directions are plain hypermedia exchanges.
-`:has(.tool-detail > *)` hides the trigger once a panel is in, and `.htmx-request`
-drives the spinner. This keeps working on cards htmx swapped in via a filter, since
-htmx processes swapped content.
+Each card's **Use cases** button `hx-get`s its fragment; the fragment ships its own **Hide details**
+control, which `hx-get`s the zero-byte `partials/empty.html` back into the same target. Both
+directions are plain hypermedia exchanges. `:has(.tool-detail > *)` hides the trigger once a panel is
+in, and `.htmx-request` drives the spinner. This keeps working on cards htmx swapped in via a filter,
+since htmx processes swapped content.
 
 ### Deferred below the fold
 
 The quick-reference section is fetched the first time it comes into view with
-`hx-trigger="intersect once"`, behind a shimmer skeleton. It is **`intersect`, not
-`revealed`**, on purpose: `revealed` is driven by scroll events, so on a tall
-display where the section is already on screen it would never load for a visitor
-who never scrolls. IntersectionObserver has no such blind spot.
+`hx-trigger="intersect once"`, behind a shimmer skeleton. It is **`intersect`, not `revealed`**, on
+purpose: `revealed` is driven by scroll events, so on a tall display where the section is already on
+screen it would never load for a visitor who never scrolls. IntersectionObserver has no such blind
+spot.
 
 ### What it deliberately doesn't do
 
-The **tool cards themselves stay in `index.html`** rather than being fragment-loaded.
-Crawlers and no-JS visitors get the complete tool list, descriptions, and links in
-the initial response; htmx only ever *adds* content. Only the quick-reference
-section is deferred, and it exists nowhere in the initial payload, so nothing
-crawlable is lost.
+The **tool cards stay in `index.html`** rather than being fragment-loaded. Crawlers and no-JS
+visitors get the complete tool list, descriptions, and links in the initial response; htmx only ever
+*adds* content. Only the quick-reference section is deferred, and it exists nowhere in the initial
+payload, so nothing crawlable is lost.
 
-`hx-boost` is scoped to the two brand links, which are the only same-origin,
-same-shell navigations on the page. It is **not** applied globally: the tool links
-go to the other repo's apps, which ship their own `<head>`, styles, and scripts, and
-boosting those would swap bodies across documents that don't share a shell.
+`hx-boost` is scoped to the two brand links — the only same-origin, same-shell navigations on the
+page. It is **not** global: the tool links go to the other repo's apps, which ship their own
+`<head>`, styles, and scripts, and boosting those would swap bodies across documents that don't
+share a shell.
 
-`hx-push-url` is **not** used on the filters. GitHub Pages can't serve a filtered
-state on refresh, so a pushed URL would 404 or lie about what the page shows.
+`hx-push-url` is **not** used on the filters. GitHub Pages can't serve a filtered state on refresh,
+so a pushed URL would 404 or lie about what the page shows.
 
-`/partials/` is disallowed in `robots.txt` so the fragments aren't indexed as thin
-standalone pages.
+`/partials/` is disallowed in `robots.txt` so fragments aren't indexed as thin standalone pages.
 
 ---
 
-## 🔒 Privacy & Security
+## Theme
 
-**Client-side only — no data leaves your browser.**  
-All parsing, rendering, and modification are performed locally within your browser using JavaScript. No files, HL7 messages, or DICOM images are uploaded to any server. This makes these tools safe for inspecting data that may contain Protected Health Information (PHI).
+Dark is **brown sugar boba**, light is **milk tea**. Accents come off a boba shop's flavour wall:
+
+| Token | Dark | Light | |
+|---|---|---|---|
+| `--bg` | `#1e1815` | `#f3e7d6` | steeped pearl / milk tea |
+| `--surface` | `#161110` | `#fdf8f0` | dark cup / milk foam |
+| `--accent` | `#c9a0ea` | `#67399c` | taro |
+| `--accent2` | `#f2a0bd` | `#a83464` | strawberry milk |
+| `--green` | `#a9c96a` | `#4d6b1c` | matcha |
+| `--yellow` | `#f0cf8a` | `#7a5a0e` | brown sugar |
+| `--red` | `#f0736f` | `#b03530` | lychee |
+| `--orange` | `#eb8a3c` | `#9c4d13` | thai tea |
+| `--text` | `#f7efe4` | `#2b211a` | milk foam |
+
+**Taro leads for a reason.** The six tool cards each set `--tint` to one of these, and a milk-tea tan
+accent landed within a few degrees of hue of the thai-tea orange — two cards would have looked
+identical. Taro sits ~200° away. If you retheme, keep the six tint hues separated by at least ~12°.
+
+Two rules hold the palette together:
+
+- **Everything is a token.** Both token blocks live at the top of `index.html`'s `<style>`, and every
+  `color-mix()` and per-card `--tint` derives from them. Change a token and the whole page follows.
+  `404.html` carries a trimmed copy of the same tokens — keep the two in step.
+- **Contrast is checked, not eyeballed.** Every foreground clears WCAG AA against `--bg`, `--surface`,
+  **and both glass fills** (`--glass`, `--glass-strong`) in both modes. Worst pair is currently
+  4.94:1. The glass fills matter: a colour can pass on the page background and still fail on a
+  frosted card.
+
+Motifs are CSS masks so they inherit `currentColor` and work in both modes without a second asset:
+`--pearl-glyph` (three tapioca pearls, the section-kicker bullet) and `--pearl-band` (pearls settling
+along the footer edge). The brand mark and favicon are a boba cup.
+
+`tools/theme.js` sets `data-theme` on `<html>`, defaults to dark, exposes `window.toggleTheme()`, and
+persists to the localStorage key **`hl7-tools-theme`**. That key is shared with the tools repo, so a
+visitor's choice follows them between the landing page and the tools. Any page wanting the toggle
+needs a `#btn-theme` button — the controller wires it automatically.
+
+> Note: the tool pages in `hl7-dicom-tools` carry their own copy of the theme and are **not** yet on
+> this palette, so they won't match the landing page until they're updated there.
 
 ---
 
-## 🛠️ The tools
+## Editing
 
-The six tools linked from the landing page live in
-[hl7-dicom-tools](https://github.com/coffeemilktea/hl7-dicom-tools) and are served
-under [`/hl7-dicom-tools/`](https://coffeemilktea.github.io/hl7-dicom-tools/):
-DICOM Viewer & Tag Morph, DICOM Toolbox (generator), HL7 v2.x Parser, HL7 Diff
-Checker, Modality Worklist Simulator, and DICOM ➔ HL7 Order Generator.
+**Changing a tool's copy?** Edit the card in `index.html` and its `partials/detail/*.html` fragment.
+Descriptions are deliberately not duplicated in this README — the cards and fragments are what the
+site actually serves.
 
-Descriptions and use cases are **not** duplicated here — they live in the cards in
-`index.html` and the `partials/detail/*.html` fragments, which are what the site
-actually serves. Edit those; this README only documents how the page is wired.
+**Adding a tool?** Four places, or the page will lie about itself:
+
+1. a `.tool-card` in `index.html`, with `data-cat` and a `--tint`
+2. the `filter-count` numbers on the affected category tabs
+3. `partials/tool-links.html` (feeds the footer and `404.html`)
+4. `sitemap.xml`
+
+**Retheming?** Edit the two token blocks in `index.html`, mirror them in `404.html`, and re-check
+contrast against all four surfaces in both modes.
 
 ---
 
-## 🚀 Running Locally
+## Privacy
 
-Serve this repository root over HTTP:
+**Client-side only — no data leaves your browser.** All parsing, rendering, and modification happen
+locally in the browser. No files, HL7 messages, or DICOM images are uploaded anywhere. That makes
+these tools safe for inspecting data that may contain PHI. The site sets no cookies and runs no
+analytics.
+
+---
+
+## Running locally
+
+Serve the repository root over HTTP:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-It must be **HTTP, not `file://`** — htmx fetches the fragments in `partials/` with
-XHR, and the page references `/vendor/`, `/tools/`, and `/partials/` by
-root-absolute path. Both would break on a `file://` origin.
+It must be **HTTP, not `file://`** — htmx fetches the fragments in `partials/` with XHR, and the page
+references `/vendor/`, `/tools/`, and `/partials/` by root-absolute path. Both break on a `file://`
+origin.
 
-The tools themselves run from their own repository; see
-[hl7-dicom-tools](https://github.com/coffeemilktea/hl7-dicom-tools) for those.
+One gotcha when editing fragments: `python3 -m http.server` sends no cache headers, so a browser will
+happily serve you a stale `partials/*.html` while the page itself reloads fresh. If a fragment edit
+doesn't show up, hard-reload or restart on a different port.
+
+The tools themselves run from their own repository — see
+[hl7-dicom-tools](https://github.com/coffeemilktea/hl7-dicom-tools).
