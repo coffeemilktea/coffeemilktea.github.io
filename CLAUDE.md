@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this site is
 
-A GitHub Pages site hosting browser-based healthcare IT tools for DICOM and HL7 medical data standards. All tools are pure client-side — no backend, no build step, no data leaves the browser. The site is deployed automatically by GitHub Pages on every push to `main`.
+A GitHub Pages site at `ocha.dev` (set via `CNAME`) hosting browser-based healthcare IT tools for DICOM and HL7 medical data standards. All tools are pure client-side — no backend, no build step, no data leaves the browser. The site is deployed automatically by GitHub Pages on every push to `main`.
 
 ## Local development
 
@@ -35,6 +35,8 @@ Four of the five tools load two shared files from `tools/`:
 **Exception**: `mwl-simulator.html` embeds its own inline CSS with the same Monokai palette but is dark-only and does not load `theme.css`/`theme.js`.
 
 The landing page (`assets/css/custom.css`) mirrors the same Monokai palette variables but is a separate dark-only stylesheet — it does not use `theme.css`.
+
+`assets/css/dark-mode.css` and `assets/js/dark-mode.js` exist in the repo but are **not referenced** by `_layouts/default.html` or any tool page — they are orphaned from an earlier dark-mode prototype and should be ignored.
 
 ### Monokai palette (used everywhere)
 
