@@ -23,6 +23,7 @@ partials/
   sections/quickref.html      "Which tool do I need?" — fetched on first view
   empty.html                  zero-byte fragment; swapping it in collapses a panel
 radiology-handbook.html       standalone: radiology IT workflow handbook
+hl7-fhir-converter.html       standalone: HL7 v2.5.1 <-> FHIR R4 converter
 mcp/index.html                standalone: HL7 v2.5.1 reference MCP server setup guide
 mcp/server.js                 that server's source, served for download
 tools/theme.js                shared dark/light controller
@@ -33,10 +34,17 @@ robots.txt sitemap.xml        /partials/ is disallowed; sitemap covers both repo
 CLAUDE.md                     notes for Claude Code
 ```
 
-The two standalone pages are self-contained — no htmx, their own styles. They're in `sitemap.xml`
+The three standalone pages are self-contained — no htmx, their own styles. They're in `sitemap.xml`
 and linked from the footer's **Reference** column, but deliberately are *not* tool cards: the six
 cards drive the filter counts and category tabs, so a seventh would have to be categorised and
 counted.
+
+`hl7-fhir-converter.html` converts both ways between v2.5.1 messages (ADT, ORM, ORU, SIU, ACK) and
+FHIR R4 message Bundles, reporting a field-level mapping trace, everything the mapping does **not**
+carry over, and a round-trip diff. Its segment field names, code tables and message structures are
+generated from the same reference data as `mcp/server.js` — change the definitions there and the
+`HL7_SPEC`, `HL7_TABLES` and `HL7_STRUCTURES` blocks in the converter have to be regenerated to
+match.
 
 ---
 
