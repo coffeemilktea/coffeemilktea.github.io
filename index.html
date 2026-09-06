@@ -49,9 +49,7 @@
       --body:     #e2d6c6;  /* oat milk        */
       --radius:   16px;
       --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-      /* Chinese faces ahead of the generic sans so hanzi render properly */
-      --font-sans: system-ui, -apple-system, 'PingFang SC', 'Hiragino Sans GB',
-                   'Microsoft YaHei', 'Noto Sans SC', 'Segoe UI', sans-serif;
+      --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
       --shadow:   0 20px 45px rgba(0, 0, 0, .45);
 
       /* Three tapioca pearls, used as a mask so they inherit currentColor.
@@ -439,18 +437,6 @@
       background: currentColor;
       -webkit-mask: var(--pearl-glyph) center / contain no-repeat;
       mask: var(--pearl-glyph) center / contain no-repeat;
-    }
-
-    /* Chinese counterpart to each kicker, set quieter than the English */
-    .section-kicker .zh {
-      color: var(--muted);
-      font-weight: 600;
-      letter-spacing: 0.08em;
-    }
-    .section-kicker .zh::before {
-      content: "·";
-      margin-right: 6px;
-      opacity: .7;
     }
 
     section h2 {
@@ -1157,7 +1143,7 @@
     -->
     <section id="tools" class="tools">
       <div class="container">
-        <h2><span class="section-kicker">The toolkit<span class="zh" lang="zh-Hans">工具</span></span>Six tools, zero setup</h2>
+        <h2><span class="section-kicker">The toolkit</span>Six tools, zero setup</h2>
         <p class="section-intro">
           Everything you need to debug, test, and learn HL7 v2.x and DICOM &mdash; each tool is a
           standalone page that works offline once loaded.
