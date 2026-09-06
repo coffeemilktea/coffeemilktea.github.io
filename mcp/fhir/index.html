@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>HL7 v2.5.1 → FHIR MCP Server</title>
+<meta name="description" content="Model Context Protocol server that maps HL7 v2.5.1 ORM, ADT and ORU messages to FHIR R4 — field-level mappings, ConceptMaps, and a converter that emits a transaction Bundle.">
+<style>
+:root {
+  --ink: #0d1117;
+  --panel: #161b22;
+  --panel2: #1c2128;
+  --line: #30363d;
+  --line-soft: #21262d;
+  --bone: #e6edf3;
+  --muted: #8b949e;
+  --dim: #6e7681;
+  --green: #3fb950;
+  --green-bg: rgba(63,185,80,.09);
+  --green-line: rgba(63,185,80,.3);
+  --amber: #d29922;
+  --amber-bg: rgba(210,153,34,.09);
+  --amber-line: rgba(210,153,34,.3);
+  --blue: #58a6ff;
+  --blue-bg: rgba(88,166,255,.08);
+  --red: #f85149;
+  --mono: "SF Mono", "Fira Code", "Cascadia Mono", ui-monospace, monospace;
+  --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html { scroll-behavior: smooth; scroll-padding-top: 20px; }
+body { background: var(--ink); color: var(--bone); font-family: var(--sans);
+  font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+::selection { background: var(--green); color: #051305; }
+
+/* ── layout ── */
+.wrap { max-width: 1100px; margin: 0 auto; padding: 0 20px; }
+@media (min-width: 900px) { .wrap { padding: 0 40px; } }
+main { max-width: 780px; padding-bottom: 120px; }
+
+/* ── nav ── */
+.topbar { display: flex; align-items: center; gap: 20px; padding: 14px 0;
+  border-bottom: 1px solid var(--line-soft); margin-bottom: 0; }
+.topbar .logo { font-family: var(--mono); font-size: 12px; color: var(--dim);
+  text-decoration: none; letter-spacing: .06em; }
+.topbar .logo:hover { color: var(--muted); }
+.topbar .sep { color: var(--line); }
+.topbar .crumb { font-family: var(--mono); font-size: 12px; color: var(--muted); }
+
+/* ── hero ── */
+.hero { padding: 64px 0 48px; }
+.hero-badge { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono);
+  font-size: 11px; letter-spacing: .2em; text-transform: uppercase; color: var(--green);
+  border: 1px solid var(--green-line); background: var(--green-bg);
+  padding: 4px 10px; border-radius: 2px; margin-bottom: 20px; }
+.hero-badge .dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; }
+h1 { font-size: clamp(30px, 5vw, 48px); font-weight: 700; letter-spacing: -.02em;
+  line-height: 1.1; margin-bottom: 16px; }
+h1 span { color: var(--muted); font-weight: 400; }
+.hero-lede { font-size: 17px; color: var(--muted); max-width: 60ch; margin-bottom: 28px; line-height: 1.7; }
+.hero-lede strong { color: var(--bone); }
+.meta-row { display: flex; flex-wrap: wrap; gap: 8px 24px; font-family: var(--mono);
+  font-size: 11px; color: var(--dim); padding-top: 20px;
+  border-top: 1px solid var(--line-soft); }
+.meta-row b { color: var(--muted); }
+
+/* ── notice ── */
+.notice { border: 1px solid var(--amber-line); background: var(--amber-bg);
+  border-radius: 4px; padding: 14px 16px; margin: 32px 0;
+  font-size: 13.5px; color: var(--muted); line-height: 1.6; }
+.notice strong { color: var(--amber); }
+
+/* ── sections ── */
+section { padding-top: 56px; }
+h2 { font-size: 22px; font-weight: 700; letter-spacing: -.015em;
+  margin-bottom: 12px; }
+h3 { font-size: 15px; font-weight: 600; letter-spacing: -.005em; margin: 28px 0 8px; }
+p { color: var(--muted); margin-bottom: 14px; max-width: 70ch; }
+a { color: var(--blue); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* ── tools grid ── */
+.tools { display: grid; gap: 12px; margin-top: 20px; }
+@media (min-width: 640px) { .tools { grid-template-columns: 1fr 1fr; } }
+.tool-card { border: 1px solid var(--line); background: var(--panel); border-radius: 4px;
+  padding: 16px; }
+.tool-card .tname { font-family: var(--mono); font-size: 12.5px; color: var(--green);
+  margin-bottom: 6px; }
+.tool-card .tdesc { font-size: 13px; color: var(--muted); line-height: 1.55; }
+.tool-card .tparams { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 5px; }
+.param { font-family: var(--mono); font-size: 10.5px; background: var(--panel2);
+  border: 1px solid var(--line-soft); border-radius: 2px; padding: 2px 6px;
+  color: var(--muted); }
+.param.req { color: var(--amber); border-color: var(--amber-line); }
+
+/* ── code blocks ── */
+.codeblock { margin: 16px 0; border: 1px solid var(--line); border-radius: 4px;
+  background: var(--panel); overflow: hidden; min-width: 0; }
+.codeblock-head { display: flex; align-items: center; justify-content: space-between;
+  padding: 8px 12px; border-bottom: 1px solid var(--line);
+  font-family: var(--mono); font-size: 10.5px; letter-spacing: .12em;
+  text-transform: uppercase; color: var(--dim); }
+.codeblock pre { margin: 0; padding: 14px 16px; overflow-x: auto;
+  font-family: var(--mono); font-size: 12.5px; line-height: 1.7; color: var(--bone); }
+.hl { color: var(--green); }
+.hl-a { color: var(--amber); }
+.hl-b { color: var(--blue); }
+.cm { color: var(--dim); }
+
+/* ── steps ── */
+.steps { list-style: none; padding: 0; counter-reset: step; margin-top: 20px; }
+.step { display: grid; grid-template-columns: 28px 1fr; gap: 12px;
+  padding-bottom: 28px; counter-increment: step; }
+.step-body { min-width: 0; }
+.step::before { content: counter(step); width: 28px; height: 28px;
+  background: var(--panel2); border: 1px solid var(--line); border-radius: 50%;
+  font-family: var(--mono); font-size: 11px; color: var(--muted);
+  display: grid; place-items: center; flex-shrink: 0; margin-top: 1px; }
+.step-body h3 { margin-top: 2px; }
+.step-body p { font-size: 13.5px; }
+
+/* ── config table ── */
+.tw { overflow-x: auto; margin: 16px 0; border: 1px solid var(--line);
+  border-radius: 4px; background: var(--panel); }
+table { border-collapse: collapse; width: 100%; min-width: 500px; font-size: 13px; }
+thead th { text-align: left; font-family: var(--mono); font-size: 10px;
+  letter-spacing: .16em; text-transform: uppercase; color: var(--dim);
+  font-weight: 500; padding: 10px 14px; border-bottom: 1px solid var(--line);
+  background: var(--panel2); }
+tbody td { padding: 9px 14px; border-bottom: 1px solid var(--line-soft);
+  vertical-align: top; color: var(--muted); }
+tbody tr:last-child td { border-bottom: 0; }
+tbody tr:hover td { background: rgba(255,255,255,.02); }
+td.mono, th.mono { font-family: var(--mono); font-size: 12px; color: var(--bone); white-space: nowrap; }
+td.green { font-family: var(--mono); font-size: 12px; color: var(--green); }
+
+/* ── footer ── */
+footer { padding: 48px 0 32px; border-top: 1px solid var(--line-soft);
+  margin-top: 80px; }
+footer p { font-size: 13px; color: var(--dim); }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+<nav class="topbar">
+  <a href="/" class="logo">coffeemilktea.github.io</a>
+  <span class="sep">/</span>
+  <a href="/mcp/" class="logo">mcp</a>
+  <span class="sep">/</span>
+  <span class="crumb">fhir</span>
+</nav>
+
+<div class="wrap" style="display:grid; grid-template-columns: 1fr; padding:0;">
+<main>
+
+<header class="hero">
+  <div class="hero-badge"><span class="dot"></span>Model Context Protocol</div>
+  <h1>HL7 v2.5.1 → FHIR<br><span>Mapping MCP Server</span></h1>
+  <p class="hero-lede">
+    A <strong>Model Context Protocol server</strong> for the crossing between the two standards
+    that actually carry an order end to end: it answers <em>what does this v2 field become in
+    FHIR R4</em> at field, datatype and code-value level, and it converts whole
+    <strong>ORM, ADT and ORU</strong> messages into a FHIR <strong>transaction Bundle</strong>
+    — with a warning for every value it could not map faithfully rather than a plausible guess.
+  </p>
+  <div class="meta-row">
+    <span><b>Protocol</b> MCP Streamable HTTP</span>
+    <span><b>Source</b> HL7 v2.5.1</span>
+    <span><b>Target</b> FHIR R4 (4.0.1)</span>
+    <span><b>Runtime</b> Node.js 18+</span>
+    <span><b>License</b> MIT</span>
+  </div>
+</header>
+
+<div class="notice">
+  <strong>Note — static hosting:</strong> GitHub Pages serves only static files.
+  This page is the documentation and download hub. Download <code>server.js</code>
+  below and run it locally; the endpoint is <code>http://localhost:3001/mcp</code> by
+  default, chosen so it can run alongside the
+  <a href="/mcp/">HL7 v2.5.1 reference server</a> on 3000.
+</div>
+
+<div class="notice">
+  <strong>What this is not:</strong> a certified conversion engine. The output is a
+  syntactically valid R4 transaction Bundle built from one message in isolation —
+  it has no patient index, no identifier registry and no memory of earlier messages.
+  Assigning authorities that carry no universal ID come out as <code>urn:id:</code>
+  placeholders, and every one of them is reported in <code>warnings</code>. Resolve
+  those against your own registry before anything reaches a shared store.
+</div>
+
+<!-- ── Tools ── -->
+<section id="tools">
+  <h2>Available Tools</h2>
+  <p>Nine tools: six that explain the mapping, three that perform it.</p>
+
+  <div class="tools">
+    <div class="tool-card">
+      <div class="tname">list_message_mappings</div>
+      <div class="tdesc">Every message type the server converts, the FHIR resources each produces, and how many documented pitfalls it carries.</div>
+      <div class="tparams"><span class="param">no parameters</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">get_message_mapping</div>
+      <div class="tdesc">The full segment-to-resource plan for one message type, including the pitfalls that make that message different from its neighbours.</div>
+      <div class="tparams"><span class="param req">messageType</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">get_segment_mapping</div>
+      <div class="tdesc">Field-by-field FHIR targets for one segment — PID, PV1, ORC, OBR, OBX, MRG, SPM, NTE, AL1, DG1, NK1, PD1, EVN, MSH, ZDS.</div>
+      <div class="tparams"><span class="param req">segment</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">get_field_mapping</div>
+      <div class="tdesc">One field, e.g. OBR-25 or PID-5, with the FHIR element it feeds and the caveat attached to it.</div>
+      <div class="tparams"><span class="param req">segment</span><span class="param req">field</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">get_datatype_mapping</div>
+      <div class="tdesc">Component-level mapping for a v2 datatype — XPN, XAD, CX, XTN, CE, TS, XCN, HD, PL, EI, CQ, SN and the primitives.</div>
+      <div class="tparams"><span class="param req">datatype</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">lookup_concept_map</div>
+      <div class="tdesc">Translate a v2 table value to its FHIR code, or list a whole table. Tables 0001, 0002, 0004, 0007, 0038, 0078, 0085, 0119, 0123, 0125, 0136, 0203, 0396.</div>
+      <div class="tparams"><span class="param req">table</span><span class="param">code?</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">which_v2_fields_feed</div>
+      <div class="tdesc">Reverse lookup. Name a FHIR resource and get every v2 field that lands in it — the question you actually have when a FHIR element is empty and you need to know which segment failed you.</div>
+      <div class="tparams"><span class="param req">resourceType</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">convert_datetime</div>
+      <div class="tdesc">HL7 TS to FHIR date/dateTime, preserving the source precision instead of padding it, and flagging a time sent with no timezone offset.</div>
+      <div class="tparams"><span class="param req">value</span></div>
+    </div>
+    <div class="tool-card">
+      <div class="tname">convert_message</div>
+      <div class="tdesc">A whole ORM, ADT or ORU message to a FHIR R4 transaction Bundle, plus the warnings and notes the conversion generated. Ask for the bundle, the summary, or both.</div>
+      <div class="tparams"><span class="param req">message</span><span class="param">include?</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ── Coverage ── -->
+<section id="coverage">
+  <h2>What Each Message Becomes</h2>
+  <p>Conversion is a transaction Bundle. Resources with a usable business identifier
+  get a conditional <code>PUT</code> so a replayed message updates rather than duplicates;
+  resources without one fall back to <code>POST</code>, and the missing identifier is
+  reported as a warning.</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Message</th><th>Resources emitted</th><th>The part that goes wrong</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="green">ORM^O01</td>
+          <td>ServiceRequest, Patient, Encounter, Practitioner, Location, Observation, ImagingStudy</td>
+          <td>One ORM can carry several ORC/OBR pairs — that is <b>N ServiceRequests</b>, not one with repeated codes. And OBX inside an ORM is an order-entry answer, not a result: it is emitted with <code>category=exam</code> and <code>basedOn</code> the request, never <code>laboratory</code>.</td>
+        </tr>
+        <tr>
+          <td class="green">ADT^A01 / A04</td>
+          <td>Patient, Encounter, Location chain, Practitioner, Condition, AllergyIntolerance</td>
+          <td><code>Encounter.class</code> is 1..1 in R4. A PV1-2 of <code>U</code> makes a conformant Encounter impossible, so the server emits <code>UNK</code> and warns rather than quietly defaulting to ambulatory.</td>
+        </tr>
+        <tr>
+          <td class="green">ADT^A08</td>
+          <td>Patient, Encounter, Condition, AllergyIntolerance</td>
+          <td>A08 is a <b>snapshot</b>, but most pipelines treat it as a patch, so a field the sender cleared never clears downstream. A changed MRN in an A08 is an unannounced merge, not an update.</td>
+        </tr>
+        <tr>
+          <td class="green">ADT^A31</td>
+          <td>Patient only</td>
+          <td>Person-level, so there is <b>no Encounter</b> — even when the sender includes a PV1. Emitting one anyway, because the A08 converter always does, is the classic A31 bug; the server warns instead.</td>
+        </tr>
+        <tr>
+          <td class="green">ADT^A40</td>
+          <td>Patient (survivor) + Patient (retired, <code>active=false</code>)</td>
+          <td>PID survives, MRG-1 is retired with <code>link.type=replaced-by</code>. The direction is reversible and reversing it is <b>silent</b> — the wrong chart is retired and the bundle still validates.</td>
+        </tr>
+        <tr>
+          <td class="green">ORU^R01</td>
+          <td>DiagnosticReport, Observation, Patient, Encounter, Specimen, Practitioner, ImagingStudy</td>
+          <td>A radiology narrative arrives as dozens of repeating TX rows. They are <b>one report</b>: the server joins consecutive narrative OBX rows sharing a code into a single Observation, in line order, and repeats the text in <code>DiagnosticReport.conclusion</code>.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Where the two status fields go</h3>
+  <p>The most common conversion defect in an ORU is copying one status onto the other.
+  They come from different fields, use different tables, and legitimately differ —
+  a final report can contain a corrected line.</p>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Source</th><th>Table</th><th>FHIR element</th></tr></thead>
+      <tbody>
+        <tr><td class="mono">OBR-25</td><td class="mono">0123</td><td class="green">DiagnosticReport.status</td></tr>
+        <tr><td class="mono">OBX-11</td><td class="mono">0085</td><td class="green">Observation.status</td></tr>
+        <tr><td class="mono">ORC-5</td><td class="mono">0038</td><td class="green">ServiceRequest.status</td></tr>
+        <tr><td class="mono">ORC-1</td><td class="mono">0119</td><td class="green">(create / update / cancel — a verb, not a state)</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── Quick Start ── -->
+<section id="quickstart">
+  <h2>Quick Start</h2>
+
+  <ol class="steps">
+    <li class="step">
+      <div class="step-body">
+        <h3>Download the server</h3>
+        <div class="codeblock">
+          <div class="codeblock-head"><span>shell</span></div>
+          <pre><span class="hl-b">curl</span> -O https://coffeemilktea.github.io/mcp/fhir/server.js</pre>
+        </div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="step-body">
+        <h3>Install dependencies</h3>
+        <div class="codeblock">
+          <div class="codeblock-head"><span>shell</span></div>
+          <pre><span class="hl-b">npm</span> install @modelcontextprotocol/sdk express cors zod</pre>
+        </div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="step-body">
+        <h3>Run the server</h3>
+        <div class="codeblock">
+          <div class="codeblock-head"><span>shell</span></div>
+          <pre><span class="hl-b">node</span> server.js
+<span class="cm"># HL7 v2.5.1 → FHIR MCP server listening on http://localhost:3001/mcp</span></pre>
+        </div>
+      </div>
+    </li>
+    <li class="step">
+      <div class="step-body">
+        <h3>Add to Claude Desktop</h3>
+        <p>Edit <code>~/Library/Application Support/Claude/claude_desktop_config.json</code> (Mac)
+        or <code>%APPDATA%\Claude\claude_desktop_config.json</code> (Windows). The two servers
+        complement each other — run both.</p>
+        <div class="codeblock">
+          <div class="codeblock-head"><span>claude_desktop_config.json</span></div>
+<pre>{
+  <span class="hl">"mcpServers"</span>: {
+    <span class="hl">"hl7-reference"</span>: {
+      <span class="hl-a">"type"</span>: <span class="hl-b">"http"</span>,
+      <span class="hl-a">"url"</span>: <span class="hl-b">"http://localhost:3000/mcp"</span>
+    },
+    <span class="hl">"hl7-to-fhir"</span>: {
+      <span class="hl-a">"type"</span>: <span class="hl-b">"http"</span>,
+      <span class="hl-a">"url"</span>: <span class="hl-b">"http://localhost:3001/mcp"</span>
+    }
+  }
+}</pre>
+        </div>
+        <p>Restart Claude Desktop. The nine tools appear in the tool panel.</p>
+      </div>
+    </li>
+  </ol>
+
+  <h3>Environment variables</h3>
+  <div class="tw">
+    <table>
+      <thead><tr><th>Variable</th><th>Default</th><th>Description</th></tr></thead>
+      <tbody>
+        <tr><td class="green">PORT</td><td class="mono">3001</td><td>HTTP port the server listens on</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── Conversion rules ── -->
+<section id="rules">
+  <h2>Rules the Converter Holds To</h2>
+  <p>Every one of these is a place where a conversion can look successful and be wrong.
+  The server's position on each is fixed, and departures are reported rather than absorbed.</p>
+
+  <div class="tw">
+    <table>
+      <thead><tr><th>Rule</th><th>Why</th></tr></thead>
+      <tbody>
+        <tr>
+          <td class="mono">No invented systems</td>
+          <td>An assigning authority with no universal ID becomes <code>urn:id:&lt;namespace&gt;</code> and a warning — never a fabricated <code>http://</code> URI. Two hospitals' local codes sharing one system URI silently merges two code systems.</td>
+        </tr>
+        <tr>
+          <td class="mono">Precision is preserved</td>
+          <td><code>19800115</code> is a <code>date</code>; <code>202501</code> stays <code>2025-01</code>. Padding a partial timestamp to midnight invents a time the sender never asserted.</td>
+        </tr>
+        <tr>
+          <td class="mono">Timezones are never assumed</td>
+          <td>A TS with a time and no offset is converted without one and flagged. Applying the receiver's locale is what shifts admissions across midnight between sites.</td>
+        </tr>
+        <tr>
+          <td class="mono">Out-of-table codes fail loudly</td>
+          <td>A PID-8 that is not in table 0001 leaves <code>Patient.gender</code> absent rather than mapping to the nearest plausible neighbour.</td>
+        </tr>
+        <tr>
+          <td class="mono">Idempotent output</td>
+          <td><code>fullUrl</code>s are derived from MSH-10 and the resource's logical key, so converting the same message twice produces byte-identical bundles — diffable in a test suite.</td>
+        </tr>
+        <tr>
+          <td class="mono">Escapes are reversed</td>
+          <td><code>\F\</code>, <code>\S\</code>, <code>\T\</code>, <code>\R\</code>, <code>\E\</code>, <code>\X..\</code> and <code>\.br\</code> are decoded before the text reaches FHIR. A FHIR string containing <code>\.br\</code> is a conversion that stopped halfway.</td>
+        </tr>
+        <tr>
+          <td class="mono">OBX-2 decides value[x]</td>
+          <td>NM becomes <code>valueQuantity</code>, SN becomes Quantity, Range or Ratio depending on its separator, CE becomes <code>valueCodeableConcept</code>. An NM that is not numeric falls back to <code>valueString</code> with a warning instead of being dropped.</td>
+        </tr>
+        <tr>
+          <td class="mono">ED and RP are not values</td>
+          <td>Encapsulated data and reference pointers belong in <code>presentedForm</code> or an ImagingStudy. The raw value is kept as a string for review and flagged, not filed as a result.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ── Example prompts ── -->
+<section id="examples">
+  <h2>Example Prompts</h2>
+  <p>Once connected, you can ask Claude questions like:</p>
+
+  <div class="codeblock">
+    <div class="codeblock-head"><span>natural language → tool call</span></div>
+<pre><span class="cm"># Field-level mapping</span>
+"Where does OBR-25 go in FHIR?"
+<span class="hl">→</span> get_field_mapping(segment="OBR", field=25)
+
+<span class="cm"># Reverse lookup — the question you have at 2am</span>
+"DiagnosticReport.effectiveDateTime is empty. Which v2 field feeds it?"
+<span class="hl">→</span> which_v2_fields_feed(resourceType="DiagnosticReport")
+
+<span class="cm"># Code translation</span>
+"What does patient class 'B' become in Encounter.class?"
+<span class="hl">→</span> lookup_concept_map(table="0004", code="B")
+
+<span class="cm"># Whole-message conversion</span>
+"Convert this ORU to FHIR and tell me what didn't map cleanly."
+<span class="hl">→</span> convert_message(message="MSH|^~\&amp;|RIS|HOSP|...", include="both")
+
+<span class="cm"># Just the diagnosis, not the payload</span>
+"Will this ADT^A08 convert cleanly?"
+<span class="hl">→</span> convert_message(message="...", include="summary")
+
+<span class="cm"># Merge safety</span>
+"Which patient does this A40 retire?"
+<span class="hl">→</span> get_message_mapping(messageType="ADT^A40")
+   convert_message(...)  <span class="cm">→ survivor keeps PID-3, MRG-1 goes
+                             active=false with replaced-by</span>
+
+<span class="cm"># Datatype detail</span>
+"How do I get an email address out of an XTN?"
+<span class="hl">→</span> get_datatype_mapping(datatype="XTN")
+
+<span class="cm"># Timestamps</span>
+"Is 20250901143000 safe to send as a FHIR instant?"
+<span class="hl">→</span> convert_datetime(value="20250901143000")</pre>
+  </div>
+</section>
+
+</main>
+</div>
+
+<div class="wrap">
+<footer>
+  <p>Part of <a href="/">coffeemilktea.github.io</a> — browser-based healthcare IT tools.</p>
+  <p style="margin-top:6px;">Companion to the <a href="/mcp/">HL7 v2.5.1 reference MCP server</a>.
+  Mappings follow FHIR R4 (4.0.1) and the HL7 v2-to-FHIR conventions. Server source:
+  <a href="/mcp/fhir/server.js">server.js</a></p>
+</footer>
+</div>
+
+</div>
+</body>
+</html>
