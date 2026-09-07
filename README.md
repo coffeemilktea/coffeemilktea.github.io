@@ -3,9 +3,10 @@
 The landing page for **[coffeemilktea.github.io](https://coffeemilktea.github.io/)** — a home for
 browser-based, fully client-side tools for DICOM and HL7 medical data standards.
 
-The six tools themselves live in **[hl7-dicom-tools](https://github.com/coffeemilktea/hl7-dicom-tools)**
+Six of the seven tools live in **[hl7-dicom-tools](https://github.com/coffeemilktea/hl7-dicom-tools)**
 and are served under [`/hl7-dicom-tools/`](https://coffeemilktea.github.io/hl7-dicom-tools/).
-This repo holds the landing page, two standalone reference pages, and the shared theme controller.
+The seventh, the Mirth Transformer Builder, lives here in `tools/`. This repo also holds the landing
+page, the standalone reference pages, and the shared theme controller.
 
 No build step, no framework, no CDN. GitHub Pages serves plain files straight from `master`;
 `.nojekyll` turns Jekyll processing off entirely.
@@ -15,10 +16,10 @@ No build step, no framework, no CDN. GitHub Pages serves plain files straight fr
 ## What's in here
 
 ```
-index.html                    shell, hero, the six tool cards, about, footer
+index.html                    shell, hero, the seven tool cards, about, footer
 404.html                      error page; pulls its tool list from a shared fragment at load
 partials/
-  tool-links.html             the six tool links, shared with 404.html
+  tool-links.html             the seven tool links, shared with 404.html
   detail/*.html               one per tool — "Use cases" panel, each shipping its own Hide control
   empty.html                  zero-byte fragment; swapping it in collapses a panel
 radiology-handbook.html       standalone: radiology IT workflow handbook
@@ -27,6 +28,7 @@ mcp/index.html                standalone: HL7 v2.5.1 reference MCP server setup 
 mcp/server.js                 that server's source, served for download
 mcp/fhir/index.html           standalone: HL7 v2.5.1 -> FHIR R4 mapping MCP server setup guide
 mcp/fhir/server.js            that server's source, served for download
+tools/mirth-transformer.html  standalone: HL7 v2.5.1 -> Mirth transformer builder (a tool card)
 tools/theme.js                shared dark/light controller
 vendor/htmx.min.js            htmx 2.0.7, vendored
 favicon.svg                   boba cup
@@ -35,10 +37,19 @@ robots.txt sitemap.xml        /partials/ is disallowed; sitemap covers both repo
 CLAUDE.md                     notes for Claude Code
 ```
 
-The four standalone pages are self-contained — no htmx, their own styles. They're in `sitemap.xml`
-and linked from the footer's **Reference** column, but deliberately are *not* tool cards: the six
-cards drive the filter counts and category tabs, so a seventh would have to be categorised and
-counted.
+The four reference pages are self-contained — no htmx, their own styles. They're in `sitemap.xml`
+and linked from the footer's **Reference** column, but deliberately are *not* tool cards: the cards
+drive the filter counts and category tabs, so anything added there has to be categorised and counted.
+
+`tools/mirth-transformer.html` is the exception that went the other way — it *is* a card, tagged
+`hl7 interop` and counted in the All, HL7 v2.x and Interop tabs. It builds Mirth Connect transformers
+from HL7 v2.5.1 messages: drag a source field onto a target field and it emits the E4X JavaScript, a
+pasteable channel `<transformer>` XML block, and a live preview of the transformed message, with 15
+chainable transforms, per-mapping conditions and 33 ready-made recipes. Like `mwl-simulator.html` it
+carries its own palette and is dark-only, so it does not load `tools/theme.js`. It is also published
+on its own at
+**[HL7-Interface-Javascript-Builder](https://github.com/coffeemilktea/HL7-Interface-Javascript-Builder)** —
+that copy and this one have to be kept in step by hand.
 
 `hl7-fhir-converter.html` converts both ways between v2.5.1 messages (ADT, ORM, ORU, SIU, ACK) and
 FHIR R4 message Bundles, reporting a field-level mapping trace, everything the mapping does **not**

@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Healthcare Data Tools — Browser-based HL7 &amp; DICOM utilities</title>
-  <meta name="description" content="Free, browser-based tools for HL7 v2.x and DICOM: parse messages, view and edit DICOM files, generate test data, and simulate modality worklists. 100% client-side — no data ever leaves your browser.">
+  <meta name="description" content="Free, browser-based tools for HL7 v2.x and DICOM: parse messages, build Mirth transformers, view and edit DICOM files, generate test data, and simulate modality worklists. 100% client-side — no data ever leaves your browser.">
   <link rel="canonical" href="https://coffeemilktea.github.io/">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
@@ -13,7 +13,7 @@
   <meta property="og:url" content="https://coffeemilktea.github.io/">
   <meta property="og:site_name" content="Healthcare Data Tools">
   <meta property="og:title" content="Healthcare Data Tools — Browser-based HL7 &amp; DICOM utilities">
-  <meta property="og:description" content="Parse HL7 v2.x messages, view and edit DICOM files, generate test data, and simulate modality worklists — entirely in your browser.">
+  <meta property="og:description" content="Parse HL7 v2.x messages, build Mirth transformers, view and edit DICOM files, generate test data, and simulate modality worklists — entirely in your browser.">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Healthcare Data Tools — Browser-based HL7 &amp; DICOM utilities">
   <meta name="twitter:description" content="Parse HL7 v2.x messages, view and edit DICOM files, generate test data, and simulate modality worklists — entirely in your browser.">
@@ -1148,8 +1148,9 @@
         <p class="hero-eyebrow">Free &middot; Open source &middot; 100% client-side</p>
         <h1>Healthcare data tools that run <em>entirely in your browser</em></h1>
         <p class="hero-sub">
-          Parse HL7 v2.x messages, view and edit DICOM files, generate test data, and simulate
-          modality worklists &mdash; with no installs, no accounts, and no PHI ever leaving your machine.
+          Parse HL7 v2.x messages, build Mirth transformers, view and edit DICOM files, generate test
+          data, and simulate modality worklists &mdash; with no installs, no accounts, and no PHI ever
+          leaving your machine.
         </p>
         <div class="hero-actions">
           <a class="btn btn-primary" href="#tools">Browse the tools</a>
@@ -1194,7 +1195,7 @@
     -->
     <section id="tools" class="tools">
       <div class="container">
-        <h2><span class="section-kicker">The toolkit</span>Six tools, zero setup</h2>
+        <h2><span class="section-kicker">The toolkit</span>Seven tools, zero setup</h2>
         <p class="section-intro">
           Everything you need to debug, test, and learn HL7 v2.x and DICOM &mdash; each tool is a
           standalone page that works offline once loaded.
@@ -1211,7 +1212,7 @@
 
             <input type="radio" name="view" id="view-all" checked
                    hx-get="/" hx-select=".tool-card">
-            <label for="view-all">All <span class="filter-count">6</span></label>
+            <label for="view-all">All <span class="filter-count">7</span></label>
 
             <input type="radio" name="view" id="view-dicom"
                    hx-get="/" hx-select=".tool-card[data-cat~='dicom']">
@@ -1219,11 +1220,11 @@
 
             <input type="radio" name="view" id="view-hl7"
                    hx-get="/" hx-select=".tool-card[data-cat~='hl7']">
-            <label for="view-hl7">HL7 v2.x <span class="filter-count">3</span></label>
+            <label for="view-hl7">HL7 v2.x <span class="filter-count">4</span></label>
 
             <input type="radio" name="view" id="view-interop"
                    hx-get="/" hx-select=".tool-card[data-cat~='interop']">
-            <label for="view-interop">Interop <span class="filter-count">2</span></label>
+            <label for="view-interop">Interop <span class="filter-count">3</span></label>
           </fieldset>
         </div>
 
@@ -1366,6 +1367,30 @@
               <button class="tool-more" type="button"
                       hx-get="/partials/detail/dicom-hl7-order.html"
                       hx-target="#detail-dicom-hl7-order"
+                      hx-swap="innerHTML">
+                <span class="spinner" aria-hidden="true"></span>
+                <span class="more-label">Use cases</span>
+              </button>
+            </div>
+          </li>
+
+          <li class="tool-card" data-cat="hl7 interop" style="--tint: var(--accent2)">
+            <div class="tool-top">
+              <span class="tool-icon" aria-hidden="true">
+                <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/></svg>
+              </span>
+              <span class="tool-tag">Interface Engineering</span>
+            </div>
+            <h3><a href="/tools/mirth-transformer.html">Mirth Transformer Builder</a></h3>
+            <p>Map HL7 v2.5.1 fields by dragging one onto another and get a working Mirth Connect transformer back &mdash; the JavaScript, a pasteable channel XML block, and a live preview of the transformed message. Ships with 33 ready-made recipes for routine interface work.</p>
+            <div class="tool-detail" id="detail-mirth-transformer"></div>
+            <div class="tool-foot">
+              <span class="tool-cta">Launch tool
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg>
+              </span>
+              <button class="tool-more" type="button"
+                      hx-get="/partials/detail/mirth-transformer.html"
+                      hx-target="#detail-mirth-transformer"
                       hx-swap="innerHTML">
                 <span class="spinner" aria-hidden="true"></span>
                 <span class="more-label">Use cases</span>
