@@ -8,7 +8,8 @@ and are served under [`/hl7-dicom-tools/`](https://coffeemilktea.github.io/hl7-d
 The seventh, the Mirth Transformer Builder, lives here in `tools/`. This repo also holds the landing
 page, the standalone reference pages, and the shared theme controller.
 
-No build step, no framework, no CDN. GitHub Pages serves plain files straight from `master`;
+No build step, no framework, no CDN — htmx is vendored and the type is a system font stack, so a
+page makes no third-party request at all. GitHub Pages serves plain files straight from `master`;
 `.nojekyll` turns Jekyll processing off entirely.
 
 ---
@@ -18,6 +19,7 @@ No build step, no framework, no CDN. GitHub Pages serves plain files straight fr
 ```
 index.html                    shell, hero, the seven tool cards, about, footer
 404.html                      error page; pulls its tool list from a shared fragment at load
+assets/tokens.css             the palette — every page on the site loads it
 partials/
   tool-links.html             the seven tool links, shared with 404.html
   detail/*.html               one per tool — "Use cases" panel, each shipping its own Hide control
@@ -37,19 +39,20 @@ robots.txt sitemap.xml        /partials/ is disallowed; sitemap covers both repo
 CLAUDE.md                     notes for Claude Code
 ```
 
-The four reference pages are self-contained — no htmx, their own styles. They're in `sitemap.xml`
-and linked from the footer's **Reference** column, but deliberately are *not* tool cards: the cards
-drive the filter counts and category tabs, so anything added there has to be categorised and counted.
+The four reference pages carry no htmx and their own layout CSS, but they share the site palette and
+theme toggle like everything else. They're in `sitemap.xml` and linked from the footer's **Reference**
+column, but deliberately are *not* tool cards: the cards drive the filter counts and category tabs, so
+anything added there has to be categorised and counted.
 
 `tools/mirth-transformer.html` is the exception that went the other way — it *is* a card, tagged
 `hl7 interop` and counted in the All, HL7 v2.x and Interop tabs. It builds Mirth Connect transformers
 from HL7 v2.5.1 messages: drag a source field onto a target field and it emits the E4X JavaScript, a
 pasteable channel `<transformer>` XML block, and a live preview of the transformed message, with 15
-chainable transforms, per-mapping conditions and 33 ready-made recipes. Like `mwl-simulator.html` it
-carries its own palette and is dark-only, so it does not load `tools/theme.js`. It is also published
+chainable transforms, per-mapping conditions and 33 ready-made recipes. It is also published
 on its own at
 **[HL7-Interface-Javascript-Builder](https://github.com/coffeemilktea/HL7-Interface-Javascript-Builder)** —
-that copy and this one have to be kept in step by hand.
+that copy and this one have to be kept in step by hand, and the standalone copy is deliberately *not*
+on this site's palette, since it has no `/assets/tokens.css` to load.
 
 `hl7-fhir-converter.html` converts both ways between v2.5.1 messages (ADT, ORM, ORU, SIU, ACK) and
 FHIR R4 message Bundles, reporting a field-level mapping trace, everything the mapping does **not**
@@ -78,7 +81,7 @@ The category tabs don't fetch pre-built per-category fragments. They re-fetch **
 ```html
 <input type="radio" name="view" id="view-hl7"
        hx-get="/" hx-select=".tool-card[data-cat~='hl7']">
-<label for="view-hl7">HL7 v2.x <span class="filter-count">3</span></label>
+<label for="view-hl7">HL7 v2.x <span class="filter-count">4</span></label>
 ```
 
 `hx-select` returns every match, not just the first, so the cards in `index.html` stay the single
@@ -134,15 +137,26 @@ Dark is **brown sugar boba**, light is **milk tea**. Accents come off a boba sho
 | `--orange` | `#eb8a3c` | `#9c4d13` | thai tea |
 | `--text` | `#f7efe4` | `#2b211a` | milk foam |
 
-**Taro leads for a reason.** The six tool cards each set `--tint` to one of these, and a milk-tea tan
-accent landed within a few degrees of hue of the thai-tea orange — two cards would have looked
-identical. Taro sits ~200° away. If you retheme, keep the six tint hues separated by at least ~12°.
+**Taro leads for a reason.** The seven tool cards each set `--tint` to one of these, and a milk-tea
+tan accent landed within a few degrees of hue of the thai-tea orange — two cards would have looked
+identical. Taro sits ~200° away. If you retheme, keep the tint hues separated by at least ~12°.
+
+Both token blocks live in **`assets/tokens.css`**, and **every page on the site loads it** — landing,
+error, tool and reference alike. That file also carries the shared chrome: the focus ring,
+`::selection`, the `.site-bar` breadcrumb, the `.btn-theme` toggle and the `.site-foot` strip. A page's
+own `<style>` block is layout only.
+
+Pages speak one vocabulary — `--bg` `--surface` `--surface2` `--sink` for surfaces, `--border`
+`--border-soft` for rules, `--text` `--body` `--muted` for type, the accents above, `--*-bg` and
+`--*-line` for derived washes, and `--on-accent` for text on a solid fill. The reference pages hold a
+semantic convention on top of that: **HL7 v2 is `--yellow`, DICOM is `--cyan`, FHIR is `--green`**.
 
 Two rules hold the palette together:
 
-- **Everything is a token.** Both token blocks live at the top of `index.html`'s `<style>`, and every
-  `color-mix()` and per-card `--tint` derives from them. Change a token and the whole page follows.
-  `404.html` carries a trimmed copy of the same tokens — keep the two in step.
+- **No page declares its own colours.** No hex, `rgb()` or `rgba()` in a page stylesheet, with three
+  deliberate exceptions: black shadow and scrim alphas, the handbook's greyscale densitometry wedge,
+  and the handbook's `@media print` block, since print is always ink on white. Everything else
+  resolves through a token, so changing `assets/tokens.css` moves the whole site at once.
 - **Contrast is checked, not eyeballed.** Every foreground clears WCAG AA against `--bg`, `--surface`,
   **and both glass fills** (`--glass`, `--glass-strong`) in both modes. Worst pair is currently
   4.94:1. The glass fills matter: a colour can pass on the page background and still fail on a
@@ -152,10 +166,11 @@ Motifs are CSS masks so they inherit `currentColor` and work in both modes witho
 `--pearl-glyph` (three tapioca pearls, the section-kicker bullet) and `--pearl-band` (pearls settling
 along the footer edge). The brand mark and favicon are a boba cup.
 
-`tools/theme.js` sets `data-theme` on `<html>`, defaults to dark, exposes `window.toggleTheme()`, and
-persists to the localStorage key **`hl7-tools-theme`**. That key is shared with the tools repo, so a
-visitor's choice follows them between the landing page and the tools. Any page wanting the toggle
-needs a `#btn-theme` button — the controller wires it automatically.
+`tools/theme.js` sets `data-theme` on `<html>` before first paint, defaults to dark, exposes
+`window.toggleTheme()`, and persists to the localStorage key **`hl7-tools-theme`**. That key is shared
+with the tools repo, so a visitor's choice follows them between the landing page and the tools. Every
+page carries a `#btn-theme` button and the controller wires it automatically; storage access is
+guarded, so a browser with site data blocked simply stays on dark.
 
 > Note: the tool pages in `hl7-dicom-tools` carry their own copy of the theme and are **not** yet on
 > this palette, so they won't match the landing page until they're updated there.
@@ -171,11 +186,14 @@ site actually serves.
 **Adding a tool?** Four places, or the page will lie about itself:
 
 1. a `.tool-card` in `index.html`, with `data-cat` and a `--tint`
-2. the `filter-count` numbers on the affected category tabs
-3. `partials/tool-links.html` (feeds the footer and `404.html`)
+2. the `filter-count` numbers on the affected category tabs, and the "N tools" heading
+3. `partials/tool-links.html` (feeds `404.html`) **and** the footer's **Tools** column in `index.html`
 4. `sitemap.xml`
 
-**Retheming?** Edit the two token blocks in `index.html`, mirror them in `404.html`, and re-check
+A new page starts by linking `/assets/tokens.css` and `/tools/theme.js`, adding a `#btn-theme` button
+and a `.site-bar` breadcrumb, then writing layout CSS that only ever reads the shared tokens.
+
+**Retheming?** Edit `assets/tokens.css` — that is the only place colours are defined — and re-check
 contrast against all four surfaces in both modes.
 
 ---
