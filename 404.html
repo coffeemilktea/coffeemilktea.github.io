@@ -6,27 +6,22 @@
   <title>Page not found — Healthcare Data Tools</title>
   <meta name="robots" content="noindex">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#1e1815" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f3e7d6" media="(prefers-color-scheme: light)">
+  <link rel="stylesheet" href="/assets/tokens.css">
   <script src="/tools/theme.js"></script>
   <script src="/vendor/htmx.min.js" defer></script>
   <style>
-    /* Boba theme — matches the token blocks in index.html */
-    :root {
-      --bg: #1e1815; --surface: #161110; --surface2: #2e2521; --border: #443831;
-      --accent: #c9a0ea; --green: #a9c96a; --text: #f7efe4; --muted: #a99584;
-      --body: #e2d6c6; --radius: 10px;
-      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-      --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
-    }
-    [data-theme="light"] {
-      --bg: #f3e7d6; --surface: #fdf8f0; --surface2: #e5d5bf; --border: #b8a184;
-      --accent: #67399c; --green: #4d6b1c; --text: #2b211a; --muted: #5f5244;
-      --body: #493c2f;
-    }
+    /* Palette and shared chrome come from /assets/tokens.css. */
     * { box-sizing: border-box; }
     body {
       margin: 0; min-height: 100vh; display: grid; place-items: center;
       background: var(--bg); color: var(--text); font-family: var(--font-sans);
       line-height: 1.6; padding: 24px;
+    }
+    .site-bar {
+      position: fixed; top: 0; left: 0; right: 0;
+      padding: 12px 20px; background: var(--surface);
     }
     .card {
       max-width: 460px; width: 100%; text-align: center;
@@ -76,6 +71,12 @@
   </style>
 </head>
 <body>
+  <nav class="site-bar" aria-label="Site">
+    <a class="site-brand" href="/"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7.5h12l-1.3 12.6a1.6 1.6 0 0 1-1.6 1.4H8.9a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M4.6 7.5h14.8"/><path d="M13.6 7.5V3.2l2.9-1.1"/><circle cx="10.2" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="13.8" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="12" cy="19.7" r="1.05" fill="currentColor" stroke="none"/></svg> coffeemilktea.github.io</a>
+    <span class="spacer"></span>
+    <button class="btn-theme" id="btn-theme" type="button"><span class="theme-icon">☀️</span><span class="theme-label">Light</span></button>
+  </nav>
+
   <main class="card">
     <p class="code">404</p>
     <h1>Page not found</h1>
@@ -83,7 +84,7 @@
     <p class="msh">MSA|AE|404^Page not found^HTTP</p>
     <a class="btn" href="/">Back to the tools</a>
 
-    <!-- Same fragment the landing page's tool list is generated from. -->
+    <!-- The tool list, shared as one fragment so it cannot drift from the site. -->
     <div class="jump" hx-get="/partials/tool-links.html" hx-trigger="load" hx-swap="beforeend">
       <h2>Jump straight to a tool</h2>
     </div>

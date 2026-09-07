@@ -1,0 +1,225 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   Boba design tokens — the single source of truth for the whole site.
+   珍珠奶茶: dark is "brown sugar boba", the drink seen through a dark cup;
+   light is "milk tea". The accents are the flavour wall of a boba shop.
+
+   Every page links this file and then aliases its own local variable
+   names onto these tokens, so a page keeps its layout CSS but can never
+   drift off the palette. Change a value here and the site follows.
+
+   Contrast: every foreground clears WCAG AA (4.5:1) against all four
+   surfaces -- --bg, --surface, --surface2 and --sink -- and both glass
+   fills, in both modes. --surface2 is the tightest of them, so check
+   there first: a colour can pass on the page background and still fail
+   on a chip or a table head.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* ── Surfaces ── */
+  --bg:          #1e1815;  /* steeped pearl   */
+  --surface:     #161110;  /* dark cup        */
+  --surface2:    #2e2521;  /* wet tapioca     */
+  --sink:        #120e0d;  /* below the cup — insets, code wells */
+  --border:      #443831;  /* cane sugar      */
+  --border-soft: #2b231f;  /* cane sugar, half strength */
+
+  /* ── Accents (the flavour wall) ──
+     Taro leads: a milk-tea tan accent collides with the warm tints the
+     cards already use, and taro sits ~200° away. If you retheme, keep the
+     tint hues at least ~12° apart or two tool cards read as identical. */
+  --accent:   #c9a0ea;  /* taro            */
+  --accent2:  #f2a0bd;  /* strawberry milk */
+  --cyan:     #8ed4c4;  /* jasmine green   */
+  --green:    #a9c96a;  /* matcha          */
+  --yellow:   #f0cf8a;  /* brown sugar     */
+  --red:      #f0736f;  /* lychee          */
+  --orange:   #eb8a3c;  /* thai tea        */
+
+  /* ── Type ── */
+  --text:  #f7efe4;  /* milk foam    — headings, primary  */
+  --body:  #e2d6c6;  /* oat milk     — running text       */
+  --muted: #a99584;  /* kraft sleeve — labels, secondary  */
+
+  /* ── Shape and motion ── */
+  --radius:    16px;
+  --radius-sm: 8px;
+  --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', ui-monospace,
+               SFMono-Regular, Menlo, Consolas, monospace;
+  --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --shadow:    0 20px 45px rgba(0, 0, 0, .45);
+
+  /* ── Glass (re-derived over the boba base) ── */
+  --glass:        rgba(46, 37, 33, 0.50);
+  --glass-strong: rgba(22, 17, 16, 0.66);
+  --glass-border: rgba(247, 239, 228, 0.12);
+  --glass-hi:     rgba(255, 250, 244, 0.14);
+  --glass-blur:   18px;
+  --glass-shadow: 0 8px 32px rgba(0, 0, 0, .30), inset 0 1px 0 rgba(255,250,244,.05);
+
+  /* ── Tinted washes. Derived, so they follow the theme on their own. ── */
+  --accent-bg:   color-mix(in srgb, var(--accent) 12%, transparent);
+  --accent-line: color-mix(in srgb, var(--accent) 38%, transparent);
+  --green-bg:    color-mix(in srgb, var(--green)  12%, transparent);
+  --green-line:  color-mix(in srgb, var(--green)  38%, transparent);
+  --yellow-bg:   color-mix(in srgb, var(--yellow) 12%, transparent);
+  --yellow-line: color-mix(in srgb, var(--yellow) 38%, transparent);
+  --cyan-bg:     color-mix(in srgb, var(--cyan)   12%, transparent);
+  --cyan-line:   color-mix(in srgb, var(--cyan)   38%, transparent);
+  --red-bg:      color-mix(in srgb, var(--red)    12%, transparent);
+  --red-line:    color-mix(in srgb, var(--red)    38%, transparent);
+
+  /* Text laid on a solid accent fill (buttons, chips, ::selection). */
+  --on-accent: #1e1815;
+
+  /* Three tapioca pearls, used as a mask so they inherit currentColor.
+     A cluster rather than a lone circle — one dot just reads as a bullet. */
+  --pearl-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='%23000'%3E%3Ccircle cx='8' cy='15.5' r='5.6'/%3E%3Ccircle cx='16' cy='15.5' r='5.6'/%3E%3Ccircle cx='12' cy='7.6' r='5.6'/%3E%3C/g%3E%3C/svg%3E");
+
+  /* Pearls settled along the bottom of the cup. */
+  --pearl-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='26' viewBox='0 0 34 26'%3E%3Cg fill='%23000'%3E%3Ccircle cx='8' cy='20' r='6'/%3E%3Ccircle cx='25' cy='21' r='5'/%3E%3Ccircle cx='17' cy='10' r='4'/%3E%3C/g%3E%3C/svg%3E");
+}
+
+[data-theme="light"] {
+  --bg:          #f3e7d6;  /* milk tea  */
+  --surface:     #fdf8f0;  /* milk foam */
+  --surface2:    #e5d5bf;  /* oat milk  */
+  --sink:        #eadcc7;
+  --border:      #b8a184;  /* kraft */
+  --border-soft: #d8c6ab;
+
+  /* Tuned against --surface2, the darkest light surface — chips, table heads
+     and pane heads all sit on it, and the earlier values (checked only against
+     --bg and --surface) landed at 4.1–4.4:1 there. Same hues, a shade deeper. */
+  --accent:   #67399c;  /* deep taro   */
+  --accent2:  #a23261;  /* strawberry  */
+  --cyan:     #2b665e;  /* jasmine     */
+  --green:    #49651a;  /* matcha      */
+  --yellow:   #77570e;  /* brown sugar */
+  --red:      #a8322e;  /* lychee      */
+  --orange:   #924812;  /* thai tea    */
+
+  --text:  #2b211a;
+  --body:  #493c2f;
+  --muted: #5f5244;
+
+  --shadow: 0 20px 45px rgba(62, 44, 30, .14);
+
+  --glass:        rgba(255, 250, 244, 0.55);
+  --glass-strong: rgba(255, 250, 244, 0.72);
+  --glass-border: rgba(255, 250, 244, 0.7);
+  --glass-hi:     rgba(255, 253, 250, 0.9);
+  --glass-shadow: 0 8px 32px rgba(62, 44, 30, .12), inset 0 1px 0 rgba(255,250,244,.6);
+
+  /* The washes read thin on a light ground, so they carry a little more. */
+  --accent-bg:   color-mix(in srgb, var(--accent) 10%, transparent);
+  --accent-line: color-mix(in srgb, var(--accent) 34%, transparent);
+  --green-bg:    color-mix(in srgb, var(--green)  10%, transparent);
+  --green-line:  color-mix(in srgb, var(--green)  34%, transparent);
+  --yellow-bg:   color-mix(in srgb, var(--yellow) 10%, transparent);
+  --yellow-line: color-mix(in srgb, var(--yellow) 34%, transparent);
+  --cyan-bg:     color-mix(in srgb, var(--cyan)   10%, transparent);
+  --cyan-line:   color-mix(in srgb, var(--cyan)   34%, transparent);
+  --red-bg:      color-mix(in srgb, var(--red)    10%, transparent);
+  --red-line:    color-mix(in srgb, var(--red)    34%, transparent);
+
+  --on-accent: #fdf8f0;
+}
+
+/* ═══ Shared chrome ════════════════════════════════════════════════════
+   The bits every page needs to look like the same site: the focus ring,
+   the boba-cup brand, the breadcrumb topbar and the theme toggle. Pages
+   keep their own layout CSS; this is only the furniture.
+   ═════════════════════════════════════════════════════════════════════ */
+
+/* Plain :focus-visible, not :where(...): a zero-specificity focus ring loses
+   to any element rule that touches outline, and a silently missing ring is
+   worse than one a page cannot restyle. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+::selection { background: var(--accent); color: var(--on-accent); }
+
+/* ── Topbar: brand mark, breadcrumb, theme toggle ── */
+.site-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border-soft);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.site-bar .site-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.site-bar .site-brand:hover { color: var(--text); }
+.site-bar .site-brand svg { flex: none; color: var(--accent); }
+
+.site-bar .sep { color: var(--muted); }
+.site-bar .crumb { color: var(--body); letter-spacing: .04em; }
+.site-bar .spacer { flex: 1 1 auto; }
+
+.site-bar .bar-link {
+  color: var(--muted);
+  text-decoration: none;
+  letter-spacing: .04em;
+  white-space: nowrap;
+}
+.site-bar .bar-link:hover { color: var(--accent); }
+
+/* ── Theme toggle (wired up by tools/theme.js via #btn-theme) ── */
+.btn-theme {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 28px;
+  padding: 0 11px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: color .15s, border-color .15s, background .15s;
+}
+.btn-theme:hover { color: var(--text); border-color: var(--accent); }
+.btn-theme:active { transform: scale(.96); }
+
+/* ── Site footer strip shared by the standalone pages ── */
+.site-foot {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 18px;
+  padding: 28px 0 36px;
+  border-top: 1px solid var(--border-soft);
+  color: var(--muted);
+  font-size: 13px;
+}
+.site-foot .spacer { flex: 1 1 auto; }
+.site-foot a { color: var(--body); text-decoration: none; }
+.site-foot a:hover { color: var(--accent); }
+
+@media (max-width: 620px) {
+  .site-bar { flex-wrap: wrap; }
+  .btn-theme .theme-label { display: none; }
+  .btn-theme { padding: 0 8px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-theme { transition: none; }
+  .btn-theme:active { transform: none; }
+}
