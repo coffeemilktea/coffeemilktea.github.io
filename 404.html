@@ -6,28 +6,25 @@
   <title>Page not found — Healthcare Data Tools</title>
   <meta name="robots" content="noindex">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
+  <meta name="theme-color" content="#1e1815">
+  <link rel="stylesheet" href="/tools/theme.css">
   <script src="/tools/theme.js"></script>
   <script src="/vendor/htmx.min.js" defer></script>
   <style>
-    /* Boba theme — matches the token blocks in index.html */
-    :root {
-      --bg: #1e1815; --surface: #161110; --surface2: #2e2521; --border: #443831;
-      --accent: #c9a0ea; --green: #a9c96a; --text: #f7efe4; --muted: #a99584;
-      --body: #e2d6c6; --radius: 10px;
-      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-      --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
-    }
-    [data-theme="light"] {
-      --bg: #f3e7d6; --surface: #fdf8f0; --surface2: #e5d5bf; --border: #b8a184;
-      --accent: #67399c; --green: #4d6b1c; --text: #2b211a; --muted: #5f5244;
-      --body: #493c2f;
-    }
+    /* Palette comes from /tools/theme.css. This page only needs a tighter
+       corner radius than the site default and its own centred layout. */
+    :root { --radius: 10px; }
+
     * { box-sizing: border-box; }
     body {
-      margin: 0; min-height: 100vh; display: grid; place-items: center;
+      margin: 0; min-height: 100vh;
       background: var(--bg); color: var(--text); font-family: var(--font-sans);
-      line-height: 1.6; padding: 24px;
+      line-height: 1.6;
     }
+    .shell { min-height: 100vh; display: grid; place-items: center; padding: 24px; }
+
+    /* The toggle floats in the corner — there is no header to hang it off. */
+    .corner-theme { position: fixed; top: 14px; right: 14px; z-index: 10; }
     .card {
       max-width: 460px; width: 100%; text-align: center;
       background: var(--surface); border: 1px solid var(--border);
@@ -54,6 +51,8 @@
     }
     a.btn:hover { background: color-mix(in srgb, var(--accent) 26%, transparent); border-color: var(--accent); }
 
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+
     /* ── htmx-loaded tool list (shared fragment with the landing page) ── */
     .jump { margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border); }
     /* Stay invisible until the fragment actually lands (or if JS is off). */
@@ -76,6 +75,12 @@
   </style>
 </head>
 <body>
+  <button class="btn-theme corner-theme" id="btn-theme" type="button">
+    <span class="theme-icon">☀️</span>
+    <span class="theme-label">Light</span>
+  </button>
+
+  <div class="shell">
   <main class="card">
     <p class="code">404</p>
     <h1>Page not found</h1>
@@ -83,10 +88,12 @@
     <p class="msh">MSA|AE|404^Page not found^HTTP</p>
     <a class="btn" href="/">Back to the tools</a>
 
-    <!-- Same fragment the landing page's tool list is generated from. -->
+    <!-- The same seven links the landing page footer carries, kept in one
+         place so a new tool only has to be added to the fragment once. -->
     <div class="jump" hx-get="/partials/tool-links.html" hx-trigger="load" hx-swap="beforeend">
       <h2>Jump straight to a tool</h2>
     </div>
   </main>
+  </div>
 </body>
 </html>

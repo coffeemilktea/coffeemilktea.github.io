@@ -6,7 +6,7 @@ browser-based, fully client-side tools for DICOM and HL7 medical data standards.
 Six of the seven tools live in **[hl7-dicom-tools](https://github.com/coffeemilktea/hl7-dicom-tools)**
 and are served under [`/hl7-dicom-tools/`](https://coffeemilktea.github.io/hl7-dicom-tools/).
 The seventh, the Mirth Transformer Builder, lives here in `tools/`. This repo also holds the landing
-page, the standalone reference pages, and the shared theme controller.
+page, the standalone reference pages, and the shared theme every page is styled from.
 
 No build step, no framework, no CDN. GitHub Pages serves plain files straight from `master`;
 `.nojekyll` turns Jekyll processing off entirely.
@@ -29,6 +29,7 @@ mcp/server.js                 that server's source, served for download
 mcp/fhir/index.html           standalone: HL7 v2.5.1 -> FHIR R4 mapping MCP server setup guide
 mcp/fhir/server.js            that server's source, served for download
 tools/mirth-transformer.html  standalone: HL7 v2.5.1 -> Mirth transformer builder (a tool card)
+tools/theme.css               the shared palette and chrome — every page links it
 tools/theme.js                shared dark/light controller
 vendor/htmx.min.js            htmx 2.0.7, vendored
 favicon.svg                   boba cup
@@ -37,17 +38,20 @@ robots.txt sitemap.xml        /partials/ is disallowed; sitemap covers both repo
 CLAUDE.md                     notes for Claude Code
 ```
 
-The four reference pages are self-contained — no htmx, their own styles. They're in `sitemap.xml`
-and linked from the footer's **Reference** column, but deliberately are *not* tool cards: the cards
-drive the filter counts and category tabs, so anything added there has to be categorised and counted.
+The four reference pages are self-contained — no htmx, no per-page JavaScript beyond what they
+need themselves — but they are **not** self-styled: like every page here they link `tools/theme.css`
+and `tools/theme.js`, so they share the palette, the topbar, the footer and the light/dark toggle.
+They're in `sitemap.xml` and linked from the footer's **Reference** column, but deliberately are
+*not* tool cards: the cards drive the filter counts and category tabs, so anything added there has
+to be categorised and counted.
 
 `tools/mirth-transformer.html` is the exception that went the other way — it *is* a card, tagged
 `hl7 interop` and counted in the All, HL7 v2.x and Interop tabs. It builds Mirth Connect transformers
 from HL7 v2.5.1 messages: drag a source field onto a target field and it emits the E4X JavaScript, a
 pasteable channel `<transformer>` XML block, and a live preview of the transformed message, with 15
-chainable transforms, per-mapping conditions and 33 ready-made recipes. Like `mwl-simulator.html` it
-carries its own palette and is dark-only, so it does not load `tools/theme.js`. It is also published
-on its own at
+chainable transforms, per-mapping conditions and 33 ready-made recipes. It used to carry its own
+Dracula palette and be dark-only; it is now on the shared theme like everything else. It is also
+published on its own at
 **[HL7-Interface-Javascript-Builder](https://github.com/coffeemilktea/HL7-Interface-Javascript-Builder)** —
 that copy and this one have to be kept in step by hand.
 
@@ -78,7 +82,7 @@ The category tabs don't fetch pre-built per-category fragments. They re-fetch **
 ```html
 <input type="radio" name="view" id="view-hl7"
        hx-get="/" hx-select=".tool-card[data-cat~='hl7']">
-<label for="view-hl7">HL7 v2.x <span class="filter-count">3</span></label>
+<label for="view-hl7">HL7 v2.x <span class="filter-count">4</span></label>
 ```
 
 `hx-select` returns every match, not just the first, so the cards in `index.html` stay the single
@@ -120,6 +124,9 @@ so a pushed URL would 404 or lie about what the page shows.
 
 ## Theme
 
+**`tools/theme.css` is the only place a colour is defined.** Every page in the repo links it and
+derives everything from its tokens — there is no second copy to keep in step.
+
 Dark is **brown sugar boba**, light is **milk tea**. Accents come off a boba shop's flavour wall:
 
 | Token | Dark | Light | |
@@ -128,25 +135,29 @@ Dark is **brown sugar boba**, light is **milk tea**. Accents come off a boba sho
 | `--surface` | `#161110` | `#fdf8f0` | dark cup / milk foam |
 | `--accent` | `#c9a0ea` | `#67399c` | taro |
 | `--accent2` | `#f2a0bd` | `#a83464` | strawberry milk |
+| `--cyan` | `#8ed4c4` | `#2f6f66` | jasmine green |
 | `--green` | `#a9c96a` | `#4d6b1c` | matcha |
 | `--yellow` | `#f0cf8a` | `#7a5a0e` | brown sugar |
 | `--red` | `#f0736f` | `#b03530` | lychee |
 | `--orange` | `#eb8a3c` | `#9c4d13` | thai tea |
 | `--text` | `#f7efe4` | `#2b211a` | milk foam |
 
-**Taro leads for a reason.** The six tool cards each set `--tint` to one of these, and a milk-tea tan
-accent landed within a few degrees of hue of the thai-tea orange — two cards would have looked
-identical. Taro sits ~200° away. If you retheme, keep the six tint hues separated by at least ~12°.
+**Taro leads for a reason.** The seven tool cards each set `--tint` to a different one of these, and
+a milk-tea tan accent landed within a few degrees of hue of the thai-tea orange — two cards would
+have looked identical. Taro sits ~200° away. If you retheme, keep the tint hues separated by at
+least ~12°, and don't let two cards share one.
 
 Two rules hold the palette together:
 
-- **Everything is a token.** Both token blocks live at the top of `index.html`'s `<style>`, and every
-  `color-mix()` and per-card `--tint` derives from them. Change a token and the whole page follows.
-  `404.html` carries a trimmed copy of the same tokens — keep the two in step.
-- **Contrast is checked, not eyeballed.** Every foreground clears WCAG AA against `--bg`, `--surface`,
-  **and both glass fills** (`--glass`, `--glass-strong`) in both modes. Worst pair is currently
-  4.94:1. The glass fills matter: a colour can pass on the page background and still fail on a
-  frosted card.
+- **Everything derives from a token.** Both token blocks live in `tools/theme.css`, and every
+  `color-mix()` and per-card `--tint` derives from them. Change a token and the whole site follows.
+  The semantic tints (`--accent-bg`, `--green-line`, `--yellow-bg`, …) are themselves `color-mix()`
+  over the accents, so they re-derive when the mode flips — the light block only has to restate the
+  accents, never the tints.
+- **Contrast is checked, not eyeballed.** Every foreground clears WCAG AA (4.5:1) against `--bg`,
+  `--surface`, **and both glass fills** (`--glass`, `--glass-strong`) in both modes. Worst pair is
+  currently 4.80:1. The glass fills matter: a colour can pass on the page background and still fail
+  on a frosted card.
 
 Motifs are CSS masks so they inherit `currentColor` and work in both modes without a second asset:
 `--pearl-glyph` (three tapioca pearls, the section-kicker bullet) and `--pearl-band` (pearls settling
@@ -155,7 +166,12 @@ along the footer edge). The brand mark and favicon are a boba cup.
 `tools/theme.js` sets `data-theme` on `<html>`, defaults to dark, exposes `window.toggleTheme()`, and
 persists to the localStorage key **`hl7-tools-theme`**. That key is shared with the tools repo, so a
 visitor's choice follows them between the landing page and the tools. Any page wanting the toggle
-needs a `#btn-theme` button — the controller wires it automatically.
+needs a `#btn-theme` button — the controller wires it automatically. Every storage access is
+guarded, so a browser with site data blocked still gets a working toggle rather than a dead button.
+
+`theme.css` also carries the chrome the standalone pages share, so they read as one site:
+`.site-topbar` (brand mark, breadcrumb, theme toggle), `.site-foot`, `.skip-link` and `::selection`.
+A page's own `<style>` comes after the link and can override any of it.
 
 > Note: the tool pages in `hl7-dicom-tools` carry their own copy of the theme and are **not** yet on
 > this palette, so they won't match the landing page until they're updated there.
@@ -172,11 +188,11 @@ site actually serves.
 
 1. a `.tool-card` in `index.html`, with `data-cat` and a `--tint`
 2. the `filter-count` numbers on the affected category tabs
-3. `partials/tool-links.html` (feeds the footer and `404.html`)
+3. `partials/tool-links.html` (feeds `404.html`) **and** the footer "Tools" column in `index.html`
 4. `sitemap.xml`
 
-**Retheming?** Edit the two token blocks in `index.html`, mirror them in `404.html`, and re-check
-contrast against all four surfaces in both modes.
+**Retheming?** Edit the two token blocks in `tools/theme.css` — that is the whole job, every page
+follows — then re-check contrast against all four surfaces in both modes.
 
 ---
 
@@ -184,8 +200,9 @@ contrast against all four surfaces in both modes.
 
 **Client-side only — no data leaves your browser.** All parsing, rendering, and modification happen
 locally in the browser. No files, HL7 messages, or DICOM images are uploaded anywhere. That makes
-these tools safe for inspecting data that may contain PHI. The site sets no cookies and runs no
-analytics.
+these tools safe for inspecting data that may contain PHI. The site sets no cookies, runs no
+analytics, and makes **no third-party requests at all** — not even a webfont. Keep it that way: if
+you need a library or a typeface, vendor it into `vendor/` rather than pointing at a CDN.
 
 ---
 

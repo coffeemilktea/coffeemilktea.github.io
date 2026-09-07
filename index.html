@@ -19,80 +19,14 @@
   <meta name="twitter:description" content="Parse HL7 v2.x messages, view and edit DICOM files, generate test data, and simulate modality worklists — entirely in your browser.">
   <meta name="theme-color" content="#1e1815">
 
+  <link rel="stylesheet" href="/tools/theme.css">
   <script src="/tools/theme.js"></script>
   <script src="/vendor/htmx.min.js" defer></script>
 
   <style>
-    /* ── Tokens (landing page palette; the tools ship their own theme) ──
-       Boba theme (珍珠奶茶): dark is "brown sugar boba" — the drink seen
-       through a dark cup — and light is "milk tea". The accents are the
-       flavour wall of a boba shop: taro, brown sugar, matcha, strawberry,
-       lychee, thai tea. Taro leads because a milk-tea tan accent collides
-       with the warm tints the cards already use; taro sits 200° away and
-       is the most recognisable boba colour there is. Every foreground
-       clears WCAG AA against --bg, --surface and both glass fills; the
-       worst pair is 4.94:1. ── */
-    :root {
-      --bg:       #1e1815;  /* steeped pearl   */
-      --surface:  #161110;  /* dark cup        */
-      --surface2: #2e2521;  /* wet tapioca     */
-      --border:   #443831;  /* cane sugar      */
-      --accent:   #c9a0ea;  /* taro            */
-      --accent2:  #f2a0bd;  /* strawberry milk */
-      --cyan:     #8ed4c4;  /* jasmine green   */
-      --green:    #a9c96a;  /* matcha          */
-      --yellow:   #f0cf8a;  /* brown sugar     */
-      --red:      #f0736f;  /* lychee          */
-      --orange:   #eb8a3c;  /* thai tea        */
-      --text:     #f7efe4;  /* milk foam       */
-      --muted:    #a99584;  /* kraft sleeve    */
-      --body:     #e2d6c6;  /* oat milk        */
-      --radius:   16px;
-      --font-mono: 'JetBrains Mono', 'Fira Code', 'Cascadia Code', 'Consolas', monospace;
-      --font-sans: system-ui, -apple-system, 'Segoe UI', sans-serif;
-      --shadow:   0 20px 45px rgba(0, 0, 0, .45);
-
-      /* Three tapioca pearls, used as a mask so they inherit currentColor.
-         A cluster rather than a lone circle — one dot just reads as a bullet. */
-      --pearl-glyph: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cg fill='%23000'%3E%3Ccircle cx='8' cy='15.5' r='5.6'/%3E%3Ccircle cx='16' cy='15.5' r='5.6'/%3E%3Ccircle cx='12' cy='7.6' r='5.6'/%3E%3C/g%3E%3C/svg%3E");
-
-      /* Pearls settled along the bottom of the cup. Replaces the seigaiha
-         wave, which is a Japanese motif and out of register here. */
-      --pearl-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='26' viewBox='0 0 34 26'%3E%3Cg fill='%23000'%3E%3Ccircle cx='8' cy='20' r='6'/%3E%3Ccircle cx='25' cy='21' r='5'/%3E%3Ccircle cx='17' cy='10' r='4'/%3E%3C/g%3E%3C/svg%3E");
-
-      /* ── Glass tokens (re-derived over the boba base) ── */
-      --glass:        rgba(46, 37, 33, 0.50);
-      --glass-strong: rgba(22, 17, 16, 0.66);
-      --glass-border: rgba(247, 239, 228, 0.12);
-      --glass-hi:     rgba(255, 250, 244, 0.14);
-      --glass-blur:   18px;
-      --glass-shadow: 0 8px 32px rgba(0, 0, 0, .30), inset 0 1px 0 rgba(255,250,244,.05);
-    }
-
-    [data-theme="light"] {
-      --bg:       #f3e7d6;  /* milk tea        */
-      --surface:  #fdf8f0;  /* milk foam       */
-      --surface2: #e5d5bf;  /* oat milk        */
-      --border:   #b8a184;  /* kraft           */
-      --accent:   #67399c;  /* deep taro       */
-      --accent2:  #a83464;  /* strawberry      */
-      --cyan:     #2f6f66;  /* jasmine green   */
-      --green:    #4d6b1c;  /* matcha          */
-      --yellow:   #7a5a0e;  /* brown sugar     */
-      --red:      #b03530;  /* lychee          */
-      --orange:   #9c4d13;  /* thai tea        */
-      --text:     #2b211a;
-      --muted:    #5f5244;
-      --body:     #493c2f;
-      --shadow:   0 20px 45px rgba(62, 44, 30, .14);
-
-      --glass:        rgba(255, 250, 244, 0.55);
-      --glass-strong: rgba(255, 250, 244, 0.72);
-      --glass-border: rgba(255, 250, 244, 0.7);
-      --glass-hi:     rgba(255, 253, 250, 0.9);
-      --glass-blur:   18px;
-      --glass-shadow: 0 8px 32px rgba(62, 44, 30, .12), inset 0 1px 0 rgba(255,250,244,.6);
-    }
+    /* The palette lives in /tools/theme.css — one token set for the whole
+       site, dark and light. Everything below derives from it, so a colour
+       is never written twice. Page-specific styling only from here down. */
 
     /* ── Base ── */
     *, *::before, *::after { box-sizing: border-box; }
@@ -233,17 +167,6 @@
       border: 0;
     }
 
-    .skip-link {
-      position: absolute;
-      left: -9999px;
-      top: 0;
-      background: var(--surface);
-      color: var(--text);
-      padding: 10px 16px;
-      z-index: 200;
-    }
-    .skip-link:focus { left: 12px; top: 12px; }
-
     /* ── Header ── */
     .site-header {
       position: sticky;
@@ -312,29 +235,14 @@
       background: var(--glass);
     }
 
-    /* Theme toggle (markup/behavior shared with tools/theme.js) */
+    /* Base styling comes from theme.css; the header wants it a touch taller
+       and frosted to match the bar it sits in. */
     .btn-theme {
-      background: var(--glass);
+      height: 30px;
+      margin-left: 6px;
       backdrop-filter: blur(6px);
       -webkit-backdrop-filter: blur(6px);
-      border: 1px solid var(--glass-border);
-      box-shadow: inset 0 1px 0 var(--glass-hi);
-      border-radius: 20px;
-      padding: 0 12px;
-      height: 30px;
-      font-size: 12px;
-      font-weight: 600;
-      color: var(--muted);
-      cursor: pointer;
-      font-family: var(--font-sans);
-      transition: color .15s, border-color .15s;
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      white-space: nowrap;
-      margin-left: 6px;
     }
-    .btn-theme:hover { color: var(--text); border-color: var(--accent); }
 
     /* ── Hero ── */
     .hero {
@@ -1191,7 +1099,7 @@
     <!--
       The cards below are the single source of truth for the tool list. The
       filter tabs re-fetch THIS page and hx-select the subset they want, so no
-      card is ever written twice. Crawlers and no-JS visitors get all six.
+      card is ever written twice. Crawlers and no-JS visitors get all seven.
     -->
     <section id="tools" class="tools">
       <div class="container">
@@ -1374,7 +1282,7 @@
             </div>
           </li>
 
-          <li class="tool-card" data-cat="hl7 interop" style="--tint: var(--accent2)">
+          <li class="tool-card" data-cat="hl7 interop" style="--tint: var(--cyan)">
             <div class="tool-top">
               <span class="tool-icon" aria-hidden="true">
                 <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/><line x1="14" y1="4" x2="10" y2="20"/></svg>
@@ -1459,6 +1367,7 @@
             <li><a href="/hl7-dicom-tools/tools/diff-checker.html">HL7 Diff Checker</a></li>
             <li><a href="/hl7-dicom-tools/tools/mwl-simulator.html">MWL Simulator</a></li>
             <li><a href="/hl7-dicom-tools/tools/dicom-hl7-order.html">DICOM &rarr; HL7 Order</a></li>
+            <li><a href="/tools/mirth-transformer.html">Mirth Transformer Builder</a></li>
           </ul>
         </div>
         <div class="footer-col">
@@ -1467,7 +1376,7 @@
             <li><a href="/radiology-handbook.html">Radiology IT Handbook</a></li>
             <li><a href="/mcp/">HL7 v2.5.1 MCP Server</a></li>
             <li><a href="/hl7-fhir-converter.html">HL7 v2 &harr; FHIR Converter</a></li>
-            <li><a href="/mcp/fhir/">HL7 v2.5.1 → FHIR MCP Server</a></li>
+            <li><a href="/mcp/fhir/">HL7 v2.5.1 &rarr; FHIR MCP Server</a></li>
           </ul>
         </div>
         <div class="footer-col">
