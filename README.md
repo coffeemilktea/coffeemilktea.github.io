@@ -66,6 +66,9 @@ does this segment mean*; the FHIR server answers *what does it become in R4*, an
 ORM, ADT and ORU messages into a transaction Bundle. They listen on 3000 and 3001, so both can run
 at once.
 
+Both are **work in progress**, and the landing page footer groups them under Reference and says so.
+Keep that label until they are finished.
+
 ---
 
 ## The landing page is hypermedia
