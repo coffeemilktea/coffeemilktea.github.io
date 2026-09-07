@@ -157,6 +157,58 @@
     @keyframes drift2 { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(-8vw, -6vh, 0) scale(1.1); } }
     @keyframes drift3 { from { transform: translate3d(0,0,0) scale(1); } to { transform: translate3d(4vw, -8vh, 0) scale(1.2); } }
 
+    /* ── Pearls rising through the drink ────────────────────────────────
+       Decorative, inside .aurora and so aria-hidden. They are spans, which
+       .aurora span already blurs by 70px — reset that here or they'd be fog. */
+    .aurora .pearl {
+      width: 13px;
+      height: 13px;
+      bottom: -6vh;
+      filter: none;
+      opacity: 0;
+      background: radial-gradient(circle at 32% 30%,
+                    color-mix(in srgb, var(--text) 55%, transparent),
+                    color-mix(in srgb, var(--accent) 70%, transparent) 45%,
+                    color-mix(in srgb, var(--accent) 30%, transparent));
+      animation: rise linear infinite;
+    }
+    .aurora .p1 { left: 12%; animation-duration: 19s; animation-delay:  -2s; }
+    .aurora .p2 { left: 27%; animation-duration: 25s; animation-delay:  -9s; width: 9px;  height: 9px;  }
+    .aurora .p3 { left: 46%; animation-duration: 22s; animation-delay: -14s; width: 16px; height: 16px; }
+    .aurora .p4 { left: 63%; animation-duration: 28s; animation-delay:  -5s; width: 11px; height: 11px; }
+    .aurora .p5 { left: 78%; animation-duration: 21s; animation-delay: -17s; }
+    .aurora .p6 { left: 90%; animation-duration: 26s; animation-delay: -11s; width: 8px;  height: 8px;  }
+
+    @keyframes rise {
+      0%   { transform: translate3d(0, 0, 0) scale(.85); opacity: 0; }
+      12%  { opacity: .55; }
+      50%  { transform: translate3d(14px, -55vh, 0) scale(1); }
+      88%  { opacity: .4; }
+      100% { transform: translate3d(-8px, -112vh, 0) scale(1.08); opacity: 0; }
+    }
+
+    /* ── Sip line: scroll progress, drawn like syrup pulled up a straw ──
+       Scroll-driven, so it costs no JS. Where animation-timeline isn't
+       supported the whole rule is skipped and the bar simply never shows. */
+    .sip {
+      position: fixed;
+      inset: 0 0 auto 0;
+      height: 3px;
+      z-index: 200;
+      pointer-events: none;
+      transform: scaleX(0);
+      transform-origin: 0 50%;
+      background: linear-gradient(90deg,
+                    var(--accent) 0%, var(--accent2) 38%, var(--yellow) 72%, var(--green) 100%);
+    }
+    @supports (animation-timeline: scroll()) {
+      .sip {
+        animation: sip linear both;
+        animation-timeline: scroll(root block);
+      }
+    }
+    @keyframes sip { to { transform: scaleX(1); } }
+
     a { color: var(--accent); }
 
     :focus-visible {
@@ -427,8 +479,8 @@
     }
 
     /* Tapioca-pearl bullet. Masked rather than inlined so the kicker inside
-       the htmx-loaded quickref partial picks it up too, and so it always
-       tracks the kicker's own color in either theme. */
+       htmx-swapped content picks it up too, and so it always tracks the
+       kicker's own color in either theme. */
     .section-kicker::before {
       content: "";
       width: 12px;
@@ -824,69 +876,6 @@
     }
     .detail-hide:hover { color: var(--text); }
 
-    /* ── htmx: lazily revealed quick-reference section ── */
-    .quickref {
-      border-top: 1px solid var(--glass-border);
-      background: var(--glass);
-      backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-    }
-
-    .quickref-inner { animation: detail-in .3s ease-out both; }
-
-    /* Skeleton shown until the fragment arrives */
-    .quickref-skeleton { display: grid; gap: 10px; max-width: 720px; }
-    .quickref-skeleton span {
-      display: block;
-      height: 14px;
-      border-radius: 6px;
-      background: linear-gradient(90deg,
-        color-mix(in srgb, var(--muted) 14%, transparent),
-        color-mix(in srgb, var(--muted) 26%, transparent),
-        color-mix(in srgb, var(--muted) 14%, transparent));
-      background-size: 200% 100%;
-      animation: shimmer 1.3s ease-in-out infinite;
-    }
-    .quickref-skeleton span:nth-child(1) { width: 30%; height: 20px; }
-    .quickref-skeleton span:nth-child(2) { width: 62%; }
-    .quickref-skeleton span:nth-child(3) { width: 54%; }
-    .quickref-skeleton span:nth-child(4) { width: 58%; }
-    @keyframes shimmer { to { background-position: -200% 0; } }
-
-    .quickref-list {
-      list-style: none;
-      margin: 0;
-      padding: 0;
-      display: grid;
-      gap: 2px;
-      max-width: 820px;
-    }
-
-    .quickref-list li {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: baseline;
-      justify-content: space-between;
-      gap: 8px 20px;
-      padding: 11px 0;
-      border-bottom: 1px solid var(--glass-border);
-    }
-    .quickref-list li:last-child { border-bottom: none; }
-
-    .qr-task {
-      color: var(--body);
-      font-size: 0.9rem;
-    }
-
-    .qr-tool {
-      font-size: 0.82rem;
-      font-weight: 600;
-      text-decoration: none;
-      white-space: nowrap;
-      color: var(--accent);
-    }
-    .qr-tool:hover { text-decoration: underline; text-underline-offset: 3px; }
-
     /* ── About ── */
     .about {
       border-top: 1px solid var(--glass-border);
@@ -1041,29 +1030,91 @@
       .toolbar { justify-content: center; }
     }
 
+    /* ── Reveal on scroll ───────────────────────────────────────────────
+       Scroll-driven, so still no JS. Wrapped in @supports because without
+       animation-timeline these elements must simply be visible, never stuck
+       at the from-state. Cards are left alone: they already run card-in,
+       which is what plays when htmx swaps a filtered set in. */
+    @keyframes settle {
+      from { opacity: .15; transform: translateY(10px); }
+      to   { opacity: 1;   transform: none; }
+    }
+
+    @supports (animation-timeline: view()) {
+      @media (prefers-reduced-motion: no-preference) {
+        .tools h2, .about h2,
+        .section-intro,
+        .hero-points li,
+        .footer-col {
+          animation: settle linear both;
+          animation-timeline: view();
+          /* Completes while the element is still entering, so anything even
+             partly on screen is essentially fully revealed. */
+          animation-range: entry 0% entry 55%;
+        }
+      }
+    }
+
+    /* ── Hover and focus detail ─────────────────────────────────────────
+       :focus-within mirrors :hover so keyboard users get the same feedback
+       when the card's stretched link takes focus. */
+    .tool-icon {
+      transition: transform .22s cubic-bezier(.2,.7,.3,1), background .18s, border-color .18s;
+    }
+    .tool-card:hover .tool-icon,
+    .tool-card:focus-within .tool-icon {
+      transform: translateY(-2px) rotate(-7deg) scale(1.07);
+    }
+
+    .tool-card:focus-within {
+      border-color: color-mix(in srgb, var(--tint) 60%, var(--glass-border));
+      box-shadow: 0 24px 50px rgba(0, 0, 0, .55), var(--shadow), 0 0 0 1px color-mix(in srgb, var(--tint) 25%, transparent);
+    }
+    .tool-card:focus-within::before { opacity: 1; }
+    .tool-card:focus-within::after  { opacity: .34; transform: scale(1.1); }
+
+    /* Press feedback */
+    .btn:active { transform: translateY(0) scale(.985); }
+    .btn-theme:active { transform: scale(.96); }
+    .filters label { transition: transform .15s, color .15s, background .15s, border-color .15s; }
+    .filters label:active { transform: scale(.97); }
+
     @media (prefers-reduced-motion: reduce) {
       html { scroll-behavior: auto; }
       .tool-card, .tool-cta svg, .tool-card::after { transition: none; }
       .tool-card:hover { transform: none; }
       .tool-card:hover::after { transform: none; }
       .aurora span { animation: none !important; }
-      .detail-inner, .quickref-inner, .tool-card { animation: none; }
-      .quickref-skeleton span { animation: none; }
+      .aurora .pearl { opacity: 0; }
+      .sip { animation: none; }
+      .tool-icon, .filters label { transition: none; }
+      .tool-card:hover .tool-icon,
+      .tool-card:focus-within .tool-icon { transform: none; }
+      .tool-card:focus-within::after { transform: none; }
+      .btn:active, .btn-theme:active, .filters label:active { transform: none; }
+      .detail-inner, .tool-card { animation: none; }
       .tool-more .spinner { animation-duration: 1.6s; }
     }
 
     /* No-JS: htmx can't run, so hide the controls that depend on it and
        fall back to showing everything that would otherwise be fetched. */
     .no-js .tool-more,
-    .no-js .toolbar,
-    .no-js .quickref { display: none; }
+    .no-js .toolbar { display: none; }
   </style>
 </head>
 <body>
+  <div class="sip" aria-hidden="true"></div>
+
   <div class="aurora" aria-hidden="true">
     <span class="b1"></span>
     <span class="b2"></span>
     <span class="b3"></span>
+    <span class="pearl p1"></span>
+    <span class="pearl p2"></span>
+    <span class="pearl p3"></span>
+    <span class="pearl p4"></span>
+    <span class="pearl p5"></span>
+    <span class="pearl p6"></span>
   </div>
 
   <a class="skip-link" href="#tools">Skip to tools</a>
@@ -1328,26 +1379,6 @@
              precede it in document order, so this is what makes the live
              "N shown" readout work without a line of JavaScript. -->
         <p class="grid-status" role="status" aria-live="polite"></p>
-      </div>
-    </section>
-
-    <!-- Fetched the first time it comes into view. Nothing here is in the
-         initial payload, so nothing crawlable is lost by deferring it.
-         "intersect once" rather than "revealed": revealed is driven by scroll
-         events, so a section already on screen on a tall display would never
-         load if the visitor never scrolled. IntersectionObserver has no such
-         blind spot. -->
-    <section class="quickref">
-      <!-- The htmx attributes belong on the .container, not the <section>:
-           an innerHTML swap on the section would replace the container too,
-           and the fragment would lose the layout's max-width and gutters. -->
-      <div class="container"
-           hx-get="/partials/sections/quickref.html"
-           hx-trigger="intersect once"
-           hx-swap="innerHTML transition:true">
-        <div class="quickref-skeleton" aria-hidden="true">
-          <span></span><span></span><span></span><span></span>
-        </div>
       </div>
     </section>
 

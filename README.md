@@ -15,12 +15,11 @@ No build step, no framework, no CDN. GitHub Pages serves plain files straight fr
 ## What's in here
 
 ```
-index.html                    shell, hero, the six tool cards, quick-reference mount, about, footer
+index.html                    shell, hero, the six tool cards, about, footer
 404.html                      error page; pulls its tool list from a shared fragment at load
 partials/
   tool-links.html             the six tool links, shared with 404.html
   detail/*.html               one per tool — "Use cases" panel, each shipping its own Hide control
-  sections/quickref.html      "Which tool do I need?" — fetched on first view
   empty.html                  zero-byte fragment; swapping it in collapses a panel
 radiology-handbook.html       standalone: radiology IT workflow handbook
 hl7-fhir-converter.html       standalone: HL7 v2.5.1 <-> FHIR R4 converter
@@ -90,20 +89,11 @@ directions are plain hypermedia exchanges. `:has(.tool-detail > *)` hides the tr
 in, and `.htmx-request` drives the spinner. This keeps working on cards htmx swapped in via a filter,
 since htmx processes swapped content.
 
-### Deferred below the fold
-
-The quick-reference section is fetched the first time it comes into view with
-`hx-trigger="intersect once"`, behind a shimmer skeleton. It is **`intersect`, not `revealed`**, on
-purpose: `revealed` is driven by scroll events, so on a tall display where the section is already on
-screen it would never load for a visitor who never scrolls. IntersectionObserver has no such blind
-spot.
-
 ### What it deliberately doesn't do
 
 The **tool cards stay in `index.html`** rather than being fragment-loaded. Crawlers and no-JS
 visitors get the complete tool list, descriptions, and links in the initial response; htmx only ever
-*adds* content. Only the quick-reference section is deferred, and it exists nowhere in the initial
-payload, so nothing crawlable is lost.
+*adds* content — the detail panels, and nothing else. Nothing crawlable is deferred.
 
 `hx-boost` is scoped to the two brand links — the only same-origin, same-shell navigations on the
 page. It is **not** global: the tool links go to the other repo's apps, which ship their own
