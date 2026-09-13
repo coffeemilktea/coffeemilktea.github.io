@@ -26,10 +26,6 @@ partials/
   empty.html                  zero-byte fragment; swapping it in collapses a panel
 radiology-handbook.html       standalone: radiology IT workflow handbook
 hl7-fhir-converter.html       standalone: HL7 v2.5.1 <-> FHIR R4 converter
-mcp/index.html                standalone: HL7 v2.5.1 reference MCP server setup guide
-mcp/server.js                 that server's source, served for download
-mcp/fhir/index.html           standalone: HL7 v2.5.1 -> FHIR R4 mapping MCP server setup guide
-mcp/fhir/server.js            that server's source, served for download
 tools/mirth-transformer.html  standalone: HL7 v2.5.1 -> Mirth transformer builder (a tool card)
 tools/theme.js                shared dark/light controller
 vendor/htmx.min.js            htmx 2.0.7, vendored
@@ -39,7 +35,7 @@ robots.txt sitemap.xml        /partials/ is disallowed; sitemap covers both repo
 CLAUDE.md                     notes for Claude Code
 ```
 
-The four reference pages carry no htmx and their own layout CSS, but they share the site palette and
+The two reference pages carry no htmx and their own layout CSS, but they share the site palette and
 theme toggle like everything else. They're in `sitemap.xml` and linked from the footer's **Reference**
 column, but deliberately are *not* tool cards: the cards drive the filter counts and category tabs, so
 anything added there has to be categorised and counted.
@@ -57,14 +53,26 @@ on this site's palette, since it has no `/assets/tokens.css` to load.
 `hl7-fhir-converter.html` converts both ways between v2.5.1 messages (ADT, ORM, ORU, SIU, ACK) and
 FHIR R4 message Bundles, reporting a field-level mapping trace, everything the mapping does **not**
 carry over, and a round-trip diff. Its segment field names, code tables and message structures are
-generated from the same reference data as `mcp/server.js` — change the definitions there and the
-`HL7_SPEC`, `HL7_TABLES` and `HL7_STRUCTURES` blocks in the converter have to be regenerated to
-match.
+generated from the same reference data as the
+[HL7 v2.5.1 reference MCP server](https://github.com/coffeemilktea/hl7-v2-mcp-server) — change the
+definitions there and the `HL7_SPEC`, `HL7_TABLES` and `HL7_STRUCTURES` blocks in the converter have
+to be regenerated to match.
 
-The two MCP servers are companions, not versions of each other. The reference server answers *what
-does this segment mean*; the FHIR server answers *what does it become in R4*, and converts whole
-ORM, ADT and ORU messages into a transaction Bundle. They listen on 3000 and 3001, so both can run
-at once.
+## The MCP servers live elsewhere
+
+Two Model Context Protocol servers used to be served from `/mcp/` as source downloads, which GitHub
+Pages could host but never run. They are now standalone repos you can clone, install and deploy:
+
+- **[hl7-v2-mcp-server](https://github.com/coffeemilktea/hl7-v2-mcp-server)** — the HL7 v2.5.1
+  reference server: segment definitions, message structures, code tables, a parser, and a validator
+  with deep profiles for ORM^O01, ADT^A08, ADT^A31, ADT^A40 and ORU^R01.
+- **[hl7-v2-fhir-mcp-server](https://github.com/coffeemilktea/hl7-v2-fhir-mcp-server)** — the v2-to-FHIR
+  mapping server: field, datatype and code-value mappings, plus whole-message conversion of ORM, ADT
+  and ORU into a FHIR R4 transaction Bundle.
+
+They are companions, not versions of each other. The reference server answers *what does this segment
+mean*; the FHIR server answers *what does it become in R4*. They default to ports 3000 and 3001, so
+both can run at once. Both are linked from the footer's **Reference** column.
 
 Both are **work in progress**, and the landing page footer groups them under Reference and says so.
 Keep that label until they are finished.

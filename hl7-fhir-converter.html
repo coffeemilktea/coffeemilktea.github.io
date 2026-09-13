@@ -160,7 +160,7 @@ footer.site-foot { margin-top: 50px; }
   <span class="sep">/</span>
   <span class="crumb">converter</span>
   <span class="spacer"></span>
-  <a class="bar-link" href="/mcp/fhir/">mcp&nbsp;server</a>
+  <a class="bar-link" href="https://github.com/coffeemilktea/hl7-v2-fhir-mcp-server">mcp&nbsp;server</a>
   <button class="btn-theme" id="btn-theme" type="button"><span class="theme-icon">☀️</span><span class="theme-label">Light</span></button>
 </nav>
 
@@ -243,8 +243,8 @@ footer.site-foot { margin-top: 50px; }
   <h3>Segments understood</h3>
   <p><code>MSH</code> <code>MSA</code> <code>ERR</code> <code>EVN</code> <code>PID</code> <code>PV1</code>
      <code>AL1</code> <code>DG1</code> <code>IN1</code> <code>MRG</code> <code>ORC</code> <code>OBR</code>
-     <code>OBX</code> <code>NTE</code> <code>SCH</code> <code>ZDS</code> &mdash; the segment set defined in this
-     site's <a href="/mcp/">HL7 v2.5.1 reference</a>, which is where the field names and code tables
+     <code>OBX</code> <code>NTE</code> <code>SCH</code> <code>ZDS</code> &mdash; the segment set defined in the
+     <a href="https://github.com/coffeemilktea/hl7-v2-mcp-server">HL7 v2.5.1 reference MCP server</a>, which is where the field names and code tables
      used here come from. Segments outside that set are reported as unmapped rather than dropped quietly.</p>
 
   <h3>Message types</h3>
@@ -296,7 +296,7 @@ footer.site-foot { margin-top: 50px; }
   <span>Client-side only &mdash; no cookies, no analytics, no uploads.</span>
   <span class="grow"></span>
   <a href="/">Home</a>
-  <a href="/mcp/">HL7 v2.5.1 reference</a>
+  <a href="https://github.com/coffeemilktea/hl7-v2-mcp-server">HL7 v2.5.1 reference</a>
   <a href="/radiology-handbook.html">Radiology IT Handbook</a>
 </footer>
 
@@ -304,7 +304,8 @@ footer.site-foot { margin-top: 50px; }
 <script>
 "use strict";
 /* ── HL7 v2.5.1 reference data (segment field names, code tables, message
-   structures) — same source of truth as this site's /mcp/ reference. ── */
+   structures) — same source of truth as the HL7 v2.5.1 reference MCP server:
+   github.com/coffeemilktea/hl7-v2-mcp-server ── */
 const HL7_SPEC = {
   MSH: { name: "Message Header", f: {1:"Field Separator",2:"Encoding Characters",3:"Sending Application",4:"Sending Facility",5:"Receiving Application",6:"Receiving Facility",7:"Date/Time Of Message",8:"Security",9:"Message Type",10:"Message Control ID",11:"Processing ID",12:"Version ID",13:"Sequence Number",14:"Continuation Pointer",15:"Accept Acknowledgment Type",16:"Application Acknowledgment Type",17:"Country Code",18:"Character Set",19:"Principal Language Of Message",20:"Alternate Character Set Handling Scheme",21:"Message Profile Identifier"} },
   MSA: { name: "Message Acknowledgment", f: {1:"Acknowledgment Code",2:"Message Control ID",3:"Text Message",4:"Expected Sequence Number",5:"Delayed Acknowledgment Type",6:"Error Condition"} },
@@ -2387,7 +2388,7 @@ function renderReport(res) {
   setCount("c-spec", res.anatomy.length, "");
 
   $("tab-map").innerHTML =
-    '<div class="tab-note">The mapping this tool implements, segment by segment. Field names and code tables come from the same v2.5.1 reference as <a href="/mcp/">the MCP server</a> on this site.</div>' +
+    '<div class="tab-note">The mapping this tool implements, segment by segment. Field names and code tables come from the same v2.5.1 reference as <a href="https://github.com/coffeemilktea/hl7-v2-mcp-server">the MCP server</a>.</div>' +
     table(["Segment", "FHIR R4", "Notes"],
       MAPPING_TABLE.map((m) => ['<span class="t-seg">' + m[0] + "</span>", esc(m[1]), esc(m[2])]), ["src", "dst", "note"]);
 }
