@@ -608,10 +608,9 @@
 
     /* ── Author identity ──────────────────────────────────────────────
        The site had GitHub links, but every one pointed at a repository —
-       nothing named the person behind it. These surface the account.
-       The mark is inline SVG rather than github.com/<user>.png on purpose:
-       hot-linking the avatar would make every visitor hit GitHub's servers,
-       which is at odds with the no-tracking promise this page makes. */
+       nothing named the account behind it. The header nav and the footer
+       now do. The GitHub mark is inline SVG rather than a remote asset, so
+       the page still makes no third-party request. */
     .gh-mark { flex: none; }
 
     /* Header: the nav slot that used to read "GitHub" and go to a repo. */
@@ -624,70 +623,6 @@
     }
     .nav-user .gh-mark { color: var(--muted); transition: color .15s; }
     .header-nav a.nav-user:hover .gh-mark { color: var(--accent); }
-
-    /* Monogram stands in for an avatar without a third-party request. */
-    .avatar {
-      display: grid;
-      place-items: center;
-      width: 26px;
-      height: 26px;
-      flex: none;
-      border-radius: 50%;
-      background: var(--accent-bg);
-      border: 1px solid var(--accent-line);
-      color: var(--accent);
-      font-family: var(--font-mono);
-      font-size: 12px;
-      font-weight: 700;
-      line-height: 1;
-    }
-    .avatar-lg { width: 46px; height: 46px; font-size: 17px; }
-
-    /* About: the author card, alongside the privacy card. */
-    .author-card {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      margin-top: 18px;
-      padding: 18px 20px;
-      border: 1px solid var(--glass-border);
-      border-radius: var(--radius);
-      background: var(--glass);
-      backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-      -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(140%);
-      box-shadow: var(--glass-shadow);
-    }
-    .author-card .who {
-      margin: 0 0 4px;
-      font-size: 0.95rem;
-      font-weight: 700;
-      color: var(--text);
-    }
-    .author-card .who .handle { color: var(--accent); font-family: var(--font-mono); }
-    .author-card p {
-      margin: 0 0 10px;
-      color: var(--muted);
-      font-size: 0.86rem;
-      line-height: 1.55;
-    }
-    .author-links { display: flex; flex-wrap: wrap; gap: 8px; }
-    .author-links a {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 5px 11px;
-      border: 1px solid var(--border);
-      border-radius: 999px;
-      color: var(--body);
-      font-size: 0.78rem;
-      text-decoration: none;
-      transition: color .15s, border-color .15s, background .15s;
-    }
-    .author-links a:hover {
-      color: var(--text);
-      border-color: var(--accent-line);
-      background: var(--accent-bg);
-    }
 
     /* ── Tool cards ── */
     .tools-grid {
@@ -1620,25 +1555,6 @@
             processed in your browser's memory and are never uploaded, logged, or stored anywhere.
           </p>
         </aside>
-      </div>
-
-      <div class="container">
-        <div class="author-card">
-          <span class="avatar avatar-lg" aria-hidden="true">cmt</span>
-          <div>
-            <p class="who">Built by <span class="handle">@coffeemilktea</span></p>
-            <p>
-              A healthcare integration engineer writing the utilities they wanted on the job —
-              every one of them client-side, open source, and free to fork. Issues and pull
-              requests are welcome on any of the repositories.
-            </p>
-            <div class="author-links">
-              <a href="https://github.com/coffeemilktea"><svg class="gh-mark" width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg> GitHub profile</a>
-              <a href="https://github.com/coffeemilktea/hl7-dicom-tools"><svg class="gh-mark" width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg> hl7-dicom-tools</a>
-              <a href="https://github.com/coffeemilktea/coffeemilktea.github.io"><svg class="gh-mark" width="13" height="13" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg> This site</a>
-            </div>
-          </div>
-        </div>
       </div>
     </section>
   </main>
