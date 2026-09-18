@@ -29,11 +29,8 @@ index.html                    landing page: hero, seven tool cards, about, foote
 404.html                      error page; pulls the tool list from a shared fragment
 assets/tokens.css             THE palette — dark + light tokens and shared chrome
 tools/theme.js                theme controller: sets data-theme, wires #btn-theme
-tools/mirth-transformer.html  tool: HL7 v2.5.1 -> Mirth Connect transformer builder
 hl7-fhir-converter.html       reference: HL7 v2.5.1 <-> FHIR R4 converter
 radiology-handbook.html       reference: radiology IT workflow handbook
-mcp/index.html + server.js    reference: HL7 v2.5.1 MCP server, docs + source
-mcp/fhir/index.html + server.js  reference: HL7 v2.5.1 -> FHIR R4 MCP server
 partials/tool-links.html      the seven tool links (used by 404.html)
 partials/detail/*.html        one "Use cases" panel per tool card
 partials/empty.html           zero-byte fragment; swapping it in collapses a panel
@@ -41,9 +38,17 @@ vendor/htmx.min.js            htmx 2.0.7, vendored — no CDN
 favicon.svg robots.txt sitemap.xml .nojekyll
 ```
 
-Six of the seven tool cards link to `/hl7-dicom-tools/…`, which is a **separate repository**
-(`coffeemilktea/hl7-dicom-tools`) deployed as a project site on the same host. Those files are not in
-this repo; only the Mirth Transformer Builder lives here.
+No tool page lives in this repo any more — every one of the seven cards links out to a project site
+on the same host. Six go to `/hl7-dicom-tools/…` (`coffeemilktea/hl7-dicom-tools`) and the Mirth
+Transformer Builder goes to `/HL7-Interface-Javascript-Builder/`
+(`coffeemilktea/HL7-Interface-Javascript-Builder`). It used to be duplicated — a copy here and a copy
+there, drifting apart — so the newer copy was pushed to that repo and the one here deleted.
+
+Those repos carry their own styling. The Mirth builder has the palette **inlined** rather than
+linking `/assets/tokens.css`, because its README promises a single-file, zero-dependency page that
+runs anywhere; re-inline it from `assets/tokens.css` if the palette changes. The two MCP servers also
+live in their own repos now (`hl7-v2-mcp-server`, `hl7-v2-fhir-mcp-server`) and are linked from the
+footer's Reference column.
 
 ## The styling contract
 
