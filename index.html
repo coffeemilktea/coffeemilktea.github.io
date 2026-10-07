@@ -67,7 +67,15 @@
       opacity: 0.55;
       will-change: transform;
     }
-    [data-theme="light"] .aurora span { opacity: 0.4; filter: blur(80px); }
+    [data-theme="light"] .aurora span { opacity: 0.48; filter: blur(80px); }
+    /* Light glass needs a real edge — a white border vanishes on Day. */
+    [data-theme="light"] .site-header,
+    [data-theme="light"] .filters,
+    [data-theme="light"] .spec,
+    [data-theme="light"] .tool-card,
+    [data-theme="light"] .privacy-card {
+      border-color: color-mix(in srgb, var(--border) 55%, transparent);
+    }
 
     .aurora .b1 {
       width: 46vw; height: 46vw; top: -8vw; left: -6vw;
@@ -310,17 +318,15 @@
     }
 
     .btn-primary {
-      background: color-mix(in srgb, var(--accent) 16%, transparent);
-      backdrop-filter: blur(10px) saturate(140%);
-      -webkit-backdrop-filter: blur(10px) saturate(140%);
-      color: var(--accent);
-      border: 1px solid color-mix(in srgb, var(--accent) 45%, transparent);
-      /* --glass-hi, not a hardcoded white alpha: a white inset keyed to the
-         dark ground washes out on the light one. The token flips with it. */
-      box-shadow: 0 8px 24px color-mix(in srgb, var(--accent) 18%, transparent), inset 0 1px 0 var(--glass-hi);
+      /* Solid accent fill so the hero CTA reads as the primary action
+         against the glass ghost button beside it. */
+      background: var(--accent);
+      color: var(--on-accent);
+      border: 1px solid var(--accent);
+      box-shadow: 0 10px 28px color-mix(in srgb, var(--accent) 32%, transparent), inset 0 1px 0 var(--glass-hi);
     }
     .btn-primary:hover {
-      background: color-mix(in srgb, var(--accent) 26%, transparent);
+      filter: brightness(1.08);
       border-color: var(--accent);
       transform: translateY(-1px);
     }
@@ -640,12 +646,15 @@
     @media (min-width: 660px)  { .tools-grid { grid-template-columns: repeat(2, 1fr); } }
     @media (min-width: 1000px) { .tools-grid { grid-template-columns: repeat(3, 1fr); } }
 
-    /* Seven cards in three columns leave one alone on the last row, hugging
-       the left. :last-child:nth-child(Xn+1) is exactly "last, and first in
-       its row", so it can be centred — and it re-evaluates by itself as htmx
-       swaps a filtered set in, with no card count baked into the CSS. */
+    /* Lone last-row card: centre it as a featured slot rather than leaving
+       a ragged left hole. :last-child:nth-child(Xn+1) is "last and first in
+       its row", so it re-evaluates when htmx swaps a filtered set in. */
     @media (min-width: 1000px) {
-      .tool-card:last-child:nth-child(3n + 1) { grid-column: 2; }
+      .tool-card:last-child:nth-child(3n + 1) {
+        grid-column: 1 / -1;
+        justify-self: center;
+        width: calc((100% - 36px) / 3);
+      }
     }
     @media (min-width: 660px) and (max-width: 999px) {
       .tool-card:last-child:nth-child(2n + 1) {
@@ -1094,7 +1103,8 @@
     @media (max-width: 820px) {
       .hero { padding: 60px 0 52px; }
       .about-grid { grid-template-columns: 1fr; }
-      .header-nav a:not(.nav-github) { display: none; }
+      /* Keep Tools reachable on narrow screens; About can tuck away. */
+      .header-nav a[href="#about"] { display: none; }
     }
 
     @media (max-width: 480px) {
