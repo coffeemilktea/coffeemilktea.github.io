@@ -5,8 +5,12 @@ browser-based, fully client-side tools for DICOM and HL7 medical data standards.
 
 Six of the seven tools live in **[hl7-dicom-tools](https://github.com/coffeemilktea/hl7-dicom-tools)**
 and are served under [`/hl7-dicom-tools/`](https://coffeemilktea.github.io/hl7-dicom-tools/).
-The seventh, the Mirth Transformer Builder, lives here in `tools/`. This repo also holds the landing
-page, the standalone reference pages, and the shared theme controller.
+The seventh, the Mirth Transformer Builder, lives in
+**[HL7-Interface-Javascript-Builder](https://github.com/coffeemilktea/HL7-Interface-Javascript-Builder)**
+and is linked from the landing page at
+[`/HL7-Interface-Javascript-Builder/`](https://coffeemilktea.github.io/HL7-Interface-Javascript-Builder/).
+This repo holds the landing page, the standalone reference pages, shared tokens, and the theme
+controller — not a local copy of the Mirth builder.
 
 No build step, no framework, no CDN — htmx is vendored and the type is a system font stack, so a
 page makes no third-party request at all. GitHub Pages serves plain files straight from `master`;
@@ -26,10 +30,9 @@ partials/
   empty.html                  zero-byte fragment; swapping it in collapses a panel
 radiology-handbook.html       standalone: radiology IT workflow handbook
 hl7-fhir-converter.html       standalone: HL7 v2.5.1 <-> FHIR R4 converter
-tools/mirth-transformer.html  standalone: HL7 v2.5.1 -> Mirth transformer builder (a tool card)
 tools/theme.js                shared dark/light controller
 vendor/htmx.min.js            htmx 2.0.7, vendored
-favicon.svg                   boba cup
+favicon.svg                   brand mark
 robots.txt sitemap.xml        /partials/ is disallowed; sitemap covers both repos' pages
 .nojekyll                     serve files as-is
 CLAUDE.md                     notes for Claude Code
@@ -40,15 +43,14 @@ theme toggle like everything else. They're in `sitemap.xml` and linked from the 
 column, but deliberately are *not* tool cards: the cards drive the filter counts and category tabs, so
 anything added there has to be categorised and counted.
 
-`tools/mirth-transformer.html` is the exception that went the other way — it *is* a card, tagged
-`hl7 interop` and counted in the All, HL7 v2.x and Interop tabs. It builds Mirth Connect transformers
-from HL7 v2.5.1 messages: drag a source field onto a target field and it emits the E4X JavaScript, a
-pasteable channel `<transformer>` XML block, and a live preview of the transformed message, with 15
-chainable transforms, per-mapping conditions and 33 ready-made recipes. It is also published
-on its own at
-**[HL7-Interface-Javascript-Builder](https://github.com/coffeemilktea/HL7-Interface-Javascript-Builder)** —
-that copy and this one have to be kept in step by hand, and the standalone copy is deliberately *not*
-on this site's palette, since it has no `/assets/tokens.css` to load.
+The Mirth Transformer Builder is a tool card on the landing page (tagged `hl7 interop`) but its
+page lives in
+**[HL7-Interface-Javascript-Builder](https://github.com/coffeemilktea/HL7-Interface-Javascript-Builder)**,
+not under `tools/` here. Drag a source HL7 v2.5.1 field onto a target field and it emits the E4X
+JavaScript, a pasteable channel `<transformer>` XML block, and a live preview, with chainable
+transforms, per-mapping conditions and ready-made recipes. That repo ships a single-file page with
+the Tokyo Night palette inlined (no `/assets/tokens.css`), so re-inline from `assets/tokens.css`
+here if the site palette changes.
 
 `hl7-fhir-converter.html` converts both ways between v2.5.1 messages (ADT, ORM, ORU, SIU, ACK) and
 FHIR R4 message Bundles, reporting a field-level mapping trace, everything the mapping does **not**
@@ -134,26 +136,28 @@ so a pushed URL would 404 or lie about what the page shows.
 
 ## Theme
 
-Dark is **brown sugar boba**, light is **milk tea**. Accents come off a boba shop's flavour wall:
+Dark is **Tokyo Night**; light is **Tokyo Night Day**. Accents are the stock Tokyo Night hues (light
+mode darkens each Day accent until it clears WCAG AA on every surface).
 
 | Token | Dark | Light | |
 |---|---|---|---|
-| `--bg` | `#1e1815` | `#f3e7d6` | steeped pearl / milk tea |
-| `--surface` | `#161110` | `#fdf8f0` | dark cup / milk foam |
-| `--accent` | `#c9a0ea` | `#67399c` | taro |
-| `--accent2` | `#f2a0bd` | `#a83464` | strawberry milk |
-| `--green` | `#a9c96a` | `#4d6b1c` | matcha |
-| `--yellow` | `#f0cf8a` | `#7a5a0e` | brown sugar |
-| `--red` | `#f0736f` | `#b03530` | lychee |
-| `--orange` | `#eb8a3c` | `#9c4d13` | thai tea |
-| `--text` | `#f7efe4` | `#2b211a` | milk foam |
+| `--bg` | `#1a1b26` | `#e1e2e7` | background |
+| `--surface` | `#16161e` | `#f4f4f8` | panels |
+| `--surface2` | `#292e42` | `#d4d6e1` | chips / heads |
+| `--accent` | `#7aa2f7` | `#1952cf` | blue |
+| `--accent2` | `#bb9af7` | `#762bd9` | purple |
+| `--cyan` | `#7dcfff` | `#006480` | cyan |
+| `--green` | `#9ece6a` | `#406616` | green |
+| `--yellow` | `#e0af68` | `#7d5300` | yellow |
+| `--red` | `#f7768e` | `#b5123e` | red |
+| `--orange` | `#ff9e64` | `#a33600` | orange |
+| `--text` | `#c0caf5` | `#343b58` | headings |
 
-**Taro leads for a reason.** The seven tool cards each set `--tint` to one of these, and a milk-tea
-tan accent landed within a few degrees of hue of the thai-tea orange — two cards would have looked
-identical. Taro sits ~200° away. If you retheme, keep the tint hues separated by at least ~12°.
+**Keep tint hues separated.** The seven tool cards each set `--tint` to one of the accents; if you
+retheme, keep neighbouring tint hues at least ~12° apart or two cards will read as identical.
 
 Both token blocks live in **`assets/tokens.css`**, and **every page on the site loads it** — landing,
-error, tool and reference alike. That file also carries the shared chrome: the focus ring,
+error, and reference alike. That file also carries the shared chrome: the focus ring,
 `::selection`, the `.site-bar` breadcrumb, the `.btn-theme` toggle and the `.site-foot` strip. A page's
 own `<style>` block is layout only.
 
@@ -169,24 +173,19 @@ Two rules hold the palette together:
   and the handbook's `@media print` block, since print is always ink on white. Everything else
   resolves through a token, so changing `assets/tokens.css` moves the whole site at once.
 - **Contrast is checked, not eyeballed.** Every foreground clears WCAG AA against `--bg`, `--surface`,
-  **and both glass fills** (`--glass`, `--glass-strong`) in both modes. Worst pair is currently
-  4.94:1. The glass fills matter: a colour can pass on the page background and still fail on a
-  frosted card.
-
-Motifs are CSS masks so they inherit `currentColor` and work in both modes without a second asset:
-`--pearl-glyph` (three tapioca pearls, the section-kicker bullet) and `--pearl-band` (pearls settling
-along the footer edge). The brand mark and favicon are a boba cup.
+  **and both glass fills** (`--glass`, `--glass-strong`) in both modes. The glass fills matter: a
+  colour can pass on the page background and still fail on a frosted card.
 
 `tools/theme.js` sets `data-theme` on `<html>` before first paint, defaults to dark, exposes
 `window.toggleTheme()`, and persists to the localStorage key **`hl7-tools-theme`**. That key is shared
 with the tools repo, so a visitor's choice follows them between the landing page and the tools. Every
 page carries a `#btn-theme` button and the controller wires it automatically; storage access is
-guarded, so a browser with site data blocked simply stays on dark.
+guarded (try/catch), so a browser with site data blocked simply stays on dark, and the theme button
+gets an `aria-label` that tracks the next mode.
 
-> Note: the tool pages in `hl7-dicom-tools` carry their own copy of the theme and are **not** yet on
-> this palette, so they won't match the landing page until they're updated there.
-
----
+> Note: the tool pages in `hl7-dicom-tools` still ship their own Tokyo Night copy via
+> `tools/theme.css` and are **not** yet on `/assets/tokens.css`, so small token drift is possible
+> until that repo wires the shared tokens.
 
 ## Editing
 
