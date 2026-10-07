@@ -150,6 +150,15 @@ td.d-b { color: var(--green); }
 .docs strong { color: var(--text); font-weight: 600; }
 footer.site-foot { margin-top: 50px; }
 .grow { flex: 1 1 auto; }
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -2370,13 +2379,28 @@ function renderReport(res) {
   const warns = res.issues.filter((x) => x.sev === "warn").length;
   setCount("c-warn", res.issues.length, errs ? "bad" : warns ? "warn" : "");
 
+  window.__lastLossy = res.lossy;
   $("tab-loss").innerHTML =
-    '<div class="tab-note">Populated in the source, read by nothing in the mapping. If something here matters to you, the conversion is not safe for your interface as it stands.</div>' +
+    '<div class="tab-note">Populated in the source, read by nothing in the mapping. If something here matters to you, the conversion is not safe for your interface as it stands.' +
+    (res.lossy.length
+      ? ' <button class="mini" type="button" id="btn-copy-unmapped" style="margin-left:8px">Copy unmapped</button>'
+      : '') +
+    '</div>' +
     (res.lossy.length
       ? table([res.kind === "fhir" ? "Field" : "Element", "What it is", "Value in the source"],
         res.lossy.map((l) => [esc(l.field), esc(l.label), esc(l.value)]), ["src", "note", "val"])
       : '<div class="empty"><span class="sev ok">complete</span> &nbsp;Every populated element was read by the mapping.</div>');
   setCount("c-loss", res.lossy.length, res.lossy.length ? "warn" : "");
+  const copyUn = $("btn-copy-unmapped");
+  if (copyUn) {
+    copyUn.addEventListener("click", () => {
+      const lines = (window.__lastLossy || []).map((l) => [l.field, l.label, l.value].join("\t")).join("\n");
+      navigator.clipboard.writeText(lines).then(() => {
+        copyUn.textContent = "Copied";
+        setTimeout(() => { copyUn.textContent = "Copy unmapped"; }, 1200);
+      }).catch(() => {});
+    });
+  }
 
   $("tab-spec").innerHTML =
     '<div class="tab-note">Segments in ' + (res.kind === "fhir" ? "the source message" : "the generated message") +

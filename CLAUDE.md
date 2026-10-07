@@ -73,8 +73,8 @@ Pages use one vocabulary, so a rule reads the same everywhere:
 | `--bg` `--surface` `--surface2` `--sink` | page, panel, raised panel, inset well |
 | `--border` `--border-soft` | rules and dividers |
 | `--text` `--body` `--muted` | headings, running text, labels |
-| `--accent` `--accent2` | taro (primary), strawberry |
-| `--cyan` `--green` `--yellow` `--red` `--orange` | jasmine, matcha, brown sugar, lychee, thai tea |
+| `--accent` `--accent2` | blue (primary), purple |
+| `--cyan` `--green` `--yellow` `--red` `--orange` | cyan, green, yellow, red, orange |
 | `--*-bg` `--*-line` | derived washes and hairlines for the accents |
 | `--on-accent` | text on a solid accent fill |
 | `--glass*` | frosted fills, used on the landing page |
