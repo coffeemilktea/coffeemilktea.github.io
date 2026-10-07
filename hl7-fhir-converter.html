@@ -55,6 +55,7 @@ button:hover, select:hover { border-color: var(--accent); color: var(--accent); 
 button:active { transform: translateY(1px); }
 button.primary { background: var(--accent-bg); border-color: var(--accent-line); color: var(--accent); }
 .spacer { flex: 1 1 auto; }
+.hint { font-size: 12px; color: var(--muted); white-space: nowrap; align-self: center; }
 .stat { font-family: var(--font-mono); font-size: 11.5px; color: var(--muted); }
 .stat b { color: var(--body); font-weight: 500; }
 
@@ -189,6 +190,7 @@ footer.site-foot { margin-top: 50px; }
     <label for="dir-f2v">FHIR &rarr; HL7 v2</label>
   </div>
   <select id="sample" aria-label="Load a sample message"></select>
+  <span class="hint" title="Samples use synthetic demographics (including SSN-shaped PID-3 repeats). Nothing here is real PHI.">All sample data is fake.</span>
   <button id="btn-convert" class="primary" type="button">Convert &#9654;</button>
   <button id="btn-swap" type="button" title="Send the output back to the input and flip direction">Output &rarr; Input</button>
   <button id="btn-trip" type="button" title="Convert, convert back, and diff against the original">Round-trip check</button>
@@ -288,6 +290,11 @@ footer.site-foot { margin-top: 50px; }
     <li>Only the segments listed above are converted. <code>RGS</code>, <code>AIS</code>, <code>AIP</code>,
         <code>NK1</code>, <code>GT1</code>, <code>PR1</code> and the rest are reported, not mapped — and
         when a structure requires one of them, the reverse direction says so instead of pretending.</li>
+    <li><code>OBR-18</code> (Placer Field 1) is mapped as an accession identifier (<code>type</code>
+        ACSN, system <code>urn:hl7:namespace:accession</code>) on <code>ServiceRequest</code> and/or
+        <code>DiagnosticReport</code>. That is an <em>IHE Radiology convention</em>, not an HL7 rule —
+        sites also put the accession in OBR-2, OBR-3 or ORC-3. Placer/filler order numbers (OBR-2/3) stay
+        separate identifiers with types PLAC/FILL.</li>
     <li><code>Z</code> segments have no FHIR equivalent. <code>ZDS</code> is carried as an identifier with
         system <code>urn:dicom:uid</code>; other Z segments are reported, not converted.</li>
     <li>This is a mapping aid, not a certified interface engine. Nothing here is validated against a
@@ -1194,6 +1201,8 @@ function hl7ToFhir(text) {
           const has = (v) => sr.identifier.some((x) => x.value === v);
           if (placer && !has(placer)) { sr.identifier.push({ type: { coding: [{ system: V2("0203"), code: "PLAC" }] }, value: placer }); T("OBR-2", "ServiceRequest.identifier[placer]", placer); }
           if (filler && !has(filler)) { sr.identifier.push({ type: { coding: [{ system: V2("0203"), code: "FILL" }] }, value: filler }); T("OBR-3", "ServiceRequest.identifier[filler]", filler); }
+          const accession = P(one(seg, 18));
+          if (accession && !has(accession)) { sr.identifier.push({ type: { coding: [{ system: V2("0203"), code: "ACSN" }] }, value: accession, system: LOCAL_NS + "accession" }); T("OBR-18", "ServiceRequest.identifier[accession]", accession, "IHE RAD convention: OBR-18 Placer Field 1 carries the accession number"); }
           if (!sr.identifier.length) delete sr.identifier;
           if (codeRaw) { sr.code = ce(codeRaw); T("OBR-4", "ServiceRequest.code", C(codeRaw, 1) + " " + C(codeRaw, 2)); }
           const requested = P(one(seg, 6)), sched = P(one(seg, 36));
@@ -1223,6 +1232,11 @@ function hl7ToFhir(text) {
           const drIds = [];
           if (placer) drIds.push({ type: { coding: [{ system: V2("0203"), code: "PLAC" }] }, value: placer });
           if (filler) drIds.push({ type: { coding: [{ system: V2("0203"), code: "FILL" }] }, value: filler });
+          const accessionDr = P(one(seg, 18));
+          if (accessionDr && !drIds.some((x) => x.value === accessionDr)) {
+            drIds.push({ type: { coding: [{ system: V2("0203"), code: "ACSN" }] }, value: accessionDr, system: LOCAL_NS + "accession" });
+            T("OBR-18", "DiagnosticReport.identifier[accession]", accessionDr, "IHE RAD convention: OBR-18 Placer Field 1 carries the accession number");
+          }
           if (drIds.length) dr.identifier = drIds;
           dr.code = ce(codeRaw) || { text: "Unidentified study" };
           T("OBR-4", "DiagnosticReport.code", C(codeRaw, 1) + " " + C(codeRaw, 2));
@@ -1905,6 +1919,8 @@ function fhirToHl7(text) {
     const placer = idType(ids, "PLAC"), filler = idType(ids, "FILL");
     if (placer) { s.set(2, idToEi(placer)); T((sr ? "ServiceRequest" : "DiagnosticReport") + ".identifier[PLAC]", "OBR-2", placer.value); }
     if (filler) { s.set(3, idToEi(filler)); T((sr ? "ServiceRequest" : "DiagnosticReport") + ".identifier[FILL]", "OBR-3", filler.value); }
+    const accession = idType(ids, "ACSN") || ids.find((x) => x.system === LOCAL_NS + "accession");
+    if (accession) { s.set(18, escapeHL7(accession.value, enc)); T((sr ? "ServiceRequest" : "DiagnosticReport") + ".identifier[ACSN]", "OBR-18", accession.value, "IHE RAD convention vs OBR-2/3 placer/filler order numbers"); }
     const code = (dr && du("code")) || (sr && su("code"));
     s.set(4, ccToCe(code));
     T((dr ? "DiagnosticReport" : "ServiceRequest") + ".code", "OBR-4", s.f[4]);
@@ -2264,7 +2280,7 @@ const SAMPLES = {
     "PID|1||MRN448120^^^MERCY^MR||Okafor^Adaeze^Chidinma||19780412|F|||118 Wren Court^^Portland^OR^97218^USA^H",
     "PV1|1|O|RAD^CT2^^MERCY_GEN||||1447^Bhatt^Nikhil^R^^Dr^MD||||||||||||V20260318-0091",
     "ORC|NW|PLC-778210|FLR-556140|GRP-99120|SC||||20260318143000-0400|||1447^Bhatt^Nikhil^R^^Dr^MD||||01^Physician order^HL70062",
-    "OBR|1|PLC-778210|FLR-556140|CT-HEAD-WO^CT HEAD WITHOUT CONTRAST^LOCAL|||||||O||Sudden onset headache, rule out bleed|||1447^Bhatt^Nikhil^R^^Dr^MD||||||||CT|||||||R51.9^Headache^I10C|||||20260318150000-0400",
+    "OBR|1|PLC-778210|FLR-556140|CT-HEAD-WO^CT HEAD WITHOUT CONTRAST^LOCAL|||||||O||Sudden onset headache, rule out bleed|||1447^Bhatt^Nikhil^R^^Dr^MD||ACC20260318-0140||||||CT|||||||R51.9^Headache^I10C|||||20260318150000-0400",
     "NTE|1|O|Patient is claustrophobic; allow extra time in the scanner.",
     "ZDS|1.2.840.113619.2.55.3.604688.98765.1774457400.1^^Application^DICOM",
   ].join("\n"),
@@ -2273,7 +2289,7 @@ const SAMPLES = {
     "PID|1||MRN448120^^^MERCY^MR||Okafor^Adaeze^Chidinma||19780412|F",
     "PV1|1|O|RAD^CT2^^MERCY_GEN||||1447^Bhatt^Nikhil^R^^Dr^MD||||||||||||V20260318-0091",
     "ORC|RE|PLC-778210|FLR-556140",
-    "OBR|1|PLC-778210|FLR-556140|CT-HEAD-WO^CT HEAD WITHOUT CONTRAST^LOCAL|||20260318150200-0400|20260318151000-0400||||||||1447^Bhatt^Nikhil^R^^Dr^MD||||||20260318171000-0400||CT|F||||||R51.9^Headache^I10C|3390^Vasquez^Elena^^^Dr^MD||9902^Lindqvist^Tomas",
+    "OBR|1|PLC-778210|FLR-556140|CT-HEAD-WO^CT HEAD WITHOUT CONTRAST^LOCAL|||20260318150200-0400|20260318151000-0400||||||||1447^Bhatt^Nikhil^R^^Dr^MD||ACC20260318-0140||||20260318171000-0400||CT|F||||||R51.9^Headache^I10C|3390^Vasquez^Elena^^^Dr^MD||9902^Lindqvist^Tomas",
     "OBX|1|TX|IMP^Impression^LOCAL||No acute intracranial haemorrhage, mass effect or midline shift.||||||F|||20260318171000-0400",
     "OBX|2|NM|8867-4^Heart rate^LN||78|/min^per minute^UCUM|60-100|N|||F|||20260318150200-0400",
     "OBX|3|CE|RADLEX-LAT^Laterality^LOCAL||G-A101^Left^SCT||||||F",
@@ -2310,7 +2326,7 @@ const MAPPING_TABLE = [
   ["DG1", "Condition", "category is always encounter-diagnosis; DG1-15 becomes the diagnosis rank extension"],
   ["IN1", "Coverage (+ Organization payor)", "plan, group, period, policy number, relationship"],
   ["ORC", "ServiceRequest", "ORC-1 order control and ORC-5 order status both feed status"],
-  ["OBR", "ServiceRequest and/or DiagnosticReport", "in ORU it becomes the report; elsewhere it enriches the order"],
+  ["OBR", "ServiceRequest and/or DiagnosticReport", "OBR-2/3 → PLAC/FILL ids; OBR-18 → ACSN (IHE accession convention); in ORU it becomes the report"],
   ["OBX", "Observation", "OBX-2 selects the value[x] type; OBX-11 gives the status"],
   ["NTE", "note / conclusion / comment on whatever preceded it", "notes with no preceding mappable segment are reported, not dropped quietly"],
   ["SCH", "Appointment", "SCH-11 timing quantity supplies start, end and duration"],

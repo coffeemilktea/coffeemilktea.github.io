@@ -782,7 +782,7 @@ footer p{max-width:70ch}
       <tr><td class="ka">CX</td><td>Extended composite ID</td><td><code>ID ^ ^ ^ AssigningAuthority ^ IdentifierTypeCode</code> — this is PID-3. Component 5 is how you find the <code>MR</code> repetition</td></tr>
       <tr><td class="ka">XPN</td><td>Extended person name</td><td><code>Family ^ Given ^ Middle ^ Suffix ^ Prefix ^ Degree ^ NameTypeCode</code> — component 7 <code>L</code> = legal</td></tr>
       <tr><td class="ka">XCN</td><td>Extended composite ID + name</td><td><code>ID ^ Family ^ Given ^ Middle ^ Suffix ^ Prefix ^ Degree</code> — used for every physician field</td></tr>
-      <tr><td class="ka">CE / CWE</td><td>Coded element</td><td><code>Identifier ^ Text ^ CodingSystem</code> — OBR-4 procedure codes. CWE replaces CE in 2.5+</td></tr>
+      <tr><td class="ka">CE / CWE</td><td>Coded element</td><td><code>Identifier ^ Text ^ CodingSystem</code> — OBR-4 procedure codes. Coded fields are <b>CE</b> in 2.5.1; CWE arrives in 2.7 (ERR-3 and ERR-5 are the 2.5.1 CWE exceptions)</td></tr>
       <tr><td class="ka">TS / DTM</td><td>Timestamp</td><td><code>YYYYMMDDHHMMSS[.S][+/-ZZZZ]</code>. Truncation to 8 chars is legal, which is why dates arrive with and without times</td></tr>
       <tr><td class="ka">HD</td><td>Hierarchic designator</td><td><code>NamespaceID ^ UniversalID ^ UniversalIDType</code> — sending/receiving facility, assigning authority</td></tr>
       <tr><td class="ka">EI</td><td>Entity identifier</td><td><code>EntityIdentifier ^ NamespaceID ^ UniversalID ^ UniversalIDType</code> — order numbers</td></tr>
@@ -1036,7 +1036,7 @@ Typical exchange on one socket:
 <pre><span class="seg">MSH</span>|^~\&amp;|POWERSCRIBE|MERCY|EPIC|MERCY|20260811142200||<span class="hi">ORU^R01</span>|MSG00931|P|2.3.1
 <span class="seg">PID</span>|1||10045522^^^MERCY^MR||RIVERA^MARIA^L||19710304|F
 <span class="seg">ORC</span>|RE|PL8891234|FL5567890
-<span class="seg">OBR</span>|1|PL8891234|FL5567890|CT7150^CT ABDOMEN PELVIS W CONTRAST^C4|||20260811103000|||||||||<span class="hi">ACC20260811-0417</span>||||||CT|<span class="hi">F</span>|||||||<span class="hi">9911^OKAFOR^ADA^^^^MD</span>
+<span class="seg">OBR</span>|1|PL8891234|FL5567890|CT7150^CT ABDOMEN PELVIS W CONTRAST^C4|||20260811103000|||||||||||<span class="hi">ACC20260811-0417</span>||||||CT|<span class="hi">F</span>|||||||<span class="hi">9911^OKAFOR^ADA^^^^MD</span>
 <span class="seg">OBX</span>|1|<span class="hi">TX</span>|<span class="hi">TECHNIQUE</span>||Axial images through the abdomen and pelvis after IV contrast.||||||F
 <span class="seg">OBX</span>|2|TX|<span class="hi">COMPARISON</span>||CT abdomen 14 March 2024.||||||F
 <span class="seg">OBX</span>|3|TX|<span class="hi">FINDINGS</span>||A 4 mm nonobstructing calculus is present in the left||||||F
@@ -1691,14 +1691,14 @@ POST   /workitems/{uid}/subscribers/{aetitle}    subscribe to notifications</pre
 
   <div class="filter">
     <input id="tagq" type="search" placeholder="Filter by tag, name or note — e.g. 0008,0050 or accession" aria-label="Filter tags">
-    <button class="chip" data-cat="all" aria-pressed="true">All</button>
-    <button class="chip" data-cat="meta" aria-pressed="false">Meta</button>
-    <button class="chip" data-cat="patient" aria-pressed="false">Patient</button>
-    <button class="chip" data-cat="study" aria-pressed="false">Study</button>
-    <button class="chip" data-cat="series" aria-pressed="false">Series</button>
-    <button class="chip" data-cat="image" aria-pressed="false">Image</button>
-    <button class="chip" data-cat="acq" aria-pressed="false">Acquisition</button>
-    <button class="chip" data-cat="wl" aria-pressed="false">Worklist / MPPS</button>
+    <button class="chip" type="button" data-cat="all" aria-pressed="true">All</button>
+    <button class="chip" type="button" data-cat="meta" aria-pressed="false">Meta</button>
+    <button class="chip" type="button" data-cat="patient" aria-pressed="false">Patient</button>
+    <button class="chip" type="button" data-cat="study" aria-pressed="false">Study</button>
+    <button class="chip" type="button" data-cat="series" aria-pressed="false">Series</button>
+    <button class="chip" type="button" data-cat="image" aria-pressed="false">Image</button>
+    <button class="chip" type="button" data-cat="acq" aria-pressed="false">Acquisition</button>
+    <button class="chip" type="button" data-cat="wl" aria-pressed="false">Worklist / MPPS</button>
     <span class="count" id="tagcount"></span>
   </div>
 
