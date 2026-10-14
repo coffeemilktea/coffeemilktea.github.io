@@ -1,237 +1,48 @@
 # Healthcare Data Tools
 
-The landing page for **[coffeemilktea.github.io](https://coffeemilktea.github.io/)** — a home for
-browser-based, fully client-side tools for DICOM and HL7 medical data standards.
+Landing page and reference pages for free, browser-based HL7 v2.5.1, DICOM and FHIR tools.
 
-Six of the seven tools live in **[hl7-dicom-tools](https://github.com/coffeemilktea/hl7-dicom-tools)**
-and are served under [`/hl7-dicom-tools/`](https://coffeemilktea.github.io/hl7-dicom-tools/).
-The seventh, the Mirth Transformer Builder, lives in
-**[HL7-Interface-Javascript-Builder](https://github.com/coffeemilktea/HL7-Interface-Javascript-Builder)**
-and is linked from the landing page at
-[`/HL7-Interface-Javascript-Builder/`](https://coffeemilktea.github.io/HL7-Interface-Javascript-Builder/).
-This repo holds the landing page, the standalone reference pages, shared tokens, and the theme
-controller — not a local copy of the Mirth builder.
+**Live:** [coffeemilktea.github.io](https://coffeemilktea.github.io/)
 
-No build step, no framework, no CDN — htmx is vendored and the type is a system font stack, so a
-page makes no third-party request at all. GitHub Pages serves plain files straight from `master`;
-`.nojekyll` turns Jekyll processing off entirely.
+## Pages
 
----
-
-## What's in here
-
-```
-index.html                    shell, hero, the seven tool cards, about, footer
-404.html                      error page; pulls its tool list from a shared fragment at load
-assets/tokens.css             the palette — every page on the site loads it
-partials/
-  tool-links.html             the seven tool links, shared with 404.html
-  detail/*.html               one per tool — "Use cases" panel, each shipping its own Hide control
-  empty.html                  zero-byte fragment; swapping it in collapses a panel
-radiology-handbook.html       standalone: radiology IT workflow handbook
-hl7-fhir-converter.html       standalone: HL7 v2.5.1 <-> FHIR R4 converter
-tools/theme.js                shared dark/light controller
-vendor/htmx.min.js            htmx 2.0.7, vendored
-favicon.svg                   brand mark
-robots.txt sitemap.xml        /partials/ is disallowed; sitemap covers both repos' pages
-.nojekyll                     serve files as-is
-CLAUDE.md                     notes for Claude Code
-```
-
-The two reference pages carry no htmx and their own layout CSS, but they share the site palette like
-everything else. They're in `sitemap.xml` and linked from the footer's **Reference**
-column, but deliberately are *not* tool cards: the cards drive the filter counts and category tabs, so
-anything added there has to be categorised and counted.
-
-The Mirth Transformer Builder is a tool card on the landing page (tagged `hl7 interop`) but its
-page lives in
-**[HL7-Interface-Javascript-Builder](https://github.com/coffeemilktea/HL7-Interface-Javascript-Builder)**,
-not under `tools/` here. Drag a source HL7 v2.5.1 field onto a target field and it emits the E4X
-JavaScript, a pasteable channel `<transformer>` XML block, and a live preview, with chainable
-transforms, per-mapping conditions and ready-made recipes. That repo ships a single-file page with
-the Tokyo Night palette inlined (no `/assets/tokens.css`), so re-inline from `assets/tokens.css`
-here if the site palette changes.
-
-`hl7-fhir-converter.html` converts both ways between v2.5.1 messages (ADT, ORM, ORU, SIU, ACK) and
-FHIR R4 message Bundles, reporting a field-level mapping trace, everything the mapping does **not**
-carry over, and a round-trip diff. Its segment field names, code tables and message structures are
-generated from the same reference data as the
-[HL7 v2.5.1 reference MCP server](https://github.com/coffeemilktea/hl7-v2-mcp-server) — change the
-definitions there and the `HL7_SPEC`, `HL7_TABLES` and `HL7_STRUCTURES` blocks in the converter have
-to be regenerated to match.
-
-## The MCP servers live elsewhere
-
-Two Model Context Protocol servers used to be served from `/mcp/` as source downloads, which GitHub
-Pages could host but never run. They are now standalone repos you can clone, install and deploy:
-
-- **[hl7-v2-mcp-server](https://github.com/coffeemilktea/hl7-v2-mcp-server)** — the HL7 v2.5.1
-  reference server: segment definitions, message structures, code tables, a parser, and a validator
-  with deep profiles for ORM^O01, ADT^A08, ADT^A31, ADT^A40 and ORU^R01.
-- **[hl7-v2-fhir-mcp-server](https://github.com/coffeemilktea/hl7-v2-fhir-mcp-server)** — the v2-to-FHIR
-  mapping server: field, datatype and code-value mappings, plus whole-message conversion of ORM, ADT
-  and ORU into a FHIR R4 transaction Bundle.
-
-They are companions, not versions of each other. The reference server answers *what does this segment
-mean*; the FHIR server answers *what does it become in R4*. They default to ports 3000 and 3001, so
-both can run at once. Both are linked from the footer's **Reference** column.
-
-Both are **work in progress**, and the landing page footer groups them under Reference and says so.
-Keep that label until they are finished.
-
----
-
-## The landing page is hypermedia
-
-Beyond the dark-only theme stub and a one-line `no-js` class remover in `<head>`, the landing page carries
-**no custom JavaScript**. Every interaction below is an htmx attribute plus CSS.
-
-### The page filters itself
-
-The category tabs don't fetch pre-built per-category fragments. They re-fetch **this page** and
-`hx-select` the subset they want:
-
-```html
-<input type="radio" name="view" id="view-hl7"
-       hx-get="/" hx-select=".tool-card[data-cat~='hl7']">
-<label for="view-hl7">HL7 v2.5.1 <span class="filter-count">4</span></label>
-```
-
-`hx-select` returns every match, not just the first, so the cards in `index.html` stay the single
-source of truth — **no card is ever written twice**, and there are no category partials to keep in
-sync. Shared inherited config (`hx-target`, `hx-swap`, `hx-trigger`, `hx-indicator`, `hx-sync`) lives
-once on the enclosing `<fieldset>`; `hx-sync="this:replace"` cancels an in-flight request when you
-click another tab.
-
-The tabs are real radio inputs, so `:checked` drives the active styling in pure CSS and the group
-stays keyboard-navigable. The live "N shown" readout is a CSS counter over `.tool-card` — which is
-why it sits *after* the grid in the markup, since a counter only sees elements preceding it in
-document order.
-
-### Panels open and close over the wire
-
-Each card's **Use cases** button `hx-get`s its fragment; the fragment ships its own **Hide details**
-control, which `hx-get`s the zero-byte `partials/empty.html` back into the same target. Both
-directions are plain hypermedia exchanges. `:has(.tool-detail > *)` hides the trigger once a panel is
-in, and `.htmx-request` drives the spinner. This keeps working on cards htmx swapped in via a filter,
-since htmx processes swapped content.
-
-### What it deliberately doesn't do
-
-The **tool cards stay in `index.html`** rather than being fragment-loaded. Crawlers and no-JS
-visitors get the complete tool list, descriptions, and links in the initial response; htmx only ever
-*adds* content — the detail panels, and nothing else. Nothing crawlable is deferred.
-
-`hx-boost` is scoped to the two brand links — the only same-origin, same-shell navigations on the
-page. It is **not** global: the tool links go to the other repo's apps, which ship their own
-`<head>`, styles, and scripts, and boosting those would swap bodies across documents that don't
-share a shell.
-
-`hx-push-url` is **not** used on the filters. GitHub Pages can't serve a filtered state on refresh,
-so a pushed URL would 404 or lie about what the page shows.
-
-`/partials/` is disallowed in `robots.txt` so fragments aren't indexed as thin standalone pages.
-
----
-
-## Theme
-
-Dark only: **Tokyo Night** (night variant), stock palette. Light mode was removed so the site and every
-tool in `hl7-dicom-tools` look identical.
-
-| Token | Value | |
+| Page | Desktop | Mobile |
 |---|---|---|
-| `--bg` | `#1a1b26` | background |
-| `--surface` | `#16161e` | panels (bg-dark) |
-| `--surface2` | `#292e42` | chips / heads (bg-highlight) |
-| `--border` | `#414868` | rules (terminal-black) |
-| `--accent` | `#7aa2f7` | blue |
-| `--accent2` | `#bb9af7` | magenta |
-| `--cyan` | `#7dcfff` | cyan |
-| `--green` | `#9ece6a` | green |
-| `--yellow` | `#e0af68` | yellow |
-| `--red` | `#f7768e` | red |
-| `--orange` | `#ff9e64` | orange |
-| `--text` | `#c0caf5` | headings (fg) |
-| `--body` | `#a9b1d6` | running text (fg-dark) |
-| `--muted` | `#9aa5ce` | secondary text (AA on every surface) |
-| `--comment` | `#565f89` | decoration only (~3:1, never text) |
+| **[Landing page](https://coffeemilktea.github.io/)**: the tool catalogue, with category filters and expandable use-case panels (htmx). · [`index.html`](index.html) | <img src="docs/screenshots/landing-desktop.webp" width="420" alt="Landing page, desktop"> | <img src="docs/screenshots/landing-mobile.webp" width="150" alt="Landing page, mobile"> |
+| **[HL7 v2.5.1 ↔ FHIR R4 Converter](https://coffeemilktea.github.io/hl7-fhir-converter.html)**: converts HL7 v2.5.1 messages (ADT, ORM, ORU, SIU, ACK) to FHIR R4 message Bundles and back, with a field-level mapping trace, a report of anything that couldn't be mapped faithfully, and a round-trip check. · [`hl7-fhir-converter.html`](hl7-fhir-converter.html) | <img src="docs/screenshots/hl7-fhir-converter-desktop.webp" width="420" alt="Converter, desktop"> | <img src="docs/screenshots/hl7-fhir-converter-mobile.webp" width="150" alt="Converter, mobile"> |
+| **[Radiology Transaction Handbook](https://coffeemilktea.github.io/radiology-handbook.html)**: a reference for PACS administrators covering the order-to-image timeline, HL7 ADT/ORM/ORU, DICOM SCU/SCP roles, DIMSE, DICOMweb, tags, ports and troubleshooting. · [`radiology-handbook.html`](radiology-handbook.html) | <img src="docs/screenshots/radiology-handbook-desktop.webp" width="420" alt="Handbook, desktop"> | <img src="docs/screenshots/radiology-handbook-mobile.webp" width="150" alt="Handbook, mobile"> |
 
-**Keep tint hues separated.** The seven tool cards each set `--tint` to one of the accents; if you
-retheme, keep neighbouring tint hues at least ~12° apart or two cards will read as identical.
+The landing page links to these tools:
+- the six tools in [hl7-dicom-tools](https://github.com/coffeemilktea/hl7-dicom-tools) (HL7 Parser, HL7 Diff Checker, DICOM → HL7 Order, DICOM Toolbox, DICOM Viewer & Tag Morph, MWL Simulator)
+- the Mirth Transformer Builder ([HL7-Interface-Javascript-Builder](https://github.com/coffeemilktea/HL7-Interface-Javascript-Builder))
 
-The palette and the base components (inputs, tables, code blocks, drop zones, focus ring) live in
-**`assets/tokyo-night.css`**. An identical copy is `tools/tokyo-night.css` in `hl7-dicom-tools`; keep
-the two byte-identical. `assets/tokens.css` imports it and adds the site chrome: the `.site-bar`
-breadcrumb, glass tokens and the `.site-foot` strip. A page's own `<style>` block is layout only.
+## Features
 
-Pages speak one vocabulary — `--bg` `--surface` `--surface2` `--sink` for surfaces, `--border`
-`--border-soft` for rules, `--text` `--body` `--muted` for type, the accents above, `--*-bg` and
-`--*-line` for derived washes, and `--on-accent` for text on a solid fill. The reference pages hold a
-semantic convention on top of that: **HL7 v2 is `--yellow`, DICOM is `--cyan`, FHIR is `--green`**.
+- No build step and no Jekyll (`.nojekyll`): files are served exactly as committed.
+- The landing page uses htmx 2.0.7, vendored in `vendor/` (no CDN). Apart from that and the small shared `tools/theme.js`, it has no custom JavaScript.
+- Dark Tokyo Night theme from `assets/tokyo-night.css`, byte-identical to the copy in hl7-dicom-tools, so the site and the tools look the same.
+- Mobile-friendly: 16px inputs on touch screens, 44px tap targets, wide tables and code blocks scroll inside their own box, and safe-area insets are respected.
 
-Two rules hold the palette together:
+## HL7 standard: v2.5.1
 
-- **No page declares its own colours.** No hex, `rgb()` or `rgba()` in a page stylesheet, with three
-  deliberate exceptions: black shadow and scrim alphas, the handbook's greyscale densitometry wedge,
-  and the handbook's `@media print` block, since print is always ink on white. Everything else
-  resolves through a token, so changing `assets/tokens.css` moves the whole site at once.
-- **Contrast is checked, not eyeballed.** Every foreground clears WCAG AA against `--bg`, `--surface`,
-  `--surface2`, `--sink` and both glass fills (`--glass`, `--glass-strong`).
-
-`tools/theme.js` is now a dark-only stub: it clears any old light-mode choice saved under the
-localStorage key `hl7-tools-theme` (shared with the tools repo) and keeps `window.toggleTheme()` as a
-no-op. There is no theme button.
-
-> Note: the tool pages in `hl7-dicom-tools` still ship their own Tokyo Night copy via
-> `tools/theme.css` and are **not** yet on `/assets/tokens.css`, so small token drift is possible
-> until that repo wires the shared tokens.
-
-## Editing
-
-**Changing a tool's copy?** Edit the card in `index.html` and its `partials/detail/*.html` fragment.
-Descriptions are deliberately not duplicated in this README — the cards and fragments are what the
-site actually serves.
-
-**Adding a tool?** Four places, or the page will lie about itself:
-
-1. a `.tool-card` in `index.html`, with `data-cat` and a `--tint`
-2. the `filter-count` numbers on the affected category tabs, and the "N tools" heading
-3. `partials/tool-links.html` (feeds `404.html`) **and** the footer's **Tools** column in `index.html`
-4. `sitemap.xml`
-
-A new page starts by linking `/assets/tokens.css` and `/tools/theme.js`, adding a `#btn-theme` button
-and a `.site-bar` breadcrumb, then writing layout CSS that only ever reads the shared tokens.
-
-**Retheming?** Edit `assets/tokens.css` — that is the only place colours are defined — and re-check
-contrast against all four surfaces in both modes.
-
----
+The converter reads and writes HL7 **v2.5.1**: it warns when an input's MSH-12 is a different version, and it always writes `2.5.1` to MSH-12 when converting from FHIR. The handbook's examples use v2.5.1 too.
 
 ## Privacy
 
-**Client-side only — no data leaves your browser.** All parsing, rendering, and modification happen
-locally in the browser. No files, HL7 messages, or DICOM images are uploaded anywhere. That makes
-these tools safe for inspecting data that may contain PHI. The site sets no cookies and runs no
-analytics.
+Everything runs client-side. The converter and the handbook make no network requests with your data: messages and Bundles are converted in your browser.
 
----
-
-## Running locally
-
-Serve the repository root over HTTP:
+## Local development
 
 ```bash
-python3 -m http.server 8000
+git clone https://github.com/coffeemilktea/coffeemilktea.github.io.git
+cd coffeemilktea.github.io
+python3 -m http.server 8000   # open http://localhost:8000/
 ```
 
-It must be **HTTP, not `file://`** — htmx fetches the fragments in `partials/` with XHR, and the page
-references `/vendor/`, `/tools/`, and `/partials/` by root-absolute path. Both break on a `file://`
-origin.
+Use HTTP, not `file://`. htmx fetches the `partials/` fragments with XHR, and pages reference `/assets/`, `/tools/`, `/vendor/` and `/partials/` by root-absolute path. See [CLAUDE.md](CLAUDE.md) for the file layout and theme rules.
 
-One gotcha when editing fragments: `python3 -m http.server` sends no cache headers, so a browser will
-happily serve you a stale `partials/*.html` while the page itself reloads fresh. If a fragment edit
-doesn't show up, hard-reload or restart on a different port.
+## Tech
 
-The tools themselves run from their own repository — see
-[hl7-dicom-tools](https://github.com/coffeemilktea/hl7-dicom-tools).
+- Static HTML, CSS and JavaScript, plus htmx for the landing page's panels.
+- `assets/tokyo-night.css`: palette and base components. `assets/tokens.css`: site chrome. `tools/theme.js`: shared helpers.
+- Published with GitHub Pages from `master`.
