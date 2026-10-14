@@ -157,3 +157,175 @@
   .site-bar { flex-wrap: wrap; }
 }
 
+
+/* ═══════════════ Shared app header (same pattern as hl7-dicom-tools/tools/theme.css) ═══════════════
+   One header for every tool and page: gradient mark, title/subtitle stack,
+   version badge, right-aligned actions with the home link. */
+
+.app-header {
+  background: var(--header-bg);
+  backdrop-filter: saturate(160%) blur(12px);
+  -webkit-backdrop-filter: saturate(160%) blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* Hairline of accent light along the top edge */
+.app-header::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(90deg,
+    transparent,
+    rgba(var(--accent-rgb), .55),
+    rgba(var(--accent2-rgb), .45),
+    transparent);
+}
+
+.app-mark {
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  border-radius: 9px;
+  background: linear-gradient(135deg, var(--accent), var(--accent2));
+  box-shadow: var(--shadow-1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  line-height: 1;
+  color: #fff;               /* for non-emoji glyph marks on the gradient */
+}
+
+.app-titles h1 {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.2px;
+  color: var(--text);
+  white-space: nowrap;
+}
+.app-titles p {
+  margin: 2px 0 0;
+  font-size: 11.5px;
+  line-height: 1.3;
+  color: var(--muted);
+}
+
+/* Controls the tool owns — always right-aligned, wrapping on narrow screens */
+.app-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
+@media (max-width: 720px) {
+  .app-header { padding: 10px 14px; }
+  .app-titles p { display: none; }
+}
+
+/* ── Home link ──
+   The one link a tool carries: back to the site it came from. */
+.app-home {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: var(--surface2);
+  color: var(--muted);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: .2px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color .15s, border-color .15s, background .15s, box-shadow .15s;
+}
+.app-home:hover {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(var(--accent-rgb), .10);
+  box-shadow: var(--shadow-1);
+}
+.app-home:active { transform: translateY(1px); box-shadow: none; }
+.app-home:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.app-home .app-home-arrow { font-size: 10px; opacity: .8; }
+
+/* ── Header chips ── */
+.app-badge {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  padding: 3px 8px;
+  border-radius: 20px;
+  color: var(--accent2);
+  background: rgba(var(--accent2-rgb), .15);
+  border: 1px solid rgba(var(--accent2-rgb), .35);
+  white-space: nowrap;
+}
+
+.app-hint {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+}
+@media (max-width: 900px) { .app-hint { display: none; } }
+
+/* ── Header on phones: keep everything on-screen ──
+   The title stays on one line (ellipsis), the home link collapses to its
+   arrow (its text is still the accessible name), and tool controls wrap
+   onto their own row instead of running off the right edge. */
+.app-titles { min-width: 0; }
+.app-titles h1 { overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 560px) {
+  .app-header { flex-wrap: wrap; row-gap: 8px; }
+  .app-titles { flex: 1 1 0; }
+  .app-actions { margin-left: 0; flex: 1 1 100%; justify-content: flex-start; }
+  .app-actions:has(> .app-home:only-child) { flex: 0 0 auto; margin-left: auto; }
+  .app-home { font-size: 0; gap: 0; padding: 0 10px; }
+  .app-home .app-home-arrow { font-size: 12px; opacity: 1; }
+  .app-badge { display: none; }
+}
+
+/* ── Shared live-region toast (theme.js: window.uxAnnounce) ── */
+.ux-toast {
+  position: fixed; left: 50%; bottom: 20px; z-index: 1000;
+  transform: translate(-50%, 8px); opacity: 0; pointer-events: none;
+  padding: 8px 14px; border-radius: var(--radius-sm, 6px);
+  background: var(--surface2); color: var(--text);
+  border: 1px solid rgba(var(--green-rgb), .45);
+  box-shadow: var(--shadow-1); font: 600 12px/1.3 var(--font-sans);
+  transition: opacity .15s, transform .15s;
+}
+.ux-toast.show { opacity: 1; transform: translate(-50%, 0); }
+.ux-toast.err { border-color: rgba(var(--red-rgb), .5); color: var(--red); }
+
+/* Click-to-open drop zones are keyboard operable (theme.js adds role/tabindex) */
+:where(.drop-zone, .upload-zone, .reader-drop)[tabindex]:focus-visible { border-color: var(--accent); }
+
+.app-mark svg { width: 17px; height: 17px; }
+.app-home + .app-home { margin-left: 0; }
+/* Page variant: the mark links home and a small eyebrow shows the site. The
+   page's own <h1> stays in its hero, so the header title is a styled div. */
+a.app-mark { text-decoration: none; }
+.app-eyebrow { margin: 0 0 1px !important; font: 500 10.5px/1.2 var(--font-mono) !important; letter-spacing: .04em; }
+.app-eyebrow a { color: var(--muted); text-decoration: none; }
+.app-eyebrow a:hover { color: var(--accent); }
+.app-titles .app-h { font: 700 15px/1.25 var(--font-sans); letter-spacing: -0.2px; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 720px) { .app-eyebrow { display: none; } }
