@@ -1,6 +1,7 @@
+@import url("tokyo-night.css");
 /* ═══════════════════════════════════════════════════════════════════════
    Tokyo Night design tokens — the single source of truth for the whole site.
-   Dark is Tokyo Night; light is Tokyo Night Day.
+   Dark only (Tokyo Night). Base palette + components: tokyo-night.css.
 
    Every page links this file and then aliases its own local variable
    names onto these tokens, so a page keeps its layout CSS but can never
@@ -25,7 +26,7 @@
   --surface:     #16161e;  /* bg_dark — panels             */
   --surface2:    #292e42;  /* bg_highlight — chips, heads  */
   --sink:        #13131a;  /* below bg — insets, code wells */
-  --border:      #3b4261;  /* terminal black               */
+  --border:      #414868;  /* terminal black               */
   --border-soft: #232433;  /* border, half strength        */
 
   /* ── Accents ──
@@ -84,54 +85,6 @@
   --pearl-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='26' viewBox='0 0 34 26'%3E%3Cg fill='%23000'%3E%3Ccircle cx='8' cy='20' r='6'/%3E%3Ccircle cx='25' cy='21' r='5'/%3E%3Ccircle cx='17' cy='10' r='4'/%3E%3C/g%3E%3C/svg%3E");
 }
 
-[data-theme="light"] {
-  --bg:          #e1e2e7;  /* Tokyo Night Day background */
-  --surface:     #f4f4f8;
-  --surface2:    #d4d6e1;
-  --sink:        #d8dae4;
-  --border:      #a8adc9;
-  --border-soft: #c4c8db;
-
-  /* Tokyo Night Day hues, each darkened until it clears AA on every light
-     surface. Stock Day values sit at 2.7–4.3:1 against --surface2 and
-     --sink, so they are not usable as text here. Keep the hue if you
-     retouch: blue 221°, purple 266°, cyan 193°, green 88°, yellow 40°,
-     red 344°, orange 20°. */
-  --accent:   #1952cf;  /* blue   */
-  --accent2:  #762bd9;  /* purple */
-  --cyan:     #006480;  /* cyan   */
-  --green:    #406616;  /* green  */
-  --yellow:   #7d5300;  /* yellow */
-  --red:      #b5123e;  /* red    */
-  --orange:   #a33600;  /* orange */
-
-  --text:  #343b58;
-  --body:  #4c5279;
-  --muted: #525980;
-
-  --shadow: 0 20px 45px rgba(52, 59, 88, .14);
-
-  --glass:        rgba(255, 255, 255, 0.62);
-  --glass-strong: rgba(255, 255, 255, 0.78);
-  /* Ink-tinted edge so glass cards stay visible on Day surfaces. */
-  --glass-border: rgba(52, 59, 88, 0.16);
-  --glass-hi:     rgba(255, 255, 255, 0.90);
-  --glass-shadow: 0 8px 32px rgba(52, 59, 88, .12), inset 0 1px 0 rgba(255,255,255,.6);
-
-  /* The washes read thin on a light ground, so they carry a little more. */
-  --accent-bg:   color-mix(in srgb, var(--accent) 10%, transparent);
-  --accent-line: color-mix(in srgb, var(--accent) 34%, transparent);
-  --green-bg:    color-mix(in srgb, var(--green)  10%, transparent);
-  --green-line:  color-mix(in srgb, var(--green)  34%, transparent);
-  --yellow-bg:   color-mix(in srgb, var(--yellow) 10%, transparent);
-  --yellow-line: color-mix(in srgb, var(--yellow) 34%, transparent);
-  --cyan-bg:     color-mix(in srgb, var(--cyan)   10%, transparent);
-  --cyan-line:   color-mix(in srgb, var(--cyan)   34%, transparent);
-  --red-bg:      color-mix(in srgb, var(--red)    10%, transparent);
-  --red-line:    color-mix(in srgb, var(--red)    34%, transparent);
-
-  --on-accent: #f4f4f8;
-}
 
 /* ═══ Shared chrome ════════════════════════════════════════════════════
    The bits every page needs to look like the same site: the focus ring,
@@ -184,27 +137,6 @@
 }
 .site-bar .bar-link:hover { color: var(--accent); }
 
-/* ── Theme toggle (wired up by tools/theme.js via #btn-theme) ── */
-.btn-theme {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  height: 28px;
-  padding: 0 11px;
-  border-radius: 999px;
-  border: 1px solid var(--border);
-  background: var(--surface2);
-  color: var(--muted);
-  font-family: var(--font-sans);
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: color .15s, border-color .15s, background .15s;
-}
-.btn-theme:hover { color: var(--text); border-color: var(--accent); }
-.btn-theme:active { transform: scale(.96); }
 
 /* ── Site footer strip shared by the standalone pages ── */
 .site-foot {
@@ -223,11 +155,5 @@
 
 @media (max-width: 620px) {
   .site-bar { flex-wrap: wrap; }
-  .btn-theme .theme-label { display: none; }
-  .btn-theme { padding: 0 8px; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .btn-theme { transition: none; }
-  .btn-theme:active { transform: none; }
-}

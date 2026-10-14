@@ -38,8 +38,8 @@ robots.txt sitemap.xml        /partials/ is disallowed; sitemap covers both repo
 CLAUDE.md                     notes for Claude Code
 ```
 
-The two reference pages carry no htmx and their own layout CSS, but they share the site palette and
-theme toggle like everything else. They're in `sitemap.xml` and linked from the footer's **Reference**
+The two reference pages carry no htmx and their own layout CSS, but they share the site palette like
+everything else. They're in `sitemap.xml` and linked from the footer's **Reference**
 column, but deliberately are *not* tool cards: the cards drive the filter counts and category tabs, so
 anything added there has to be categorised and counted.
 
@@ -83,7 +83,7 @@ Keep that label until they are finished.
 
 ## The landing page is hypermedia
 
-Beyond the theme toggle and a one-line `no-js` class remover in `<head>`, the landing page carries
+Beyond the dark-only theme stub and a one-line `no-js` class remover in `<head>`, the landing page carries
 **no custom JavaScript**. Every interaction below is an htmx attribute plus CSS.
 
 ### The page filters itself
@@ -94,7 +94,7 @@ The category tabs don't fetch pre-built per-category fragments. They re-fetch **
 ```html
 <input type="radio" name="view" id="view-hl7"
        hx-get="/" hx-select=".tool-card[data-cat~='hl7']">
-<label for="view-hl7">HL7 v2.x <span class="filter-count">4</span></label>
+<label for="view-hl7">HL7 v2.5.1 <span class="filter-count">4</span></label>
 ```
 
 `hx-select` returns every match, not just the first, so the cards in `index.html` stay the single
@@ -136,30 +136,34 @@ so a pushed URL would 404 or lie about what the page shows.
 
 ## Theme
 
-Dark is **Tokyo Night**; light is **Tokyo Night Day**. Accents are the stock Tokyo Night hues (light
-mode darkens each Day accent until it clears WCAG AA on every surface).
+Dark only: **Tokyo Night** (night variant), stock palette. Light mode was removed so the site and every
+tool in `hl7-dicom-tools` look identical.
 
-| Token | Dark | Light | |
-|---|---|---|---|
-| `--bg` | `#1a1b26` | `#e1e2e7` | background |
-| `--surface` | `#16161e` | `#f4f4f8` | panels |
-| `--surface2` | `#292e42` | `#d4d6e1` | chips / heads |
-| `--accent` | `#7aa2f7` | `#1952cf` | blue |
-| `--accent2` | `#bb9af7` | `#762bd9` | purple |
-| `--cyan` | `#7dcfff` | `#006480` | cyan |
-| `--green` | `#9ece6a` | `#406616` | green |
-| `--yellow` | `#e0af68` | `#7d5300` | yellow |
-| `--red` | `#f7768e` | `#b5123e` | red |
-| `--orange` | `#ff9e64` | `#a33600` | orange |
-| `--text` | `#c0caf5` | `#343b58` | headings |
+| Token | Value | |
+|---|---|---|
+| `--bg` | `#1a1b26` | background |
+| `--surface` | `#16161e` | panels (bg-dark) |
+| `--surface2` | `#292e42` | chips / heads (bg-highlight) |
+| `--border` | `#414868` | rules (terminal-black) |
+| `--accent` | `#7aa2f7` | blue |
+| `--accent2` | `#bb9af7` | magenta |
+| `--cyan` | `#7dcfff` | cyan |
+| `--green` | `#9ece6a` | green |
+| `--yellow` | `#e0af68` | yellow |
+| `--red` | `#f7768e` | red |
+| `--orange` | `#ff9e64` | orange |
+| `--text` | `#c0caf5` | headings (fg) |
+| `--body` | `#a9b1d6` | running text (fg-dark) |
+| `--muted` | `#9aa5ce` | secondary text (AA on every surface) |
+| `--comment` | `#565f89` | decoration only (~3:1, never text) |
 
 **Keep tint hues separated.** The seven tool cards each set `--tint` to one of the accents; if you
 retheme, keep neighbouring tint hues at least ~12° apart or two cards will read as identical.
 
-Both token blocks live in **`assets/tokens.css`**, and **every page on the site loads it** — landing,
-error, and reference alike. That file also carries the shared chrome: the focus ring,
-`::selection`, the `.site-bar` breadcrumb, the `.btn-theme` toggle and the `.site-foot` strip. A page's
-own `<style>` block is layout only.
+The palette and the base components (inputs, tables, code blocks, drop zones, focus ring) live in
+**`assets/tokyo-night.css`**. An identical copy is `tools/tokyo-night.css` in `hl7-dicom-tools`; keep
+the two byte-identical. `assets/tokens.css` imports it and adds the site chrome: the `.site-bar`
+breadcrumb, glass tokens and the `.site-foot` strip. A page's own `<style>` block is layout only.
 
 Pages speak one vocabulary — `--bg` `--surface` `--surface2` `--sink` for surfaces, `--border`
 `--border-soft` for rules, `--text` `--body` `--muted` for type, the accents above, `--*-bg` and
@@ -173,15 +177,11 @@ Two rules hold the palette together:
   and the handbook's `@media print` block, since print is always ink on white. Everything else
   resolves through a token, so changing `assets/tokens.css` moves the whole site at once.
 - **Contrast is checked, not eyeballed.** Every foreground clears WCAG AA against `--bg`, `--surface`,
-  **and both glass fills** (`--glass`, `--glass-strong`) in both modes. The glass fills matter: a
-  colour can pass on the page background and still fail on a frosted card.
+  `--surface2`, `--sink` and both glass fills (`--glass`, `--glass-strong`).
 
-`tools/theme.js` sets `data-theme` on `<html>` before first paint, defaults to dark, exposes
-`window.toggleTheme()`, and persists to the localStorage key **`hl7-tools-theme`**. That key is shared
-with the tools repo, so a visitor's choice follows them between the landing page and the tools. Every
-page carries a `#btn-theme` button and the controller wires it automatically; storage access is
-guarded (try/catch), so a browser with site data blocked simply stays on dark, and the theme button
-gets an `aria-label` that tracks the next mode.
+`tools/theme.js` is now a dark-only stub: it clears any old light-mode choice saved under the
+localStorage key `hl7-tools-theme` (shared with the tools repo) and keeps `window.toggleTheme()` as a
+no-op. There is no theme button.
 
 > Note: the tool pages in `hl7-dicom-tools` still ship their own Tokyo Night copy via
 > `tools/theme.css` and are **not** yet on `/assets/tokens.css`, so small token drift is possible

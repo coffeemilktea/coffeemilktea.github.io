@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>HL7 v2.5.1 &harr; FHIR R4 Converter</title>
 <meta name="description" content="Client-side converter between HL7 v2.5.1 messages (ADT, ORM, ORU, SIU, ACK) and FHIR R4 message Bundles. Field-level mapping trace, lossiness report and round-trip check. Nothing leaves your browser.">
-<meta name="theme-color" content="#1a1b26" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#e1e2e7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1b26">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="canonical" href="https://coffeemilktea.github.io/hl7-fhir-converter.html">
 <meta property="og:type" content="website">
@@ -171,7 +170,6 @@ footer.site-foot { margin-top: 50px; }
   <span class="crumb">converter</span>
   <span class="spacer"></span>
   <a class="bar-link" href="https://github.com/coffeemilktea/hl7-v2-fhir-mcp-server">mcp&nbsp;server</a>
-  <button class="btn-theme" id="btn-theme" type="button"><span class="theme-icon">☀️</span><span class="theme-label">Light</span></button>
 </nav>
 
 <header class="top">
@@ -1018,7 +1016,7 @@ function hl7ToFhir(text) {
       case "EVN": {
         const recorded = P(one(seg, 2)), occurred = P(one(seg, 6));
         const evnType = C(F(seg, 1), 1);
-        if (evnType) T("EVN-1", "(none)", evnType, "deprecated since v2.3.1 — MSH-9 carries the trigger event");
+        if (evnType) T("EVN-1", "(none)", evnType, "retained for backward compatibility only in v2.5.1 — MSH-9 carries the trigger event");
         const prov = { resourceType: "Provenance", target: [{ reference: mhRef.reference }] };
         prov.recorded = (ts2fhir(recorded) || ts2fhir(msgTime) || new Date().toISOString().slice(0, 19)) + (tsHasOffset(recorded || msgTime) ? "" : "Z");
         T("EVN-2", "Provenance.recorded", prov.recorded);
@@ -1674,9 +1672,10 @@ function fhirToHl7(text) {
     ctrlId = "MSG" + stableUuid(JSON.stringify(doc).slice(0, 4000)).replace(/-/g, "").slice(0, 14).toUpperCase();
     I("info", "MSH-10", "No Bundle.identifier, so a message control ID was derived from the content: " + ctrlId);
   }
-  msh.set(10, escapeHL7(ctrlId, enc)).set(11, procId || "P").set(12, version || "2.5.1");
+  msh.set(10, escapeHL7(ctrlId, enc)).set(11, procId || "P").set(12, "2.5.1");
+  if (version && version !== "2.5.1") I("warn", "MSH-12", "The MessageHeader carries v2 version \"" + version + "\"; MSH-12 is always written as 2.5.1.");
   if (procId) T("MessageHeader.meta.tag[v2-0103]", "MSH-11", procId);
-  T("(fixed)", "MSH-12", version || "2.5.1");
+  T("(fixed)", "MSH-12", "2.5.1");
 
   /* ── segment builders ── */
   function buildEVN() {

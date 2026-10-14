@@ -5,7 +5,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Healthcare Data Tools — Browser-based HL7 &amp; DICOM utilities</title>
-  <meta name="description" content="Free, browser-based tools for HL7 v2.x and DICOM: parse messages, build Mirth transformers, view and edit DICOM files, generate test data, and simulate modality worklists. 100% client-side — no data ever leaves your browser.">
+  <meta name="description" content="Free, browser-based tools for HL7 v2.5.1 and DICOM: parse messages, build Mirth transformers, view and edit DICOM files, generate test data, and simulate modality worklists. 100% client-side — no data ever leaves your browser.">
   <link rel="canonical" href="https://coffeemilktea.github.io/">
   <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 
@@ -13,12 +13,11 @@
   <meta property="og:url" content="https://coffeemilktea.github.io/">
   <meta property="og:site_name" content="Healthcare Data Tools">
   <meta property="og:title" content="Healthcare Data Tools — Browser-based HL7 &amp; DICOM utilities">
-  <meta property="og:description" content="Parse HL7 v2.x messages, build Mirth transformers, view and edit DICOM files, generate test data, and simulate modality worklists — entirely in your browser.">
+  <meta property="og:description" content="Parse HL7 v2.5.1 messages, build Mirth transformers, view and edit DICOM files, generate test data, and simulate modality worklists — entirely in your browser.">
   <meta name="twitter:card" content="summary">
   <meta name="twitter:title" content="Healthcare Data Tools — Browser-based HL7 &amp; DICOM utilities">
-  <meta name="twitter:description" content="Parse HL7 v2.x messages, view and edit DICOM files, generate test data, and simulate modality worklists — entirely in your browser.">
-  <meta name="theme-color" content="#1a1b26" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#e1e2e7" media="(prefers-color-scheme: light)">
+  <meta name="twitter:description" content="Parse HL7 v2.5.1 messages, view and edit DICOM files, generate test data, and simulate modality worklists — entirely in your browser.">
+  <meta name="theme-color" content="#1a1b26">
 
   <link rel="stylesheet" href="/assets/tokens.css">
   <script src="/tools/theme.js"></script>
@@ -66,15 +65,6 @@
       filter: blur(70px);
       opacity: 0.55;
       will-change: transform;
-    }
-    [data-theme="light"] .aurora span { opacity: 0.48; filter: blur(80px); }
-    /* Light glass needs a real edge — a white border vanishes on Day. */
-    [data-theme="light"] .site-header,
-    [data-theme="light"] .filters,
-    [data-theme="light"] .spec,
-    [data-theme="light"] .tool-card,
-    [data-theme="light"] .privacy-card {
-      border-color: color-mix(in srgb, var(--border) 55%, transparent);
     }
 
     .aurora .b1 {
@@ -247,17 +237,6 @@
     .header-nav a:hover {
       color: var(--text);
       background: var(--glass);
-    }
-
-    /* Base button lives in tokens.css; the header wants it glassy. */
-    .header-nav .btn-theme {
-      background: var(--glass);
-      backdrop-filter: blur(6px);
-      -webkit-backdrop-filter: blur(6px);
-      border-color: var(--glass-border);
-      box-shadow: inset 0 1px 0 var(--glass-hi);
-      height: 30px;
-      margin-left: 6px;
     }
 
     /* ── Hero ── */
@@ -1112,8 +1091,6 @@
       .brand { font-size: 0.8rem; gap: 8px; }
       .brand-mark { width: 26px; height: 26px; }
       .header-nav a { padding: 6px 8px; }
-      .btn-theme .theme-label { display: none; }
-      .btn-theme { padding: 0 9px; }
       .tool-foot { flex-wrap: wrap; }
       .filters { width: 100%; justify-content: center; }
       .filters label { padding: 5px 12px; font-size: 0.76rem; }
@@ -1165,7 +1142,6 @@
 
     /* Press feedback */
     .btn:active { transform: translateY(0) scale(.985); }
-    .btn-theme:active { transform: scale(.96); }
     .filters label { transition: transform .15s, color .15s, background .15s, border-color .15s; }
     .filters label:active { transform: scale(.97); }
 
@@ -1181,7 +1157,7 @@
       .tool-card:hover .tool-icon,
       .tool-card:focus-within .tool-icon { transform: none; }
       .tool-card:focus-within::after { transform: none; }
-      .btn:active, .btn-theme:active, .filters label:active { transform: none; }
+      .btn:active, .filters label:active { transform: none; }
       .detail-inner, .tool-card { animation: none; }
       .tool-more .spinner { animation-duration: 1.6s; }
     }
@@ -1224,10 +1200,6 @@
         <a href="#tools">Tools</a>
         <a href="#about">About</a>
         <a class="nav-github nav-user" href="https://github.com/coffeemilktea"><svg class="gh-mark" width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg>@coffeemilktea</a>
-        <button class="btn-theme" id="btn-theme" type="button">
-          <span class="theme-icon">☀️</span>
-          <span class="theme-label">Light</span>
-        </button>
       </nav>
     </div>
   </header>
@@ -1240,7 +1212,7 @@
         <p class="hero-eyebrow">Free &middot; Open source &middot; 100% client-side</p>
         <h1>Healthcare data tools that run <em>entirely in your browser</em></h1>
         <p class="hero-sub">
-          Parse HL7 v2.x messages, build Mirth transformers, view and edit DICOM files, generate test
+          Parse HL7 v2.5.1 messages, build Mirth transformers, view and edit DICOM files, generate test
           data, and simulate modality worklists &mdash; with no installs, no accounts, and no PHI ever
           leaving your machine.
         </p>
@@ -1329,7 +1301,7 @@
       <div class="container">
         <h2><span class="section-kicker">The toolkit</span>Seven tools, zero setup</h2>
         <p class="section-intro">
-          Everything you need to debug, test, and learn HL7 v2.x and DICOM &mdash; each tool is a
+          Everything you need to debug, test, and learn HL7 v2.5.1 and DICOM &mdash; each tool is a
           standalone page that works offline once loaded.
         </p>
 
@@ -1352,7 +1324,7 @@
 
             <input type="radio" name="view" id="view-hl7"
                    hx-get="/" hx-select=".tool-card[data-cat~='hl7']">
-            <label for="view-hl7">HL7 v2.x <span class="filter-count">4</span></label>
+            <label for="view-hl7">HL7 v2.5.1 <span class="filter-count">4</span></label>
 
             <input type="radio" name="view" id="view-interop"
                    hx-get="/" hx-select=".tool-card[data-cat~='interop']">
@@ -1417,8 +1389,8 @@
               </span>
               <span class="tool-tag">Clinical Messaging</span>
             </div>
-            <h3><a href="/hl7-dicom-tools/tools/msgparser.html">HL7 v2.x Parser</a></h3>
-            <p>Paste any HL7 v2.x message for an instant segment-by-segment, field-by-field breakdown with names and descriptions from the standard. Understand your interface data at a glance.</p>
+            <h3><a href="/hl7-dicom-tools/tools/msgparser.html">HL7 v2.5.1 Parser</a></h3>
+            <p>Paste any HL7 v2.5.1 message for an instant segment-by-segment, field-by-field breakdown with names and descriptions from the standard. Understand your interface data at a glance.</p>
             <div class="tool-detail" id="detail-msgparser"></div>
             <div class="tool-foot">
               <span class="tool-cta">Launch tool
@@ -1580,14 +1552,14 @@
             </span>
             Healthcare Data Tools
           </a>
-          <p>Browser-based utilities for HL7 v2.x and DICOM. Free to use, client-side by design.</p>
+          <p>Browser-based utilities for HL7 v2.5.1 and DICOM. Free to use, client-side by design.</p>
         </div>
         <div class="footer-col">
           <h4>Tools</h4>
           <ul>
             <li><a href="/hl7-dicom-tools/tools/dicom-viewer.html">DICOM Viewer &amp; Tag Morph</a></li>
             <li><a href="/hl7-dicom-tools/tools/dicom-generator.html">DICOM Toolbox</a></li>
-            <li><a href="/hl7-dicom-tools/tools/msgparser.html">HL7 v2.x Parser</a></li>
+            <li><a href="/hl7-dicom-tools/tools/msgparser.html">HL7 v2.5.1 Parser</a></li>
             <li><a href="/hl7-dicom-tools/tools/diff-checker.html">HL7 Diff Checker</a></li>
             <li><a href="/hl7-dicom-tools/tools/mwl-simulator.html">MWL Simulator</a></li>
             <li><a href="/hl7-dicom-tools/tools/dicom-hl7-order.html">DICOM &rarr; HL7 Order</a></li>

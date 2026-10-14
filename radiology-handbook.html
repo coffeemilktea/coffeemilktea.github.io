@@ -7,8 +7,7 @@
 <meta name="description" content="A working reference for PACS administrators and healthcare IT: the order-to-image timeline, HL7 ADT/ORM/ORU, DICOM SCU/SCP roles, DIMSE services, DICOMweb QIDO/WADO/STOW, tags, ports and troubleshooting.">
 <link rel="canonical" href="https://coffeemilktea.github.io/radiology-handbook.html">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
-<meta name="theme-color" content="#1a1b26" media="(prefers-color-scheme: dark)">
-<meta name="theme-color" content="#e1e2e7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#1a1b26">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://coffeemilktea.github.io/radiology-handbook.html">
 <meta property="og:site_name" content="Healthcare Data Tools">
@@ -384,7 +383,6 @@ footer p{max-width:70ch}
   <span class="sep">/</span>
   <span class="crumb">handbook</span>
   <span class="spacer"></span>
-  <button class="btn-theme" id="btn-theme" type="button"><span class="theme-icon">☀️</span><span class="theme-label">Light</span></button>
 </nav>
 
 <header class="hero" id="top">
@@ -393,7 +391,7 @@ footer p{max-width:70ch}
   <p class="hero-lede">Every radiology study is the product of two conversations running in parallel: <strong>HL7 carries the identity and the intent</strong>, <strong>DICOM carries the pixels and the acknowledgement</strong>. Almost every ticket you will ever work is a break at one of the seams between them. This guide walks the whole chain in order, with the roles, field names and status codes you need to prove where it broke.</p>
   <div class="hero-meta">
     <span><b>Audience</b> PACS admins · imaging informatics · healthcare IT</span>
-    <span><b>Scope</b> HL7 v2.3–2.5.1 · DICOM PS3 · DICOMweb PS3.18 · IHE RAD</span>
+    <span><b>Scope</b> HL7 v2.5.1 · DICOM PS3 · DICOMweb PS3.18 · IHE RAD</span>
     <span><b>Structure</b> Part 0 orientation · I HL7 · II DICOM · III operations</span>
   </div>
 </header>
@@ -946,7 +944,7 @@ Typical exchange on one socket:
 
   <div class="msg">
     <div class="msg-head"><span>ORM^O01 — new order, scheduled</span><span>RIS → PACS / MWL provider · IHE RAD-4</span></div>
-<pre><span class="seg">MSH</span>|<span class="f" data-loc="MSH-2" tabindex="0">^~\&amp;</span>|<span class="f" data-loc="MSH-3" tabindex="0">RIS</span>|<span class="f" data-loc="MSH-4" tabindex="0">MERCY</span>|<span class="f" data-loc="MSH-5" tabindex="0">PACS</span>|<span class="f" data-loc="MSH-6" tabindex="0">RAD</span>|<span class="f" data-loc="MSH-7" tabindex="0">20260805110600</span>||<span class="f key" data-loc="MSH-9" tabindex="0">ORM^O01</span>|<span class="f" data-loc="MSH-10" tabindex="0">MSG00187</span>|<span class="f" data-loc="MSH-11" tabindex="0">P</span>|<span class="f" data-loc="MSH-12" tabindex="0">2.3.1</span>
+<pre><span class="seg">MSH</span>|<span class="f" data-loc="MSH-2" tabindex="0">^~\&amp;</span>|<span class="f" data-loc="MSH-3" tabindex="0">RIS</span>|<span class="f" data-loc="MSH-4" tabindex="0">MERCY</span>|<span class="f" data-loc="MSH-5" tabindex="0">PACS</span>|<span class="f" data-loc="MSH-6" tabindex="0">RAD</span>|<span class="f" data-loc="MSH-7" tabindex="0">20260805110600</span>||<span class="f key" data-loc="MSH-9" tabindex="0">ORM^O01^ORM_O01</span>|<span class="f" data-loc="MSH-10" tabindex="0">MSG00187</span>|<span class="f" data-loc="MSH-11" tabindex="0">P</span>|<span class="f" data-loc="MSH-12" tabindex="0">2.5.1</span>
 <span class="seg">PID</span>|<span class="f" data-loc="PID-1" tabindex="0">1</span>||<span class="f key" data-loc="PID-3" tabindex="0">10045522^^^MERCY^MR</span>||<span class="f" data-loc="PID-5" tabindex="0">RIVERA^MARIA^L</span>||<span class="f" data-loc="PID-7" tabindex="0">19710304</span>|<span class="f" data-loc="PID-8" tabindex="0">F</span>
 <span class="seg">PV1</span>|<span class="f" data-loc="PV1-1" tabindex="0">1</span>|<span class="f" data-loc="PV1-2" tabindex="0">O</span>|<span class="f" data-loc="PV1-3" tabindex="0">RAD^CT^01</span>||||<span class="f" data-loc="PV1-7" tabindex="0">1234^CHEN^WEI^^^^MD</span>|<span class="f" data-loc="PV1-8" tabindex="0">5678^PARK^SUNG^^^^MD</span>
 <span class="seg">ORC</span>|<span class="f key" data-loc="ORC-1" tabindex="0">SC</span>|<span class="f key" data-loc="ORC-2" tabindex="0">PL8891234</span>|<span class="f key" data-loc="ORC-3" tabindex="0">FL5567890</span>||<span class="f key" data-loc="ORC-5" tabindex="0">SC</span>||<span class="f" data-loc="ORC-7" tabindex="0">^^^20260811103000^^R</span>||<span class="f" data-loc="ORC-9" tabindex="0">20260805110600</span>|||<span class="f" data-loc="ORC-12" tabindex="0">1234^CHEN^WEI^^^^MD</span>|<span class="f" data-loc="ORC-13" tabindex="0">RAD^CT^01</span>
@@ -1033,7 +1031,7 @@ Typical exchange on one socket:
 
   <div class="msg">
     <div class="msg-head"><span>ORU^R01 — final report</span><span>Dictation → RIS → EMR / PACS</span></div>
-<pre><span class="seg">MSH</span>|^~\&amp;|POWERSCRIBE|MERCY|EPIC|MERCY|20260811142200||<span class="hi">ORU^R01</span>|MSG00931|P|2.3.1
+<pre><span class="seg">MSH</span>|^~\&amp;|POWERSCRIBE|MERCY|EPIC|MERCY|20260811142200||<span class="hi">ORU^R01^ORU_R01</span>|MSG00931|P|2.5.1
 <span class="seg">PID</span>|1||10045522^^^MERCY^MR||RIVERA^MARIA^L||19710304|F
 <span class="seg">ORC</span>|RE|PL8891234|FL5567890
 <span class="seg">OBR</span>|1|PL8891234|FL5567890|CT7150^CT ABDOMEN PELVIS W CONTRAST^C4|||20260811103000|||||||||||<span class="hi">ACC20260811-0417</span>||||||CT|<span class="hi">F</span>|||||||<span class="hi">9911^OKAFOR^ADA^^^^MD</span>

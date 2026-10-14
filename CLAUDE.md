@@ -27,8 +27,9 @@ references `/assets/`, `/tools/`, `/vendor/` and `/partials/` by root-absolute p
 ```
 index.html                    landing page: hero, seven tool cards, about, footer (htmx)
 404.html                      error page; pulls the tool list from a shared fragment
-assets/tokens.css             THE palette — dark + light tokens and shared chrome
-tools/theme.js                theme controller: sets data-theme, wires #btn-theme
+assets/tokyo-night.css        THE palette — dark-only Tokyo Night tokens + base components
+assets/tokens.css             imports tokyo-night.css; site chrome
+tools/theme.js                dark-only stub: clears any saved light-mode choice
 hl7-fhir-converter.html       reference: HL7 v2.5.1 <-> FHIR R4 converter
 radiology-handbook.html       reference: radiology IT workflow handbook
 partials/tool-links.html      the seven tool links (used by 404.html)
@@ -59,9 +60,9 @@ Every page — landing, error, tool and reference alike — loads the same two f
 <script src="/tools/theme.js"></script>
 ```
 
-`assets/tokens.css` is the single source of truth for the palette. It defines the dark tokens on
-`:root`, the light overrides on `[data-theme="light"]`, and the shared chrome: the focus ring,
-`::selection`, the `.site-bar` breadcrumb, the `.btn-theme` toggle and the `.site-foot` strip.
+`assets/tokens.css` imports `assets/tokyo-night.css`, the single source of truth for the palette
+(dark only, Tokyo Night; byte-identical copy in hl7-dicom-tools `tools/tokyo-night.css`), and adds
+the shared chrome: the `.site-bar` breadcrumb and the `.site-foot` strip.
 
 **A page must not declare its own palette.** Page-level `<style>` blocks carry layout only, and read
 colour exclusively through the shared tokens. There is a check for this — see below.
