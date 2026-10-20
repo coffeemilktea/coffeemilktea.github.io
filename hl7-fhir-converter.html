@@ -389,6 +389,7 @@ const HL7_SPEC = {
 
 const HL7_TABLES = {
   "0001": { name: "Administrative Sex", v: {"A":"Ambiguous","F":"Female","M":"Male","N":"Not applicable","O":"Other","U":"Unknown"} },
+  "0002": { name: "Marital Status", v: {"A":"Separated","D":"Divorced","M":"Married","S":"Single","W":"Widowed","C":"Common law","G":"Living together","P":"Domestic partner","R":"Registered domestic partner","E":"Legally Separated","N":"Annulled","I":"Interlocutory","B":"Unmarried","U":"Unknown","O":"Other","T":"Unreported"} },
   "0003": { name: "Event Type", v: {"A01":"ADT/ACK - Admit/visit notification","A02":"ADT/ACK - Transfer a patient","A03":"ADT/ACK - Discharge/end visit","A04":"ADT/ACK - Register a patient","A05":"ADT/ACK - Pre-admit a patient","A06":"ADT/ACK - Change an outpatient to an inpatient","A07":"ADT/ACK - Change an inpatient to an outpatient","A08":"ADT/ACK - Update patient information","A09":"ADT/ACK - Patient departing - tracking","A10":"ADT/ACK - Patient arriving - tracking","A11":"ADT/ACK - Cancel admit/visit notification","A12":"ADT/ACK - Cancel transfer","A13":"ADT/ACK - Cancel discharge/end visit","A14":"ADT/ACK - Pending admit","A15":"ADT/ACK - Pending transfer","A16":"ADT/ACK - Pending discharge","A17":"ADT/ACK - Swap patients","A18":"ADT/ACK - Merge patient information","A19":"QRY/ADR - Patient query","A20":"ADT/ACK - Bed status update","A21":"ADT/ACK - Patient goes on a leave of absence","A22":"ADT/ACK - Patient returns from a leave of absence","A23":"ADT/ACK - Delete a patient record","A24":"ADT/ACK - Link patient information","A25":"ADT/ACK - Cancel pending discharge","A26":"ADT/ACK - Cancel pending transfer","A27":"ADT/ACK - Cancel pending admit","A28":"ADT/ACK - Add person or patient information","A29":"ADT/ACK - Delete person information","A30":"ADT/ACK - Merge person information","A31":"ADT/ACK - Update person information","A32":"ADT/ACK - Cancel patient arriving - tracking","A33":"ADT/ACK - Cancel patient departing - tracking","A34":"ADT/ACK - Merge patient information - patient ID only","A35":"ADT/ACK - Merge patient information - account number only","A36":"ADT/ACK - Merge patient information - patient ID and account number","A37":"ADT/ACK - Unlink patient information","A38":"ADT/ACK - Cancel pre-admit","A39":"ADT/ACK - Merge person - patient ID","A40":"ADT/ACK - Merge patient - patient identifier list","A41":"ADT/ACK - Merge account - patient account number","A42":"ADT/ACK - Merge visit - visit number","A43":"ADT/ACK - Move patient information - patient identifier list","A44":"ADT/ACK - Move account information - patient account number","A45":"ADT/ACK - Move visit information - visit number","O01":"ORM - Order message (also ORM^O01)","O02":"ORR - Order acknowledgment","R01":"ORU - Unsolicited transmission of an observation message","R02":"QRY - Query for results of observation","T02":"MDM - Original document notification and content","T11":"MDM - Document cancel notification"} },
   "0004": { name: "Patient Class", v: {"B":"Obstetrics","C":"Commercial Account","E":"Emergency","I":"Inpatient","N":"Not Applicable","O":"Outpatient","P":"Preadmit","R":"Recurring Patient","U":"Unknown"} },
   "0007": { name: "Admission Type", v: {"A":"Accident","C":"Elective","E":"Emergency","L":"Labor and Delivery","N":"Newborn (birth in healthcare facility)","R":"Routine","U":"Urgent"} },
@@ -522,12 +523,30 @@ const csName = (uri) => {
   if (uri.indexOf(LOCAL_CS) === 0) return uri.slice(LOCAL_CS.length);
   const v2 = /CodeSystem\/v2-(\d+)$/.exec(uri);
   if (v2) return "HL7" + v2[1];
-  if (uri === "http://terminology.hl7.org/CodeSystem/v3-MaritalStatus") return "HL70002";
   return CS_NAME[uri] || "";
 };
 const V2 = (t) => "http://terminology.hl7.org/CodeSystem/v2-" + t;
 const V3 = (n) => "http://terminology.hl7.org/CodeSystem/v3-" + n;
 const tblDisplay = (t, code) => (HL7_TABLES[t] && HL7_TABLES[t].v[code]) || undefined;
+/* HL7 v2.5.1 table 0002 (Marital Status) → FHIR R4 Patient.maritalStatus, as mapped by the HL7
+   v2-to-FHIR IG ConceptMap table-hl70002-to-v3-maritalstatus (hl7.fhir.uv.v2mappings 1.0.0). The v2
+   and v3 code systems reuse letters with different meanings (v2 A = Separated but v3 A = Annulled;
+   v2 P = Domestic partner but v3 P = Polygamous; v2 U = Unknown but v3 U = unmarried; v2 T =
+   Unreported but v3 T = Domestic partner), so a v2 code is never copied into the v3 system as-is.
+   Target displays are the HL7 Terminology displays. */
+const MARITAL_V2_TO_FHIR = {
+  A: ["L", "Legally Separated"], D: ["D", "Divorced"], M: ["M", "Married"], S: ["S", "Never Married"],
+  W: ["W", "Widowed"], C: ["C", "Common Law"], G: ["T", "Domestic partner"], P: ["T", "Domestic partner"],
+  R: ["T", "Domestic partner"], E: ["L", "Legally Separated"], N: ["A", "Annulled"], I: ["I", "Interlocutory"],
+  B: ["U", "unmarried"], U: ["UNK", "unknown", V3("NullFlavor")], O: ["OTH", "other", V3("NullFlavor")],
+  T: ["NAVU", "Not available", V3("NullFlavor")],
+};
+/* FHIR → v2: the v2.5.1 code with the same meaning. A v2-0002 coding (which hl7ToFhir keeps next to the
+   v3 one) wins, so v2 A and E, or G, P and R, survive a round trip. v3 P (Polygamous) has no v2.5.1 code. */
+const MARITAL_FHIR_TO_V2 = {
+  [V3("MaritalStatus")]: { A: "N", C: "C", D: "D", I: "I", L: "E", M: "M", S: "S", T: "P", U: "B", W: "W" },
+  [V3("NullFlavor")]: { UNK: "U", OTH: "O", NAVU: "T" },
+};
 const clean = (o) => { Object.keys(o).forEach((k) => { const v = o[k]; if (v === undefined || v === "" || v === null || (Array.isArray(v) && !v.length)) delete o[k]; }); return o; };
 
 /* v2 TS → FHIR dateTime; "" when unparseable */
@@ -869,9 +888,20 @@ function hl7ToFhir(text) {
     if (lang) { p.communication = [{ language: ce(lang), preferred: true }]; T("PID-15", "Patient.communication[0].language", C(lang, 1)); }
     const marital = one(seg, 16);
     if (marital) {
-      const code = C(marital, 1);
-      p.maritalStatus = { coding: [clean({ system: /^[ADMSWUTLPC]$/.test(code) ? V3("MaritalStatus") : V2("0002"), code, display: C(marital, 2) || undefined })] };
-      T("PID-16", "Patient.maritalStatus", code);
+      const code = C(marital, 1), text = C(marital, 2), m = MARITAL_V2_TO_FHIR[code];
+      if (m) {
+        p.maritalStatus = clean({
+          coding: [
+            { system: m[2] || V3("MaritalStatus"), code: m[0], display: m[1] },
+            { system: V2("0002"), code, display: tblDisplay("0002", code) },
+          ],
+          text: text || undefined,
+        });
+        T("PID-16", "Patient.maritalStatus", code + " → " + m[0], "v2 table 0002 → " + (m[2] ? "v3 NullFlavor" : "v3 MaritalStatus") + " per the HL7 v2-to-FHIR IG; the v2 code is kept as a second coding");
+      } else {
+        if (text) { p.maritalStatus = { text }; T("PID-16", "Patient.maritalStatus.text", text); }
+        if (code) I("warn", "PID-16", "'" + code + "' is not an HL7 v2.5.1 table 0002 (Marital Status) code, so no coding was produced" + (text ? "; only the text was kept." : "."));
+      }
     }
     const mb = C(F(seg, 24), 1), bo = C(F(seg, 25), 1);
     if (mb) { p.multipleBirthBoolean = mb.toUpperCase() === "Y"; T("PID-24", "Patient.multipleBirthBoolean", p.multipleBirthBoolean); }
@@ -1792,7 +1822,20 @@ function fhirToHl7(text) {
     const comm = (u("communication") || [])[0];
     if (comm) { s.set(15, ccToCe(comm.language)); T("Patient.communication[0].language", "PID-15", s.f[15]); }
     const ms = u("maritalStatus");
-    if (ms) { s.set(16, ccToCe(ms)); T("Patient.maritalStatus", "PID-16", s.f[16]); }
+    if (ms) {
+      const cods = ms.coding || [];
+      const v2c = cods.find((c) => c.system === V2("0002") && tblDisplay("0002", c.code));
+      let code = v2c ? v2c.code : "", from = v2c;
+      if (!code) for (const c of cods) { const t = MARITAL_FHIR_TO_V2[c.system]; if (t && t[c.code]) { code = t[c.code]; from = c; break; } }
+      if (code) {
+        s.set(16, cmp(code, tblDisplay("0002", code), "HL70002"));
+        T("Patient.maritalStatus", "PID-16", s.f[16], from === v2c ? "" : (from.code === "L" ? "v3 L could be v2 A (Separated) or E (Legally Separated); E chosen" : from.code === "T" ? "v3 T could be v2 G, P or R; P chosen" : "v3 " + from.code + " → v2 " + code));
+      } else {
+        const txt = ms.text || (cods[0] || {}).display || "";
+        if (txt) s.set(16, cmp("", txt));
+        I("warn", "Patient.maritalStatus", "No HL7 v2.5.1 table 0002 code matches " + (cods.map((c) => c.code).join(", ") || "this value") + (txt ? "; only the text was written to PID-16." : "; PID-16 left empty."));
+      }
+    }
     if (acct) { s.set(18, escapeHL7(acct.value, enc)); T("Patient.identifier[PID-18]", "PID-18", acct.value); }
     if (ssn) { s.set(19, escapeHL7(ssn.value, enc)); T("Patient.identifier[SS]", "PID-19", ssn.value); }
     if (dl) { s.set(20, escapeHL7(dl.value, enc)); T("Patient.identifier[PID-20]", "PID-20", dl.value); }
