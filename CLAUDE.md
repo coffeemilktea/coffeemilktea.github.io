@@ -19,24 +19,23 @@ Serve the repository root over HTTP:
 python3 -m http.server 8000
 ```
 
-It must be HTTP, not `file://` — htmx fetches the fragments in `partials/` with XHR, and every page
-references `/assets/`, `/tools/`, `/vendor/` and `/partials/` by root-absolute path.
+It must be HTTP, not `file://` — every page references `/assets/` and `/tools/` by root-absolute path.
 
 ## Layout
 
 ```
-index.html                    landing page: hero, seven tool cards, about, footer (htmx)
-404.html                      error page; pulls the tool list from a shared fragment
+index.html                    landing page: hero, tool showcase (9 cards), how it works, repos, footer, lightbox
+404.html                      error page with the shared header/footer and a static tool list
 assets/tokyo-night.css        THE palette — dark-only Tokyo Night tokens + base components
-assets/tokens.css             imports tokyo-night.css; site chrome
-tools/theme.js                dark-only stub: clears any saved light-mode choice
+assets/tokens.css             imports tokyo-night.css; tokens + legacy app-header chrome
+assets/site.css, site.js      shared header (.sx-header), footer (.sx-footer), buttons, scroll reveal
+assets/landing.css, landing.js landing-only layout and interactions (filters, tilt, lightbox, typing)
+assets/screenshots/           <slug>-card / -phone / -desktop / -mobile .webp for every card
+assets/og.jpg, icon-*.png     social image and PWA icons; favicon.ico + favicon.svg + apple-touch-icon.png at the root
+tools/theme.js                dark-only stub + shared toast / keyboard helpers
 hl7-fhir-converter.html       reference: HL7 v2.5.1 <-> FHIR R4 converter
 radiology-handbook.html       reference: radiology IT workflow handbook
-partials/tool-links.html      the seven tool links (used by 404.html)
-partials/detail/*.html        one "Use cases" panel per tool card
-partials/empty.html           zero-byte fragment; swapping it in collapses a panel
-vendor/htmx.min.js            htmx 2.0.7, vendored — no CDN
-favicon.svg robots.txt sitemap.xml .nojekyll
+site.webmanifest robots.txt sitemap.xml .nojekyll
 ```
 
 No tool page lives in this repo any more — every one of the seven cards links out to a project site
@@ -57,8 +56,13 @@ Every page — landing, error, tool and reference alike — loads the same two f
 
 ```html
 <link rel="stylesheet" href="/assets/tokens.css">
+<link rel="stylesheet" href="/assets/site.css">
 <script src="/tools/theme.js"></script>
+<script src="/assets/site.js" defer></script>
 ```
+
+The header (`<header class="sx-header">`) and footer (`<footer class="sx-footer">`) markup is
+repeated verbatim in all four pages — there is no include step. Change one, change all four.
 
 `assets/tokens.css` imports `assets/tokyo-night.css`, the single source of truth for the palette
 (dark only, Tokyo Night; byte-identical copy in hl7-dicom-tools `tools/tokyo-night.css`), and adds
@@ -93,9 +97,8 @@ Two rules hold the palette together:
   and both glass fills, in both modes. A colour can pass on the page background and still fail on a
   frosted card.
 
-Every page also carries a `#btn-theme` button; `tools/theme.js` finds it and wires it up. The choice
-persists to the localStorage key `hl7-tools-theme`, which is shared with the `hl7-dicom-tools` repo so
-a visitor's theme follows them into the tools.
+The site is dark only; `tools/theme.js` clears any old light-mode choice saved under `hl7-tools-theme`.
+Animations must switch off under `prefers-reduced-motion: reduce`.
 
 > The tool pages in `hl7-dicom-tools` still carry their own palette and are **not** yet on these
 > tokens, so they will not match until that repo is updated.
@@ -110,23 +113,23 @@ Before committing a styling change, confirm that no page has regressed on the co
 
 - no page declares a `:root` palette block of its own
 - no `var(--x)` resolves to a token `assets/tokens.css` doesn't define
-- every page links `assets/tokens.css`, loads `tools/theme.js`, and has a `#btn-theme`
+- every page links `assets/tokens.css` and `assets/site.css`, and loads `tools/theme.js` and `assets/site.js`
 
 Check both themes, not just dark — a `rgba()` tint keyed to a dark background disappears on a light
 one, which is exactly the class of bug the tokens exist to prevent.
 
 ## Adding a tool
 
-Four places, or the page will lie about itself:
+Five places, or the page will lie about itself:
 
-1. a `.tool-card` in `index.html`, with `data-cat` and a `--tint`
-2. the `filter-count` numbers on the affected category tabs, and the "N tools" heading
-3. `partials/tool-links.html` and the footer's **Tools** column in `index.html`
-4. `sitemap.xml`
-
-A new tool page starts by linking `/assets/tokens.css` and `/tools/theme.js`, adding a `#btn-theme`
-button and a `.site-bar` breadcrumb, and then writing layout CSS that only ever reads the tokens
-above.
+1. a `<li class="card">` in `index.html`'s `#cards` list, with `data-cat` (any of `hl7 dicom fhir`),
+   `data-slug`, a `--tint`, tags, Open/Source links and a `<template class="card-uses">` list
+   (filter counts are computed by `landing.js`, but the "N tools" heading and hero facts are text)
+2. four screenshots in `assets/screenshots/`: `<slug>-card.webp` 640×400, `<slug>-phone.webp` 200×433,
+   `<slug>-desktop.webp` 1280×800 and `<slug>-mobile.webp` 780×1688 (390×844 @2x), sample data loaded
+3. the footer's **Tools** column in all four pages
+4. the tool list in `404.html`
+5. `sitemap.xml`
 
 ## Adding a reference page
 

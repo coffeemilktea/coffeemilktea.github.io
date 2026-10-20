@@ -6,20 +6,29 @@
 <title>Radiology Transaction Handbook — HL7 &amp; DICOM for PACS Administrators</title>
 <meta name="description" content="A working reference for PACS administrators and healthcare IT: the order-to-image timeline, HL7 ADT/ORM/ORU, DICOM SCU/SCP roles, DIMSE services, DICOMweb QIDO/WADO/STOW, tags, ports and troubleshooting.">
 <link rel="canonical" href="https://coffeemilktea.github.io/radiology-handbook.html">
-<link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <meta name="theme-color" content="#1a1b26">
 <meta property="og:type" content="article">
 <meta property="og:url" content="https://coffeemilktea.github.io/radiology-handbook.html">
 <meta property="og:site_name" content="Healthcare Data Tools">
 <meta property="og:title" content="Radiology Transaction Handbook — HL7 &amp; DICOM for PACS Administrators">
 <meta property="og:description" content="A working reference for PACS administrators and healthcare IT: the order-to-image timeline, HL7 ADT/ORM/ORU, DICOM SCU/SCP roles, DIMSE services, DICOMweb QIDO/WADO/STOW, tags, ports and troubleshooting.">
-<meta name="twitter:card" content="summary">
+<meta property="og:image" content="https://coffeemilktea.github.io/assets/og.jpg">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Healthcare Data Tools: screenshots of the HL7 and DICOM tools on a Tokyo Night dark background">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:image" content="https://coffeemilktea.github.io/assets/og.jpg">
+<link rel="icon" href="/favicon.ico" sizes="32x32">
+<link rel="icon" type="image/svg+xml" href="/favicon.svg">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="stylesheet" href="/assets/tokens.css">
+<link rel="stylesheet" href="/assets/site.css">
 <script src="/tools/theme.js"></script>
+<script src="/assets/site.js" defer></script>
 <style>
 /* Palette and shared chrome come from /assets/tokens.css. */
 *{box-sizing:border-box}
-html{scroll-behavior:smooth;scroll-padding-top:24px}
+html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--text);font-family:var(--font-sans);
   font-size:16px;line-height:1.62;-webkit-font-smoothing:antialiased}
 
@@ -61,8 +70,13 @@ main{max-width:980px;padding:0 0 120px}
 .mnav ol{margin:0;padding:0 16px 16px 34px}
 .mnav a{color:var(--body);text-decoration:none;font-size:14px;line-height:2}
 .mnav a:hover{color:var(--text)}
+@media(pointer:coarse){.mnav a{display:inline-flex;align-items:center;min-height:44px}footer .top{display:inline-flex;align-items:center;min-height:44px}}
 
-.app-header{position:relative}
+/* Shared header sits above the grid: the greyscale wedge scrolls away with the page, and the sticky contents rail starts below the header. */
+.wedge--top{position:relative;z-index:auto}
+@media(min-width:1080px){.index{top:var(--sx-h-small);height:calc(100vh - var(--sx-h-small));height:calc(100dvh - var(--sx-h-small))}}
+html{scroll-padding-top:calc(var(--sx-h) + 16px)}
+.hero{padding-top:56px}
 .hero{padding:74px 0 26px}
 @media(min-width:1080px){.hero{padding:86px 0 30px}}
 .hero-tag{font-family:var(--font-mono);font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--cyan);margin-bottom:26px}
@@ -340,6 +354,19 @@ footer p{max-width:70ch}
 </head>
 <body>
 <div class="wedge wedge--top"></div>
+<a class="sx-skip" href="#main">Skip to content</a>
+<header class="sx-header">
+  <div class="sx-wrap sx-header-in">
+    <a class="sx-brand" href="/"><span class="sx-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 7.5h12l-1.3 12.6a1.6 1.6 0 0 1-1.6 1.4H8.9a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M4.6 7.5h14.8"/><path d="M13.6 7.5V3.2l2.9-1.1"/><circle cx="10.2" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="13.8" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="12" cy="19.7" r="1.05" fill="currentColor" stroke="none"/></svg></span><span class="sx-brand-text">Healthcare Data Tools</span></a>
+    <nav class="sx-nav" aria-label="Primary"><a href="/#tools">Tools</a><a href="/#how">How it works</a><a href="/#repos">Repos</a><a href="/hl7-fhir-converter.html">Converter</a><a href="/radiology-handbook.html" aria-current="page">Handbook</a></nav>
+    <span class="sx-badge" title="Every tool reads and writes HL7 v2.5.1">HL7 v2.5.1</span>
+    <a class="sx-gh" href="https://github.com/coffeemilktea" aria-label="@coffeemilktea on GitHub"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
+    <details class="sx-menu">
+      <summary aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg></summary>
+      <nav class="sx-menu-panel" aria-label="Primary (menu)"><a href="/#tools">Tools</a><a href="/#how">How it works</a><a href="/#repos">Repos</a><a href="/hl7-fhir-converter.html">Converter</a><a href="/radiology-handbook.html" aria-current="page">Handbook</a></nav>
+    </details>
+  </div>
+</header>
 <div class="shell">
 
 <aside class="index" aria-label="Contents">
@@ -376,20 +403,8 @@ footer p{max-width:70ch}
   </nav>
 </aside>
 
-<header class="app-header">
-  <a class="app-mark" href="/" aria-label="Healthcare Data Tools home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 7.5h12l-1.3 12.6a1.6 1.6 0 0 1-1.6 1.4H8.9a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M4.6 7.5h14.8"/><path d="M13.6 7.5V3.2l2.9-1.1"/><circle cx="10.2" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="13.8" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="12" cy="19.7" r="1.05" fill="currentColor" stroke="none"/></svg></a>
-  <div class="app-titles">
-    <p class="app-eyebrow"><a href="/">coffeemilktea.github.io</a></p>
-    <div class="app-h">Radiology Transaction Handbook</div>
-    <p>HL7 v2.5.1 · DICOM · PACS study guide</p>
-  </div>
-  <span class="app-badge">v2.5.1</span>
-  <nav class="app-actions" aria-label="Page links">
-    <a class="app-home" href="/">All tools<span class="app-home-arrow" aria-hidden="true">←</span></a>
-  </nav>
-</header>
 
-<main>
+<main id="main">
 
 
 <header class="hero" id="top">
@@ -2225,6 +2240,45 @@ tcpdump -i any -s 0 -w dicom.pcap host 10.20.30.40 and port 11112
 
 </main>
 </div>
+<footer class="sx-footer">
+  <div class="sx-wrap">
+    <div class="sx-foot-grid">
+      <div>
+        <a class="sx-brand" href="/"><span class="sx-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 7.5h12l-1.3 12.6a1.6 1.6 0 0 1-1.6 1.4H8.9a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M4.6 7.5h14.8"/><path d="M13.6 7.5V3.2l2.9-1.1"/><circle cx="10.2" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="13.8" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="12" cy="19.7" r="1.05" fill="currentColor" stroke="none"/></svg></span><span class="sx-brand-text">Healthcare Data Tools</span></a>
+        <p class="sx-foot-blurb">Free, open-source browser tools for HL7 v2.5.1, DICOM and FHIR. Static pages, no install, no account.</p>
+      </div>
+      <div>
+        <h2>Tools</h2>
+        <ul><li><a href="/hl7-dicom-tools/tools/msgparser.html">HL7 Parser</a></li><li><a href="/hl7-dicom-tools/tools/diff-checker.html">HL7 Diff Checker</a></li><li><a href="/hl7-dicom-tools/tools/dicom-hl7-order.html">DICOM &rarr; HL7 Order</a></li><li><a href="/hl7-dicom-tools/tools/dicom-generator.html">DICOM Toolbox</a></li><li><a href="/hl7-dicom-tools/tools/dicom-viewer.html">DICOM Viewer &amp; Tag Morph</a></li><li><a href="/hl7-dicom-tools/tools/mwl-simulator.html">MWL Simulator</a></li><li><a href="/HL7-Interface-Javascript-Builder/">Mirth Transformer Builder</a></li></ul>
+      </div>
+      <div>
+        <h2>Reference</h2>
+        <ul>
+          <li><a href="/hl7-fhir-converter.html">HL7 v2.5.1 &harr; FHIR R4 Converter</a></li>
+          <li><a href="/radiology-handbook.html">Radiology Transaction Handbook</a></li>
+        </ul>
+        <h3>MCP servers <span class="sx-wip">Work in progress</span></h3>
+        <ul>
+          <li><a href="https://github.com/coffeemilktea/hl7-v2-mcp-server">HL7 v2.5.1 Reference</a></li>
+          <li><a href="https://github.com/coffeemilktea/hl7-v2-fhir-mcp-server">HL7 v2.5.1 &rarr; FHIR R4</a></li>
+        </ul>
+      </div>
+      <div>
+        <h2>Project</h2>
+        <ul>
+          <li><a href="https://github.com/coffeemilktea">@coffeemilktea on GitHub</a></li>
+          <li><a href="https://github.com/coffeemilktea/hl7-dicom-tools">hl7-dicom-tools source</a></li>
+          <li><a href="https://github.com/coffeemilktea/coffeemilktea.github.io">This site&rsquo;s source</a></li>
+          <li><a href="https://github.com/coffeemilktea/hl7-dicom-tools/issues">Report an issue</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="sx-foot-bottom">
+      <span>&copy; 2026 Healthcare Data Tools &middot; built by <a href="https://github.com/coffeemilktea">@coffeemilktea</a></span>
+      <span>No cookies, no analytics, no data collection.</span>
+    </div>
+  </div>
+</footer>
 
 <div id="ftip" role="tooltip" aria-hidden="true"></div>
 
