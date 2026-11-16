@@ -1,13 +1,55 @@
-/* Shared theme controller — dark only.
-   The site and the tools use a single Tokyo Night (night) theme, defined in
-   tokyo-night.css. This file only clears any light-mode choice a visitor
-   saved under the old "hl7-tools-theme" key, so returning visitors land on
-   the dark theme too. window.toggleTheme is kept as a no-op for any old
-   caller. */
+/* Shared theme controller: dark (Tokyo Night) or light (Tokyo Night Day hues).
+   Loaded as a plain, non-deferred <script> in <head>, so <html data-theme> is
+   set before first paint and there is no flash of the wrong theme.
+
+   Choice order: an explicit choice saved in localStorage "hl7-tools-theme"
+   ("light" | "dark"), else the system's prefers-color-scheme. The key and
+   values are the ones the Mirth Transformer Builder (same origin) already
+   uses, so one choice follows the visitor between the two. This file used to
+   delete that key on every load, silently resetting the builder's setting.
+
+   window.toggleTheme() flips and saves the choice and returns the new theme.
+   The palettes themselves live in /assets/tokens.css. */
 (function () {
-  document.documentElement.removeAttribute('data-theme');
-  try { localStorage.removeItem('hl7-tools-theme'); } catch (e) { /* storage blocked: not fatal */ }
-  window.toggleTheme = function () {};
+  var KEY = 'hl7-tools-theme';
+  var BAR = { dark: '#1a1b26', light: '#e1e2e7' };   /* = --bg, for the browser UI */
+  var root = document.documentElement;
+  var mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+
+  function saved() {
+    try { var v = localStorage.getItem(KEY); return v === 'light' || v === 'dark' ? v : null; }
+    catch (e) { return null; }   /* storage blocked: follow the system */
+  }
+  function system() { return mq && mq.matches ? 'light' : 'dark'; }
+
+  function apply(theme, forced) {
+    root.setAttribute('data-theme', theme);
+    /* <meta name=theme-color media=...> pairs follow the system on their own;
+       an explicit choice has to override both. */
+    var metas = document.querySelectorAll('meta[name="theme-color"]');
+    for (var i = 0; i < metas.length; i++) {
+      var m = metas[i], media = m.getAttribute('media') || '';
+      m.setAttribute('content', forced ? BAR[theme] : (media.indexOf('light') > -1 ? BAR.light : BAR.dark));
+    }
+    try { root.dispatchEvent(new CustomEvent('themechange', { detail: theme })); } catch (e) { /* old browser */ }
+  }
+  function sync() { var s = saved(); apply(s || system(), !!s); }
+
+  sync();
+  if (mq) {
+    var onSystem = function () { if (!saved()) apply(system(), false); };
+    if (mq.addEventListener) mq.addEventListener('change', onSystem);
+    else if (mq.addListener) mq.addListener(onSystem);
+  }
+  /* another tab (or the Mirth builder) changed the choice */
+  window.addEventListener('storage', function (e) { if (e.key === KEY || e.key === null) sync(); });
+
+  window.toggleTheme = function () {
+    var next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+    try { localStorage.setItem(KEY, next); } catch (e) { /* not fatal: applies to this page only */ }
+    apply(next, true);
+    return next;
+  };
 })();
 
 /* Shared UX helpers used by every tool and page.

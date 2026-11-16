@@ -48,7 +48,7 @@ html { scroll-behavior: smooth; scroll-padding-top: calc(var(--sx-h) + 12px); -w
 .sx-header.is-scrolled {
   background: color-mix(in srgb, var(--surface) 90%, transparent);
   border-bottom-color: var(--border-soft);
-  box-shadow: 0 10px 30px -18px rgba(0, 0, 0, .7);
+  box-shadow: 0 10px 30px -18px rgb(var(--shade) / calc(.7 * var(--shade-k)));
 }
 .sx-header-in {
   display: flex; align-items: center; gap: 14px;
@@ -96,6 +96,19 @@ html { scroll-behavior: smooth; scroll-padding-top: calc(var(--sx-h) + 12px); -w
 }
 .sx-gh:hover { color: var(--text); background: var(--accent-bg); }
 
+/* Light/dark toggle. Hidden in the markup; site.js reveals it once theme.js
+   has set <html data-theme>, so without JS there's no dead button. The icon
+   shows the theme a press switches to. */
+.sx-theme {
+  display: grid; place-items: center; width: 44px; height: 44px; padding: 0; border: 0; border-radius: 12px;
+  background: none; color: var(--body); cursor: pointer; transition: color .15s, background-color .15s;
+}
+.sx-theme[hidden] { display: none; }
+.sx-theme:hover { color: var(--text); background: var(--accent-bg); }
+.sx-theme .i-moon, [data-theme="light"] .sx-theme .i-sun { display: none; }
+[data-theme="light"] .sx-theme .i-moon { display: block; }
+.sx-menu-panel .sx-menu-gh { display: none; }
+
 /* Phone menu: a <details> disclosure, no JS needed */
 .sx-menu { display: none; position: relative; margin-left: auto; }
 .sx-menu > summary {
@@ -109,7 +122,7 @@ html { scroll-behavior: smooth; scroll-padding-top: calc(var(--sx-h) + 12px); -w
   position: absolute; right: 0; top: calc(100% + 8px); min-width: 220px;
   padding: 8px; border-radius: 14px;
   background: var(--surface); border: 1px solid var(--border);
-  box-shadow: 0 24px 50px -12px rgba(0, 0, 0, .7);
+  box-shadow: 0 24px 50px -12px rgb(var(--shade) / calc(.7 * var(--shade-k)));
   display: grid;
 }
 .sx-menu-panel a {
@@ -149,6 +162,8 @@ html { scroll-behavior: smooth; scroll-padding-top: calc(var(--sx-h) + 12px); -w
   transition-delay: calc(var(--d, 0) * 70ms);
 }
 .js [data-reveal].is-in { opacity: 1; transform: none; }
+/* Stagger steps as data attributes, not style="" (the CSP has no 'unsafe-inline'). */
+[data-d="1"] { --d: 1; } [data-d="2"] { --d: 2; } [data-d="3"] { --d: 3; } [data-d="4"] { --d: 4; }
 @media (prefers-reduced-motion: reduce) {
   .js [data-reveal] { opacity: 1; transform: none; transition: none; }
 }
@@ -189,8 +204,16 @@ html { scroll-behavior: smooth; scroll-padding-top: calc(var(--sx-h) + 12px); -w
 @media print { .sx-header, .sx-footer, .sx-skip { display: none !important; } }
 
 @media (max-width: 860px) {
-  .sx-header .sx-gh { margin-left: auto; }
+  .sx-header-in { gap: 6px; }
+  .sx-brand { margin-right: 8px; }
+  .sx-header .sx-theme, .sx-header .sx-gh { margin-left: auto; }
+  .sx-header .sx-theme:not([hidden]) + .sx-gh { margin-left: 0; }
   .sx-menu { margin-left: 0; }
+}
+/* Narrow phones: the GitHub icon moves into the menu so brand + toggle + menu fit at 320px. */
+@media (max-width: 480px) {
+  .sx-header .sx-gh { display: none; }
+  .sx-menu-panel .sx-menu-gh { display: flex; }
 }
 @media (pointer: coarse) {
   .sx-foot-bottom a { display: inline-flex; align-items: center; min-height: 44px; }

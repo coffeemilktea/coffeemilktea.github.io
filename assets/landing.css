@@ -23,10 +23,10 @@ body.landing {
   mask-image: radial-gradient(ellipse 70% 60% at 50% 30%, #000 30%, transparent 75%);
   animation: grid-pan 30s linear infinite;
 }
-.hero-bg .glow { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .32; will-change: transform; }
+.hero-bg .glow { position: absolute; border-radius: 50%; filter: blur(70px); opacity: calc(.32 * var(--glow-k)); will-change: transform; }
 .hero-bg .g1 { width: 520px; height: 520px; left: -120px; top: -140px; background: var(--accent); animation: drift1 18s ease-in-out infinite alternate; }
-.hero-bg .g2 { width: 460px; height: 460px; right: -120px; top: 40px; background: var(--accent2); opacity: .26; animation: drift2 22s ease-in-out infinite alternate; }
-.hero-bg .g3 { width: 380px; height: 380px; left: 38%; bottom: -220px; background: var(--cyan); opacity: .16; animation: drift1 26s ease-in-out infinite alternate-reverse; }
+.hero-bg .g2 { width: 460px; height: 460px; right: -120px; top: 40px; background: var(--accent2); opacity: calc(.26 * var(--glow-k)); animation: drift2 22s ease-in-out infinite alternate; }
+.hero-bg .g3 { width: 380px; height: 380px; left: 38%; bottom: -220px; background: var(--cyan); opacity: calc(.16 * var(--glow-k)); animation: drift1 26s ease-in-out infinite alternate-reverse; }
 @keyframes grid-pan { to { background-position: 44px 44px; } }
 @keyframes drift1 { to { transform: translate3d(80px, 60px, 0) scale(1.08); } }
 @keyframes drift2 { to { transform: translate3d(-90px, 50px, 0) scale(.94); } }
@@ -54,7 +54,7 @@ body.landing {
   margin: 0; min-width: 0; border-radius: 18px; overflow: hidden;
   background: color-mix(in srgb, var(--sink) 88%, transparent);
   border: 1px solid var(--border);
-  box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .75), 0 0 0 1px var(--glass-border) inset;
+  box-shadow: 0 40px 80px -30px rgb(var(--shade) / calc(.75 * var(--shade-k))), 0 0 0 1px var(--glass-border) inset;
 }
 .term-head { display: flex; align-items: center; gap: 14px; padding: 8px 12px 8px 16px; background: var(--surface); border-bottom: 1px solid var(--border-soft); }
 .term-dots { display: flex; gap: 6px; }
@@ -103,7 +103,13 @@ body.landing {
 
 /* Tool cards */
 .cards { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 24px; }
-.card { min-width: 0; perspective: 1100px; }
+.card { min-width: 0; perspective: 1100px; --tint: var(--accent); }
+.card[data-tint="accent2"] { --tint: var(--accent2); }
+.card[data-tint="cyan"]    { --tint: var(--cyan); }
+.card[data-tint="green"]   { --tint: var(--green); }
+.card[data-tint="yellow"]  { --tint: var(--yellow); }
+.card[data-tint="orange"]  { --tint: var(--orange); }
+.card[data-tint="red"]     { --tint: var(--red); }
 .card[hidden] { display: none; }
 .card.is-filtered-in { animation: card-in .45s var(--sx-ease) both; }
 @keyframes card-in { from { opacity: 0; transform: translateY(12px) scale(.98); } }
@@ -116,7 +122,7 @@ body.landing {
 }
 .card-in:hover, .card-in:focus-within {
   border-color: color-mix(in srgb, var(--tint) 45%, transparent);
-  box-shadow: 0 28px 60px -28px rgba(0, 0, 0, .8), 0 0 0 1px color-mix(in srgb, var(--tint) 20%, transparent);
+  box-shadow: 0 28px 60px -28px rgb(var(--shade) / calc(.8 * var(--shade-k))), 0 0 0 1px color-mix(in srgb, var(--tint) 20%, transparent);
   transform: translateY(-6px) rotateX(var(--rx)) rotateY(var(--ry));
 }
 .card-shot {
@@ -130,7 +136,7 @@ body.landing {
 .shot-phone {
   position: absolute; right: 14px; bottom: -40%; width: 26%; aspect-ratio: 200 / 433;
   border-radius: 12px; overflow: hidden; border: 3px solid var(--surface2);
-  box-shadow: 0 18px 30px -10px rgba(0, 0, 0, .8);
+  box-shadow: 0 18px 30px -10px rgb(var(--shade) / calc(.8 * var(--shade-k)));
   opacity: 0; transform: translateY(10px) rotate(4deg); z-index: 1;
   transition: opacity .45s var(--sx-ease), transform .55s var(--sx-ease), bottom .55s var(--sx-ease);
 }
@@ -196,7 +202,7 @@ body.landing {
   width: min(1180px, calc(100vw - 32px)); max-width: none; max-height: calc(100dvh - 32px);
   padding: 0; border: 1px solid var(--border); border-radius: 18px; overflow: hidden;
   background: var(--surface); color: var(--body);
-  box-shadow: 0 40px 100px -20px rgba(0, 0, 0, .85);
+  box-shadow: 0 40px 100px -20px rgb(var(--shade) / calc(.85 * var(--shade-k)));
 }
 .lb::backdrop { background: rgba(0, 0, 0, .7); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
 .lb[open] { animation: lb-in .35s var(--sx-ease); }

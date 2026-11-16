@@ -1,0 +1,30 @@
+/* 404 page layout. Colours only through the shared tokens (tokens.css). */
+* { box-sizing: border-box; }
+body { margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; overflow-x: clip;
+       background: var(--bg); color: var(--body); font: 16px/1.6 var(--font-sans); }
+main { flex: 1; display: grid; place-items: center; padding: 56px 0 72px; position: relative; isolation: isolate; }
+main::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
+  background-image: linear-gradient(to right, color-mix(in srgb, var(--border) 40%, transparent) 1px, transparent 1px),
+                    linear-gradient(to bottom, color-mix(in srgb, var(--border) 40%, transparent) 1px, transparent 1px);
+  background-size: 44px 44px;
+  -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 20%, transparent 75%);
+          mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 20%, transparent 75%); }
+.nf-wrap { width: 100%; display: grid; place-items: center; }
+.nf { width: min(560px, 100%); text-align: center; padding: 44px 32px; border-radius: 20px;
+      background: var(--surface); border: 1px solid var(--border);
+      box-shadow: 0 40px 80px -30px rgb(var(--shade) / calc(.75 * var(--shade-k))); }
+.code { margin: 0; font: 800 4rem/1 var(--font-mono); letter-spacing: -.04em;
+        background: linear-gradient(100deg, var(--accent), var(--cyan), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+h1 { margin: 12px 0 8px; color: var(--text); font-size: 1.4rem; }
+.nf p { margin: 0 0 20px; }
+.msa { font: 13px/1.5 var(--font-mono); color: var(--muted); background: var(--sink); border: 1px solid var(--border-soft);
+       border-radius: 10px; padding: 10px 14px; overflow-wrap: anywhere; }
+.msa b { color: var(--yellow); }
+/* Scoped to the card: a bare h2 rule also hit the footer's column headings. */
+.nf h2 { margin: 32px 0 12px; padding-top: 24px; border-top: 1px solid var(--border-soft); color: var(--muted);
+         font: 700 12px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
+.links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px;
+           border: 1px solid var(--border); background: var(--surface2); color: var(--text); text-decoration: none; font-size: 14px; }
+.links a:hover { border-color: var(--accent); color: var(--accent); }
+@media (max-width: 480px) { .nf { padding: 36px 20px; } .code { font-size: 3.2rem; } }

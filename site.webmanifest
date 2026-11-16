@@ -1,8 +1,11 @@
 {
+  "id": "/",
   "name": "Healthcare Data Tools",
   "short_name": "HDT",
   "description": "Browser-based HL7 v2.5.1, DICOM and FHIR tools.",
+  "lang": "en",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#1a1b26",
   "theme_color": "#1a1b26",

@@ -19,10 +19,11 @@ The landing page links to these tools:
 ## Features
 
 - No build step and no Jekyll (`.nojekyll`): files are served exactly as committed.
-- No frameworks: small vanilla `assets/site.js` (sticky header, scroll reveal, phone menu) and `assets/landing.js` (filters, card tilt, lightbox, typing sample), plus the shared `tools/theme.js`.
+- No frameworks: small vanilla `assets/site.js` (sticky header, scroll reveal, phone menu, theme toggle) and `assets/landing.js` (filters, card tilt, lightbox, typing sample), plus the shared `tools/theme.js`.
 - Animations respect `prefers-reduced-motion`: with it on, nothing moves and all content shows at once.
 - Screenshots of every tool live in `assets/screenshots/` as WebP (`*-card`, `*-phone`, `*-desktop`, `*-mobile`).
-- Dark Tokyo Night theme from `assets/tokyo-night.css`, byte-identical to the copy in hl7-dicom-tools, so the site and the tools look the same.
+- Dark Tokyo Night theme from `assets/tokyo-night.css` (byte-identical to the copy in hl7-dicom-tools) and a light theme in `assets/tokens.css`. It follows your system setting; the header toggle overrides it and is remembered in `localStorage` (`hl7-tools-theme`, shared with the Mirth Transformer Builder). Both themes meet WCAG AA contrast.
+- Strict Content-Security-Policy on every page (`<meta http-equiv>`, since GitHub Pages can't send headers): scripts and styles only from this site, no inline code, no network requests.
 - Mobile-friendly: 16px inputs on touch screens, 44px tap targets, wide tables and code blocks scroll inside their own box, and safe-area insets are respected.
 
 ## HL7 standard: v2.5.1
@@ -31,7 +32,7 @@ The converter reads and writes HL7 **v2.5.1**: it warns when an input's MSH-12 i
 
 ## Privacy
 
-Everything runs client-side. The converter and the handbook make no network requests with your data: messages and Bundles are converted in your browser.
+Everything runs client-side. The converter and the handbook make no network requests with your data: messages and Bundles are converted in your browser, and the CSP (`connect-src 'none'`) blocks any request a script might try. The only thing stored is the light/dark choice, if you change it.
 
 ## Local development
 
@@ -46,5 +47,5 @@ Use HTTP, not `file://`: pages reference `/assets/` and `/tools/` by root-absolu
 ## Tech
 
 - Static HTML, CSS and vanilla JavaScript.
-- `assets/tokyo-night.css`: palette and base components. `assets/tokens.css`: tokens and legacy chrome. `assets/site.css` / `assets/site.js`: the shared header, footer and scroll reveal. `assets/landing.css` / `assets/landing.js`: the landing page. `tools/theme.js`: shared helpers.
+- `assets/tokyo-night.css`: dark palette and base components. `assets/tokens.css`: tokens, the light palette and legacy chrome. `assets/converter.*`, `assets/handbook.*`, `assets/404.css`: each page's own CSS/JS. `assets/site.css` / `assets/site.js`: the shared header, footer and scroll reveal. `assets/landing.css` / `assets/landing.js`: the landing page. `tools/theme.js`: light/dark choice and shared helpers.
 - Published with GitHub Pages from `master`.

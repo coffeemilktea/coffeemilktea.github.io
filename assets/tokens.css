@@ -1,7 +1,16 @@
 @import url("tokyo-night.css");
 /* ═══════════════════════════════════════════════════════════════════════
    Tokyo Night design tokens — the single source of truth for the whole site.
-   Dark only (Tokyo Night). Base palette + components: tokyo-night.css.
+   Dark (Tokyo Night) by default, light (Tokyo Night Day hues) when the
+   visitor's system prefers light or they pick it with the header toggle.
+   Base palette + components: tokyo-night.css (dark values, kept
+   byte-identical with hl7-dicom-tools; the light overrides live here).
+
+   How the theme is chosen (tools/theme.js runs in <head>, before paint):
+     stored choice in localStorage "hl7-tools-theme" (light|dark) — the same
+     key the Mirth Transformer Builder uses — else prefers-color-scheme.
+   theme.js writes the result to <html data-theme>. Without JS there is no
+   attribute and the @media block below follows the system setting.
 
    Every page links this file and then aliases its own local variable
    names onto these tokens, so a page keeps its layout CSS but can never
@@ -83,6 +92,91 @@
 
   /* Pearls settled along the bottom of the cup. */
   --pearl-band: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='34' height='26' viewBox='0 0 34 26'%3E%3Cg fill='%23000'%3E%3Ccircle cx='8' cy='20' r='6'/%3E%3Ccircle cx='25' cy='21' r='5'/%3E%3Ccircle cx='17' cy='10' r='4'/%3E%3C/g%3E%3C/svg%3E");
+
+  /* ── Shadow ink and glow strength ──
+     Shadows are written rgb(var(--shade) / calc(<alpha> * var(--shade-k))):
+     pure black in dark, a soft ink tint in light, where black reads as dirt. */
+  --shade:   0 0 0;
+  --shade-k: 1;
+  --glow-k:  1;   /* hero background glows */
+
+  /* tokyo-night.css aliases, re-pointed at the semantic tokens so they
+     follow the theme instead of staying on the dark hex values. */
+  --bg-dark:      var(--surface);
+  --bg-highlight: var(--surface2);
+  --input-bg:     var(--sink);
+  --fg:           var(--text);
+  --fg-dark:      var(--body);
+  --blue:         var(--accent);
+  --magenta:      var(--accent2);
+  --purple:       var(--accent2);
+  --pink:         var(--red);
+}
+
+/* ═══ Light theme ══════════════════════════════════════════════════════
+   Tokyo Night Day hues, each darkened (same hue) until every text token
+   clears WCAG AA 4.5:1 on --bg, --surface, --surface2, --sink, both glass
+   fills, and its own 10% wash over each of those. Lowest pair: 4.60:1.
+   Hues: blue 221°, purple 266°, cyan 193°, green 88°, yellow 40°, red 344°,
+   orange 20°. Preserve the hue, not the hex, if you retouch them.
+
+   The block appears twice with identical bodies: once for an explicit
+   choice (data-theme="light", set by theme.js) and once for no-JS
+   visitors whose system prefers light. Keep the two in sync.
+   ═════════════════════════════════════════════════════════════════════ */
+:root[data-theme="light"] {
+  color-scheme: light;
+  --bg: #e1e2e7; --surface: #f4f4f8; --surface2: #d4d6e1; --sink: #d8dae4;
+  --border: #a8adc9; --border-soft: #c4c8db;
+  --accent: #174abb; --accent2: #6a24c7; --cyan: #005a73; --green: #395c14;
+  --yellow: #704b00; --red: #a01037; --orange: #943100;
+  --text: #343b58; --body: #444a6e; --muted: #4e5479; --comment: #8990b3;
+  --on-accent: #f4f4f8;
+  --shadow: 0 20px 45px rgba(52, 59, 88, .14);
+  --shadow-1: 0 1px 2px rgba(52, 59, 88, .12);
+  --shadow-2: 0 8px 24px -8px rgba(52, 59, 88, .22);
+  --header-bg: rgba(244, 244, 248, .86);
+  --glass: rgba(255, 255, 255, .62); --glass-strong: rgba(255, 255, 255, .78);
+  --glass-border: rgba(52, 59, 88, .16); --glass-hi: rgba(255, 255, 255, .90);
+  --glass-shadow: 0 8px 32px rgba(52, 59, 88, .12), inset 0 1px 0 rgba(255, 255, 255, .6);
+  --accent-bg: color-mix(in srgb, var(--accent) 10%, transparent); --accent-line: color-mix(in srgb, var(--accent) 34%, transparent);
+  --green-bg:  color-mix(in srgb, var(--green) 10%, transparent);  --green-line:  color-mix(in srgb, var(--green) 34%, transparent);
+  --yellow-bg: color-mix(in srgb, var(--yellow) 10%, transparent); --yellow-line: color-mix(in srgb, var(--yellow) 34%, transparent);
+  --cyan-bg:   color-mix(in srgb, var(--cyan) 10%, transparent);   --cyan-line:   color-mix(in srgb, var(--cyan) 34%, transparent);
+  --red-bg:    color-mix(in srgb, var(--red) 10%, transparent);    --red-line:    color-mix(in srgb, var(--red) 34%, transparent);
+  --bg-rgb: 225, 226, 231; --surface2-rgb: 212, 214, 225; --border-rgb: 168, 173, 201;
+  --accent-rgb: 23, 74, 187; --accent2-rgb: 106, 36, 199; --purple-rgb: 106, 36, 199;
+  --cyan-rgb: 0, 90, 115; --green-rgb: 57, 92, 20; --yellow-rgb: 112, 75, 0;
+  --orange-rgb: 148, 49, 0; --red-rgb: 160, 16, 55; --text-rgb: 52, 59, 88; --muted-rgb: 78, 84, 121;
+  --shade: 52 59 88; --shade-k: .32; --glow-k: .55;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme]) {
+    color-scheme: light;
+    --bg: #e1e2e7; --surface: #f4f4f8; --surface2: #d4d6e1; --sink: #d8dae4;
+    --border: #a8adc9; --border-soft: #c4c8db;
+    --accent: #174abb; --accent2: #6a24c7; --cyan: #005a73; --green: #395c14;
+    --yellow: #704b00; --red: #a01037; --orange: #943100;
+    --text: #343b58; --body: #444a6e; --muted: #4e5479; --comment: #8990b3;
+    --on-accent: #f4f4f8;
+    --shadow: 0 20px 45px rgba(52, 59, 88, .14);
+    --shadow-1: 0 1px 2px rgba(52, 59, 88, .12);
+    --shadow-2: 0 8px 24px -8px rgba(52, 59, 88, .22);
+    --header-bg: rgba(244, 244, 248, .86);
+    --glass: rgba(255, 255, 255, .62); --glass-strong: rgba(255, 255, 255, .78);
+    --glass-border: rgba(52, 59, 88, .16); --glass-hi: rgba(255, 255, 255, .90);
+    --glass-shadow: 0 8px 32px rgba(52, 59, 88, .12), inset 0 1px 0 rgba(255, 255, 255, .6);
+    --accent-bg: color-mix(in srgb, var(--accent) 10%, transparent); --accent-line: color-mix(in srgb, var(--accent) 34%, transparent);
+    --green-bg:  color-mix(in srgb, var(--green) 10%, transparent);  --green-line:  color-mix(in srgb, var(--green) 34%, transparent);
+    --yellow-bg: color-mix(in srgb, var(--yellow) 10%, transparent); --yellow-line: color-mix(in srgb, var(--yellow) 34%, transparent);
+    --cyan-bg:   color-mix(in srgb, var(--cyan) 10%, transparent);   --cyan-line:   color-mix(in srgb, var(--cyan) 34%, transparent);
+    --red-bg:    color-mix(in srgb, var(--red) 10%, transparent);    --red-line:    color-mix(in srgb, var(--red) 34%, transparent);
+    --bg-rgb: 225, 226, 231; --surface2-rgb: 212, 214, 225; --border-rgb: 168, 173, 201;
+    --accent-rgb: 23, 74, 187; --accent2-rgb: 106, 36, 199; --purple-rgb: 106, 36, 199;
+    --cyan-rgb: 0, 90, 115; --green-rgb: 57, 92, 20; --yellow-rgb: 112, 75, 0;
+    --orange-rgb: 148, 49, 0; --red-rgb: 160, 16, 55; --text-rgb: 52, 59, 88; --muted-rgb: 78, 84, 121;
+    --shade: 52 59 88; --shade-k: .32; --glow-k: .55;
+  }
 }
 
 

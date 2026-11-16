@@ -2,12 +2,17 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- CSP as a meta tag: GitHub Pages cannot send headers. A meta CSP cannot set
+     frame-ancestors or report-to; see the security report. Keep it identical on every page. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Healthcare Data Tools: HL7 v2.5.1, DICOM and FHIR tools that run in your browser</title>
 <meta name="description" content="Free, open-source browser tools for HL7 v2.5.1, DICOM and FHIR R4: parse and diff HL7 messages, build Mirth transformers, view and generate DICOM, simulate modality worklists and convert v2 to FHIR. No install, no account.">
 <link rel="canonical" href="https://coffeemilktea.github.io/">
-<meta name="theme-color" content="#1a1b26">
-<meta name="color-scheme" content="dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#e1e2e7">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1b26">
+<meta name="color-scheme" content="light dark">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://coffeemilktea.github.io/">
 <meta property="og:site_name" content="Healthcare Data Tools">
@@ -25,13 +30,13 @@
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/assets/tokyo-night.css" as="style">
 <link rel="stylesheet" href="/assets/tokens.css">
 <link rel="stylesheet" href="/assets/site.css">
 <script src="/tools/theme.js"></script>
 <script src="/assets/site.js" defer></script>
 <link rel="stylesheet" href="/assets/landing.css">
 <script src="/assets/landing.js" defer></script>
-<link rel="preload" as="image" href="/assets/screenshots/msgparser-card.webp" type="image/webp">
 </head>
 <body class="landing">
 <a class="sx-skip" href="#main">Skip to content</a>
@@ -40,10 +45,11 @@
     <a class="sx-brand" href="/"><span class="sx-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 7.5h12l-1.3 12.6a1.6 1.6 0 0 1-1.6 1.4H8.9a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M4.6 7.5h14.8"/><path d="M13.6 7.5V3.2l2.9-1.1"/><circle cx="10.2" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="13.8" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="12" cy="19.7" r="1.05" fill="currentColor" stroke="none"/></svg></span><span class="sx-brand-text">Healthcare Data Tools</span></a>
     <nav class="sx-nav" aria-label="Primary"><a href="#tools">Tools</a><a href="#how">How it works</a><a href="#repos">Repos</a><a href="/hl7-fhir-converter.html">Converter</a><a href="/radiology-handbook.html">Handbook</a></nav>
     <span class="sx-badge" title="Every tool reads and writes HL7 v2.5.1">HL7 v2.5.1</span>
+    <button class="sx-theme" type="button" aria-label="Light theme" aria-pressed="false" hidden><svg class="i-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg><svg class="i-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg></button>
     <a class="sx-gh" href="https://github.com/coffeemilktea" aria-label="@coffeemilktea on GitHub"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
     <details class="sx-menu">
       <summary aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg></summary>
-      <nav class="sx-menu-panel" aria-label="Primary (menu)"><a href="#tools">Tools</a><a href="#how">How it works</a><a href="#repos">Repos</a><a href="/hl7-fhir-converter.html">Converter</a><a href="/radiology-handbook.html">Handbook</a></nav>
+      <nav class="sx-menu-panel" aria-label="Primary (menu)"><a href="#tools">Tools</a><a href="#how">How it works</a><a href="#repos">Repos</a><a href="/hl7-fhir-converter.html">Converter</a><a href="/radiology-handbook.html">Handbook</a><a class="sx-menu-gh" href="https://github.com/coffeemilktea">GitHub</a></nav>
     </details>
   </div>
 </header>
@@ -54,13 +60,13 @@
     <div class="sx-wrap hero-grid">
       <div class="hero-copy">
         <p class="eyebrow" data-reveal><span class="dot" aria-hidden="true"></span>Free &middot; Open source &middot; Runs in your browser</p>
-        <h1 id="hero-title" data-reveal style="--d:1">HL7, DICOM and FHIR tools that run <span class="grad">entirely in your browser</span>.</h1>
-        <p class="hero-sub" data-reveal style="--d:2">Parse and diff HL7 v2.5.1 messages, view and generate DICOM, build Mirth transformers, simulate modality worklists and convert to FHIR R4. No install, no account, nothing to set up.</p>
-        <div class="hero-actions" data-reveal style="--d:3">
+        <h1 id="hero-title" data-reveal data-d="1">HL7, DICOM and FHIR tools that run <span class="grad">entirely in your browser</span>.</h1>
+        <p class="hero-sub" data-reveal data-d="2">Parse and diff HL7 v2.5.1 messages, view and generate DICOM, build Mirth transformers, simulate modality worklists and convert to FHIR R4. No install, no account, nothing to set up.</p>
+        <div class="hero-actions" data-reveal data-d="3">
           <a class="sx-btn sx-btn-primary sx-btn-lg" href="#tools">Explore the tools <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a>
           <a class="sx-btn sx-btn-lg" href="https://github.com/coffeemilktea/hl7-dicom-tools"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg> View the source</a>
         </div>
-        <ul class="facts" data-reveal style="--d:4" aria-label="At a glance">
+        <ul class="facts" data-reveal data-d="4" aria-label="At a glance">
           <li><strong>7</strong><span>browser tools</span></li>
           <li><strong>2</strong><span>reference pages</span></li>
           <li><strong>v2.5.1</strong><span>HL7 standard</span></li>
@@ -68,7 +74,7 @@
         </ul>
       </div>
 
-      <figure class="term" data-reveal style="--d:2" aria-labelledby="term-cap">
+      <figure class="term" data-reveal data-d="2" aria-labelledby="term-cap">
         <div class="term-head">
           <span class="term-dots" aria-hidden="true"><i></i><i></i><i></i></span>
           <div class="term-tabs" role="tablist" aria-label="Sample data">
@@ -112,7 +118,7 @@
       </div>
       <div class="filters" role="group" aria-label="Filter by standard" data-reveal hidden><button class="chip" type="button" data-filter="all" aria-pressed="true">All <span class="chip-n" data-count="all"></span></button><button class="chip" type="button" data-filter="hl7" aria-pressed="false">HL7 <span class="chip-n" data-count="hl7"></span></button><button class="chip" type="button" data-filter="dicom" aria-pressed="false">DICOM <span class="chip-n" data-count="dicom"></span></button><button class="chip" type="button" data-filter="fhir" aria-pressed="false">FHIR <span class="chip-n" data-count="fhir"></span></button></div>
       <ul class="cards" id="cards">
-        <li class="card" data-cat="hl7 fhir" data-slug="msgparser" style="--tint: var(--yellow); --d: 0" data-reveal>
+        <li class="card" data-cat="hl7 fhir" data-slug="msgparser" data-tint="yellow" data-d="0" data-reveal>
           <article class="card-in" aria-labelledby="t-msgparser">
             <button class="card-shot" type="button" data-open="msgparser" aria-label="Enlarge screenshots of HL7 Parser">
               <img class="shot-desk" src="/assets/screenshots/msgparser-card.webp" width="640" height="400" loading="lazy" decoding="async" alt="HL7 Parser with a sample ORU^R01 lab result message broken into segments, with the MSH fields listed by name">
@@ -133,7 +139,7 @@
             <template class="card-uses"><ul><li>Troubleshooting clinical interface and integration engine messages.</li><li>Decoding nested messages to inspect patient identifiers (PID), orders (ORC/OBR) or observations (OBX).</li><li>Learning HL7 v2 segment structures and field definitions.</li></ul></template>
           </article>
         </li>
-        <li class="card" data-cat="hl7" data-slug="diff-checker" style="--tint: var(--orange); --d: 1" data-reveal>
+        <li class="card" data-cat="hl7" data-slug="diff-checker" data-tint="orange" data-d="1" data-reveal>
           <article class="card-in" aria-labelledby="t-diff-checker">
             <button class="card-shot" type="button" data-open="diff-checker" aria-label="Enlarge screenshots of HL7 Diff Checker">
               <img class="shot-desk" src="/assets/screenshots/diff-checker-card.webp" width="640" height="400" loading="lazy" decoding="async" alt="HL7 Diff Checker comparing two sample messages, with segment and field counts and the fields that differ highlighted">
@@ -154,7 +160,7 @@
             <template class="card-uses"><ul><li>Comparing an inbound message with its transformed outbound counterpart to verify mapping logic.</li><li>Aligning specifications by comparing messages from different source systems.</li><li>Working out why one message succeeded and a near-identical one failed.</li></ul></template>
           </article>
         </li>
-        <li class="card" data-cat="dicom hl7" data-slug="dicom-hl7-order" style="--tint: var(--red); --d: 2" data-reveal>
+        <li class="card" data-cat="dicom hl7" data-slug="dicom-hl7-order" data-tint="red" data-d="2" data-reveal>
           <article class="card-in" aria-labelledby="t-dicom-hl7-order">
             <button class="card-shot" type="button" data-open="dicom-hl7-order" aria-label="Enlarge screenshots of DICOM → HL7 Order">
               <img class="shot-desk" src="/assets/screenshots/dicom-hl7-order-card.webp" width="640" height="400" loading="lazy" decoding="async" alt="DICOM to HL7 Order tool showing sample DICOM tags, the generated HL7 v2.5.1 ORM^O01 message and the tag-to-field mapping table">
@@ -175,7 +181,7 @@
             <template class="card-uses"><ul><li>Bridging imaging archives (PACS) with clinical information systems (RIS/EMR).</li><li>Simulating order messages from existing DICOM files for interface testing.</li><li>Validating alignment between DICOM attributes and HL7 order segments.</li></ul></template>
           </article>
         </li>
-        <li class="card" data-cat="dicom" data-slug="dicom-generator" style="--tint: var(--green); --d: 0" data-reveal>
+        <li class="card" data-cat="dicom" data-slug="dicom-generator" data-tint="green" data-d="0" data-reveal>
           <article class="card-in" aria-labelledby="t-dicom-generator">
             <button class="card-shot" type="button" data-open="dicom-generator" aria-label="Enlarge screenshots of DICOM Toolbox">
               <img class="shot-desk" src="/assets/screenshots/dicom-generator-card.webp" width="640" height="400" loading="lazy" decoding="async" alt="DICOM Toolbox Tag Reader listing the tags, VRs and values of a demo DICOM file">
@@ -196,7 +202,7 @@
             <template class="card-uses"><ul><li>Building synthetic or mock datasets for testing PACS, VNA and other DICOM-compatible software.</li><li>Learning and exploring the structure of DICOM headers, tags and data elements.</li><li>Testing application boundary conditions with hand-crafted DICOM tag values.</li></ul></template>
           </article>
         </li>
-        <li class="card" data-cat="dicom" data-slug="dicom-viewer" style="--tint: var(--cyan); --d: 1" data-reveal>
+        <li class="card" data-cat="dicom" data-slug="dicom-viewer" data-tint="cyan" data-d="1" data-reveal>
           <article class="card-in" aria-labelledby="t-dicom-viewer">
             <button class="card-shot" type="button" data-open="dicom-viewer" aria-label="Enlarge screenshots of DICOM Viewer &amp; Tag Morph">
               <img class="shot-desk" src="/assets/screenshots/dicom-viewer-card.webp" width="640" height="400" loading="lazy" decoding="async" alt="DICOM Viewer showing a demo axial phantom image with its tag list in the side panel">
@@ -217,7 +223,7 @@
             <template class="card-uses"><ul><li>Viewing DICOM image series and verifying metadata without standing up a full PACS viewer.</li><li>Anonymising or correcting patient, study and series tags before sharing a dataset.</li><li>Troubleshooting header issues and re-exporting a corrected DICOM file.</li></ul></template>
           </article>
         </li>
-        <li class="card" data-cat="dicom" data-slug="mwl-simulator" style="--tint: var(--accent2); --d: 2" data-reveal>
+        <li class="card" data-cat="dicom" data-slug="mwl-simulator" data-tint="accent2" data-d="2" data-reveal>
           <article class="card-in" aria-labelledby="t-mwl-simulator">
             <button class="card-shot" type="button" data-open="mwl-simulator" aria-label="Enlarge screenshots of MWL Simulator">
               <img class="shot-desk" src="/assets/screenshots/mwl-simulator-card.webp" width="640" height="400" loading="lazy" decoding="async" alt="MWL Simulator with a C-FIND request form, matching scheduled worklist items and the protocol log">
@@ -238,7 +244,7 @@
             <template class="card-uses"><ul><li>Testing DICOM C-FIND connections and query/retrieve workflows.</li><li>Validating query filter parameters such as Scheduled Procedure Step Start Date and Modality.</li><li>Simulating imaging equipment querying a RIS or PACS worklist.</li></ul></template>
           </article>
         </li>
-        <li class="card" data-cat="hl7" data-slug="mirth-transformer" style="--tint: var(--accent); --d: 0" data-reveal>
+        <li class="card" data-cat="hl7" data-slug="mirth-transformer" data-tint="accent" data-d="0" data-reveal>
           <article class="card-in" aria-labelledby="t-mirth-transformer">
             <button class="card-shot" type="button" data-open="mirth-transformer" aria-label="Enlarge screenshots of Mirth Transformer Builder">
               <img class="shot-desk" src="/assets/screenshots/mirth-transformer-card.webp" width="640" height="400" loading="lazy" decoding="async" alt="Mirth Transformer Builder with a sample ADT^A01 message, three field mappings and the generated JavaScript transformer">
@@ -259,7 +265,7 @@
             <template class="card-uses"><ul><li>Prototyping Mirth channel transformers without hand-writing E4X.</li><li>Standardising routine interface work: code normalisation, date reformatting, de-identification, routing variables.</li><li>Learning HL7 field and component structure, with datatype-aware names on every path.</li></ul></template>
           </article>
         </li>
-        <li class="card" data-cat="hl7 fhir" data-slug="hl7-fhir-converter" style="--tint: var(--green); --d: 1" data-reveal>
+        <li class="card" data-cat="hl7 fhir" data-slug="hl7-fhir-converter" data-tint="green" data-d="1" data-reveal>
           <article class="card-in" aria-labelledby="t-hl7-fhir-converter">
             <button class="card-shot" type="button" data-open="hl7-fhir-converter" aria-label="Enlarge screenshots of HL7 v2.5.1 ↔ FHIR R4 Converter">
               <img class="shot-desk" src="/assets/screenshots/hl7-fhir-converter-card.webp" width="640" height="400" loading="lazy" decoding="async" alt="HL7 v2.5.1 to FHIR R4 Converter with a sample ADT^A08 message on the left and the generated FHIR R4 Bundle on the right">
@@ -280,7 +286,7 @@
             <template class="card-uses"><ul><li>Seeing exactly which v2 field became which FHIR element, through the mapping trace.</li><li>Finding what a conversion cannot carry faithfully, listed in the lossiness report.</li><li>Checking a message survives v2 &rarr; FHIR &rarr; v2 with the round-trip check.</li></ul></template>
           </article>
         </li>
-        <li class="card" data-cat="hl7 dicom" data-slug="radiology-handbook" style="--tint: var(--cyan); --d: 2" data-reveal>
+        <li class="card" data-cat="hl7 dicom" data-slug="radiology-handbook" data-tint="cyan" data-d="2" data-reveal>
           <article class="card-in" aria-labelledby="t-radiology-handbook">
             <button class="card-shot" type="button" data-open="radiology-handbook" aria-label="Enlarge screenshots of Radiology Transaction Handbook">
               <img class="shot-desk" src="/assets/screenshots/radiology-handbook-card.webp" width="640" height="400" loading="lazy" decoding="async" alt="Radiology Transaction Handbook opening page with its numbered contents and the introduction">
@@ -313,9 +319,9 @@
         <h2 id="how-title">Static pages. Your data stays in the tab.</h2>
       </div>
       <ol class="steps">
-        <li data-reveal style="--d:0"><span class="step-n" aria-hidden="true">01</span><h3>Open a page</h3><p>Every tool is a single static HTML page served from GitHub Pages. No install, no account and no build step.</p></li>
-        <li data-reveal style="--d:1"><span class="step-n" aria-hidden="true">02</span><h3>Load a sample or your own file</h3><p>Every tool has a sample or demo button, so you can see it work before you paste a message or drop a DICOM file.</p></li>
-        <li data-reveal style="--d:2"><span class="step-n" aria-hidden="true">03</span><h3>It runs in your browser</h3><p>Files and messages are parsed in your browser and are not uploaded anywhere. The site sets no cookies and runs no analytics.</p></li>
+        <li data-reveal data-d="0"><span class="step-n" aria-hidden="true">01</span><h3>Open a page</h3><p>Every tool is a single static HTML page served from GitHub Pages. No install, no account and no build step.</p></li>
+        <li data-reveal data-d="1"><span class="step-n" aria-hidden="true">02</span><h3>Load a sample or your own file</h3><p>Every tool has a sample or demo button, so you can see it work before you paste a message or drop a DICOM file.</p></li>
+        <li data-reveal data-d="2"><span class="step-n" aria-hidden="true">03</span><h3>It runs in your browser</h3><p>Files and messages are parsed in your browser and are not uploaded anywhere. The site sets no cookies and runs no analytics.</p></li>
       </ol>
       <aside class="privacy" data-reveal aria-labelledby="priv-title">
         <svg class="privacy-ico" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -335,31 +341,31 @@
         <p class="lede">Read the code, open an issue or fork it. Everything here is on GitHub under <a href="https://github.com/coffeemilktea">@coffeemilktea</a>.</p>
       </div>
       <ul class="repo-grid">
-          <li class="repo" data-reveal style="--d:0">
+          <li class="repo" data-reveal data-d="0">
             <div class="repo-top"><span class="repo-lang" data-lang="HTML">HTML</span></div>
             <h3><a href="https://github.com/coffeemilktea/hl7-dicom-tools"><span class="repo-owner">coffeemilktea/</span>hl7-dicom-tools</a></h3>
             <p>Single-file browser tools for HL7 v2.5.1 and DICOM: parser, diff, DICOM viewer and tag editor, generator, ORM^O01 order builder and MWL C-FIND simulator.</p>
             <a class="repo-live" href="https://coffeemilktea.github.io/hl7-dicom-tools/">Live site <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a>
           </li>
-          <li class="repo" data-reveal style="--d:1">
+          <li class="repo" data-reveal data-d="1">
             <div class="repo-top"><span class="repo-lang" data-lang="HTML">HTML</span></div>
             <h3><a href="https://github.com/coffeemilktea/coffeemilktea.github.io"><span class="repo-owner">coffeemilktea/</span>coffeemilktea.github.io</a></h3>
             <p>This site: the landing page, the HL7 v2.5.1 &harr; FHIR R4 converter and the radiology transaction handbook.</p>
             <a class="repo-live" href="https://coffeemilktea.github.io/">Live site <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a>
           </li>
-          <li class="repo" data-reveal style="--d:2">
+          <li class="repo" data-reveal data-d="2">
             <div class="repo-top"><span class="repo-lang" data-lang="HTML">HTML</span></div>
             <h3><a href="https://github.com/coffeemilktea/HL7-Interface-Javascript-Builder"><span class="repo-owner">coffeemilktea/</span>HL7-Interface-Javascript-Builder</a></h3>
             <p>Generate Mirth Connect transformers from HL7 v2.5.1 messages by dragging fields around. Single file, no dependencies.</p>
             <a class="repo-live" href="https://coffeemilktea.github.io/HL7-Interface-Javascript-Builder/">Live site <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a>
           </li>
-          <li class="repo" data-reveal style="--d:0">
+          <li class="repo" data-reveal data-d="0">
             <div class="repo-top"><span class="repo-lang" data-lang="JavaScript">JavaScript</span><span class="sx-wip">Work in progress</span></div>
             <h3><a href="https://github.com/coffeemilktea/hl7-v2-mcp-server"><span class="repo-owner">coffeemilktea/</span>hl7-v2-mcp-server</a></h3>
             <p>MCP server giving LLMs structured access to the HL7 v2.5.1 standard: segments, message structures, code tables, a parser and a validator.</p>
             
           </li>
-          <li class="repo" data-reveal style="--d:1">
+          <li class="repo" data-reveal data-d="1">
             <div class="repo-top"><span class="repo-lang" data-lang="JavaScript">JavaScript</span><span class="sx-wip">Work in progress</span></div>
             <h3><a href="https://github.com/coffeemilktea/hl7-v2-fhir-mcp-server"><span class="repo-owner">coffeemilktea/</span>hl7-v2-fhir-mcp-server</a></h3>
             <p>MCP server for the HL7 v2.5.1 &rarr; FHIR R4 crossing: field, datatype and code-value mappings, plus whole-message conversion with a warning for anything it cannot map faithfully.</p>

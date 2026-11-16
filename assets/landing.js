@@ -81,7 +81,8 @@
         if (t) uses.appendChild(t.content.cloneNode(true));
         var links = $$('.card-actions a', c);
         open.href = links[0].href; src.href = links[1].href;
-        open.innerHTML = open.innerHTML.replace(/^[^<]*/, 'Open ' + name + ' ');
+        /* the label is the link's first text node; set it as text, never as HTML */
+        if (open.firstChild && open.firstChild.nodeType === 3) open.firstChild.nodeValue = 'Open ' + name + ' ';
         $$('.lb-views button', lb).forEach(function (b) { b.setAttribute('aria-pressed', b.dataset.view === view ? 'true' : 'false'); });
         var many = list.length > 1;
         $$('.lb-nav', lb).forEach(function (b) { b.hidden = !many; });

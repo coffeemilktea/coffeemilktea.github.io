@@ -2,47 +2,25 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
+<!-- CSP as a meta tag: GitHub Pages cannot send headers. A meta CSP cannot set
+     frame-ancestors or report-to; see the security report. Keep it identical on every page. -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; connect-src 'none'; manifest-src 'self'; base-uri 'none'; form-action 'none'; object-src 'none'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Page not found: Healthcare Data Tools</title>
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#1a1b26">
-<meta name="color-scheme" content="dark">
+<meta name="theme-color" media="(prefers-color-scheme: light)" content="#e1e2e7">
+<meta name="theme-color" media="(prefers-color-scheme: dark)" content="#1a1b26">
+<meta name="color-scheme" content="light dark">
 <link rel="icon" href="/favicon.ico" sizes="32x32">
 <link rel="icon" type="image/svg+xml" href="/favicon.svg">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preload" href="/assets/tokyo-night.css" as="style">
 <link rel="stylesheet" href="/assets/tokens.css">
 <link rel="stylesheet" href="/assets/site.css">
 <script src="/tools/theme.js"></script>
 <script src="/assets/site.js" defer></script>
-<style>
-  /* Layout only; colours come from the shared tokens. */
-  * { box-sizing: border-box; }
-  body { margin: 0; min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; overflow-x: clip;
-         background: var(--bg); color: var(--body); font: 16px/1.6 var(--font-sans); }
-  main { flex: 1; display: grid; place-items: center; padding: 56px 0 72px; position: relative; isolation: isolate; }
-  main::before { content: ''; position: absolute; inset: 0; z-index: -1; pointer-events: none;
-    background-image: linear-gradient(to right, color-mix(in srgb, var(--border) 40%, transparent) 1px, transparent 1px),
-                      linear-gradient(to bottom, color-mix(in srgb, var(--border) 40%, transparent) 1px, transparent 1px);
-    background-size: 44px 44px;
-    -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 20%, transparent 75%);
-            mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 20%, transparent 75%); }
-  .nf { width: min(560px, 100%); text-align: center; padding: 44px 32px; border-radius: 20px;
-        background: var(--surface); border: 1px solid var(--border);
-        box-shadow: 0 40px 80px -30px rgba(0, 0, 0, .75); }
-  .code { margin: 0; font: 800 4rem/1 var(--font-mono); letter-spacing: -.04em;
-          background: linear-gradient(100deg, var(--accent), var(--cyan), var(--accent2)); -webkit-background-clip: text; background-clip: text; color: transparent; }
-  h1 { margin: 12px 0 8px; color: var(--text); font-size: 1.4rem; }
-  .nf p { margin: 0 0 20px; }
-  .msa { font: 13px/1.5 var(--font-mono); color: var(--muted); background: var(--sink); border: 1px solid var(--border-soft);
-         border-radius: 10px; padding: 10px 14px; overflow-wrap: anywhere; }
-  .msa b { color: var(--yellow); }
-  h2 { margin: 32px 0 12px; padding-top: 24px; border-top: 1px solid var(--border-soft); color: var(--muted);
-       font: 700 12px/1 var(--font-mono); letter-spacing: .14em; text-transform: uppercase; }
-  .links { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
-  .links a { display: inline-flex; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 999px;
-             border: 1px solid var(--border); background: var(--surface2); color: var(--text); text-decoration: none; font-size: 14px; }
-  .links a:hover { border-color: var(--accent); color: var(--accent); }
-</style>
+<link rel="stylesheet" href="/assets/404.css">
 </head>
 <body>
 <a class="sx-skip" href="#main">Skip to content</a>
@@ -51,15 +29,16 @@
     <a class="sx-brand" href="/"><span class="sx-mark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M6 7.5h12l-1.3 12.6a1.6 1.6 0 0 1-1.6 1.4H8.9a1.6 1.6 0 0 1-1.6-1.4z"/><path d="M4.6 7.5h14.8"/><path d="M13.6 7.5V3.2l2.9-1.1"/><circle cx="10.2" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="13.8" cy="17.4" r="1.05" fill="currentColor" stroke="none"/><circle cx="12" cy="19.7" r="1.05" fill="currentColor" stroke="none"/></svg></span><span class="sx-brand-text">Healthcare Data Tools</span></a>
     <nav class="sx-nav" aria-label="Primary"><a href="/#tools">Tools</a><a href="/#how">How it works</a><a href="/#repos">Repos</a><a href="/hl7-fhir-converter.html">Converter</a><a href="/radiology-handbook.html">Handbook</a></nav>
     <span class="sx-badge" title="Every tool reads and writes HL7 v2.5.1">HL7 v2.5.1</span>
+    <button class="sx-theme" type="button" aria-label="Light theme" aria-pressed="false" hidden><svg class="i-sun" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="4.2"/><path d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"/></svg><svg class="i-moon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7z"/></svg></button>
     <a class="sx-gh" href="https://github.com/coffeemilktea" aria-label="@coffeemilktea on GitHub"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg></a>
     <details class="sx-menu">
       <summary aria-label="Menu"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16"/></svg></summary>
-      <nav class="sx-menu-panel" aria-label="Primary (menu)"><a href="/#tools">Tools</a><a href="/#how">How it works</a><a href="/#repos">Repos</a><a href="/hl7-fhir-converter.html">Converter</a><a href="/radiology-handbook.html">Handbook</a></nav>
+      <nav class="sx-menu-panel" aria-label="Primary (menu)"><a href="/#tools">Tools</a><a href="/#how">How it works</a><a href="/#repos">Repos</a><a href="/hl7-fhir-converter.html">Converter</a><a href="/radiology-handbook.html">Handbook</a><a class="sx-menu-gh" href="https://github.com/coffeemilktea">GitHub</a></nav>
     </details>
   </div>
 </header>
 <main id="main">
-  <div class="sx-wrap" style="width:100%;display:grid;place-items:center">
+  <div class="sx-wrap nf-wrap">
     <div class="nf" data-reveal>
       <p class="code">404</p>
       <h1>Page not found</h1>

@@ -2,6 +2,7 @@
    - the sticky header shrinks once the page scrolls
    - [data-reveal] elements fade up as they enter the viewport
    - the phone menu closes after a link is chosen or on Escape
+   - the light/dark toggle is revealed and kept in sync (theme.js does the work)
    Smooth anchor scrolling is CSS (scroll-behavior), off under reduced motion. */
 (function () {
   var root = document.documentElement;
@@ -17,6 +18,21 @@
       var update = function () { ticking = false; header.classList.toggle('is-scrolled', window.scrollY > 12); };
       window.addEventListener('scroll', function () { if (!ticking) { ticking = true; requestAnimationFrame(update); } }, { passive: true });
       update();
+    }
+
+    /* Light/dark toggle: theme.js (in <head>) already applied the theme;
+       this only reveals the button and keeps its state in sync. */
+    var tbtn = document.querySelector('.sx-theme');
+    if (tbtn && typeof window.toggleTheme === 'function') {
+      var syncBtn = function () {
+        var light = root.getAttribute('data-theme') === 'light';
+        tbtn.setAttribute('aria-pressed', light ? 'true' : 'false');
+        tbtn.title = light ? 'Switch to dark theme' : 'Switch to light theme';
+      };
+      syncBtn();
+      tbtn.hidden = false;
+      tbtn.addEventListener('click', function () { window.toggleTheme(); });
+      root.addEventListener('themechange', syncBtn);
     }
 
     var menu = document.querySelector('.sx-menu');

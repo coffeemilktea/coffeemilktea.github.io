@@ -61,3 +61,22 @@ Not pushed. Preview locally with `python3 -m http.server 8000` (links into `/hl7
 - All 58 local links/assets return 200; all external GitHub links return 200.
 - Filters, lightbox (open, phone view, arrow keys, Esc, focus return), header shrink, scroll reveal,
   reduced-motion behaviour.
+
+# Security + polish pass (branch `modernize`, 2026-11-16)
+
+Full findings and evidence: the security report (`coffeemilktea.github.io-security.md`, kept outside the repo).
+
+- **Converter XSS fixed**: the FHIR → v2 status line put the pasted Bundle's `MessageHeader.eventCoding.code`
+  into `innerHTML` unescaped. It's escaped now, and `esc()` also escapes `"` and `'` (which also switches on
+  the JSON key/string colouring that `highlightJson` was always meant to do). Output is otherwise identical.
+- **CSP on every page** (meta tag): `script-src 'self'`, `style-src 'self'`, `connect-src 'none'`, no
+  `'unsafe-inline'`. All inline `<script>`/`<style>` moved to `assets/converter.*`, `assets/handbook.*`,
+  `assets/404.css`; `style=""` replaced with classes / `data-d` / `data-tint`. Plus `referrer` meta.
+- **Light theme** via `prefers-color-scheme`, with a header toggle saved under `hl7-tools-theme`
+  (the Mirth builder's key). `theme.js` no longer deletes that key on every load. Theme-color metas for both
+  schemes; shadows and hero glows tuned per theme through tokens.
+- Phone header: the GitHub icon moves into the menu at ≤480px so the toggle fits at 320px.
+- 404: a bare `h2` rule was giving the footer's column headings a border; scoped to the card.
+- Converter: the input and output panes have accessible names. Handbook: literal white row-hover tint now
+  token-derived. Landing: lightbox label set as text, not HTML; dropped a preload of a below-the-fold image;
+  `tokyo-night.css` is preloaded so it no longer waits on `tokens.css`. Manifest gains `id`/`scope`/`lang`.
