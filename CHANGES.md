@@ -80,3 +80,22 @@ Full findings and evidence: the security report (`coffeemilktea.github.io-securi
 - Converter: the input and output panes have accessible names. Handbook: literal white row-hover tint now
   token-derived. Landing: lightbox label set as text, not HTML; dropped a preload of a below-the-fold image;
   `tokyo-night.css` is preloaded so it no longer waits on `tokens.css`. Manifest gains `id`/`scope`/`lang`.
+
+---
+
+# Polish pass (branch `polish`)
+
+Not pushed. Copy and layout only; the CSP, tokens, themes and every URL are unchanged.
+
+- **Handbook**: the "signal chain" infographic and the register-to-read timeline were capped at 74ch by the
+  generic `ul,ol{max-width}` rule, so on desktop the seven boxes were squeezed into ~70% of the frame and
+  their titles broke mid-word. Both lists now use the full width.
+- **Landing, phones**: the eyebrow pill fits on one line at 360px and up, the two hero buttons are full
+  width, and the four "at a glance" facts sit on an even two-column grid.
+- **Landing, copy**: tighter hero and section intros; card and repo descriptions use one voice;
+  "View the source" is now "Source on GitHub"; "Repositories" is now "Read the code".
+- **Repo cards**: one consistent action row on every card (Live site where there is one, GitHub always),
+  with the repo name in each link's accessible name.
+- **Converter**: on phones the controls stack in a fixed order (direction, sample, Convert, secondary
+  actions) instead of a ragged wrap; "Output → Input" is now "Use output as input"; sample data is
+  described as synthetic.

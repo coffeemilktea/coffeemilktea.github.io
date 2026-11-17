@@ -54,11 +54,11 @@
 
 <header class="top">
   <h1><span class="v2">HL7 v2.5.1</span> <span class="arrow">&harr;</span> <span class="v4">FHIR R4</span> converter</h1>
-  <p class="tagline">Paste a v2.5.1 message (ADT, ORM, ORU, SIU, ACK) and get a FHIR R4 message Bundle &mdash;
-     or paste a Bundle and get the pipe-delimited message back. Every mapped element is traced field by field,
-     and anything the mapping drops is listed rather than silently lost.</p>
-  <span class="privacy">&#9679; Runs entirely in your browser &mdash; no uploads, no network calls</span>
-  <a class="mcp-link" href="https://github.com/coffeemilktea/hl7-v2-fhir-mcp-server">Also available as an MCP server &rarr;</a>
+  <p class="tagline">Paste an HL7 v2.5.1 message (ADT, ORM, ORU, SIU or ACK) to get a FHIR R4 message Bundle,
+     or paste a Bundle to get the pipe-delimited message back. Every mapped element is traced field by field,
+     and anything the mapping drops is listed, not silently lost.</p>
+  <span class="privacy"><span aria-hidden="true">&#9679;</span> Runs entirely in your browser: no uploads, no network calls</span>
+  <a class="mcp-link" href="https://github.com/coffeemilktea/hl7-v2-fhir-mcp-server">Also available as an MCP server <span aria-hidden="true">&rarr;</span></a>
 </header>
 
 <div class="bar">
@@ -69,9 +69,9 @@
     <label for="dir-f2v">FHIR &rarr; HL7 v2</label>
   </div>
   <select id="sample" aria-label="Load a sample message"></select>
-  <span class="hint" title="Samples use synthetic demographics (including SSN-shaped PID-3 repeats). Nothing here is real PHI.">All sample data is fake.</span>
+  <span class="hint" title="Samples use synthetic demographics (including SSN-shaped PID-3 repeats). Nothing here is real PHI.">All sample data is synthetic.</span>
   <button id="btn-convert" class="primary" type="button">Convert &#9654;</button>
-  <button id="btn-swap" type="button" title="Send the output back to the input and flip direction">Output &rarr; Input</button>
+  <button id="btn-swap" type="button" title="Send the output back to the input and flip direction">Use output as input</button>
   <button id="btn-trip" type="button" title="Convert, convert back, and diff against the original">Round-trip check</button>
   <button id="btn-clear" type="button">Clear</button>
   <span class="spacer"></span>

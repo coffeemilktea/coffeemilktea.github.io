@@ -78,10 +78,10 @@ h1 .thin{font-weight:400;color:var(--body);display:block}
   background:linear-gradient(180deg,var(--surface) 0%,var(--sink) 100%);border-radius:4px}
 .chain-cap{font-family:var(--font-mono);font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;
   color:var(--muted);margin-bottom:22px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.chain{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.chain{list-style:none;margin:0;padding:0;max-width:none;display:flex;flex-direction:column}
 @media(min-width:900px){.chain{flex-direction:row;align-items:stretch}}
 .node{position:relative;flex:1 1 0;min-width:0;padding:0 0 30px}
-@media(min-width:900px){.node{padding:0 20px 0 0}}
+@media(min-width:900px){.node{padding:0 20px 0 0}.node:last-child{padding-right:0}}
 .node:last-child{padding-bottom:0}
 .node-box{border:1px solid var(--border);background:var(--surface2);border-radius:3px;padding:11px 12px;height:100%}
 .node-box .who{font-family:var(--font-sans);font-weight:600;font-size:13.5px;line-height:1.2;overflow-wrap:break-word}
@@ -125,7 +125,7 @@ h1 .thin{font-weight:400;color:var(--body);display:block}
 .phase[data-p="both"]{border-top-color:var(--body)}
 .ph-t{display:block;font-family:var(--font-mono);font-size:9.5px;letter-spacing:.14em;color:var(--muted);margin-bottom:4px}
 .ph-n{display:block;font-family:var(--font-sans);font-weight:600;font-size:13.5px;line-height:1.15}
-.tl{list-style:none;margin:0;padding:0}
+.tl{list-style:none;margin:0;padding:0;max-width:none}
 .tl-item{display:grid;grid-template-columns:62px 20px minmax(0,1fr);gap:0;position:relative}
 @media(min-width:700px){.tl-item{grid-template-columns:88px 22px minmax(0,1fr)}}
 .tl-time{font-family:var(--font-mono);font-size:11px;color:var(--muted);padding:2px 10px 0 0;text-align:right;white-space:nowrap}

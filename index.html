@@ -61,10 +61,10 @@
       <div class="hero-copy">
         <p class="eyebrow" data-reveal><span class="dot" aria-hidden="true"></span>Free &middot; Open source &middot; Runs in your browser</p>
         <h1 id="hero-title" data-reveal data-d="1">HL7, DICOM and FHIR tools that run <span class="grad">entirely in your browser</span>.</h1>
-        <p class="hero-sub" data-reveal data-d="2">Parse and diff HL7 v2.5.1 messages, view and generate DICOM, build Mirth transformers, simulate modality worklists and convert to FHIR R4. No install, no account, nothing to set up.</p>
+        <p class="hero-sub" data-reveal data-d="2">Parse and diff HL7 v2.5.1 messages, view and generate DICOM, build Mirth transformers, simulate modality worklists and convert to FHIR R4. Nothing to install, no account needed.</p>
         <div class="hero-actions" data-reveal data-d="3">
           <a class="sx-btn sx-btn-primary sx-btn-lg" href="#tools">Explore the tools <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a>
-          <a class="sx-btn sx-btn-lg" href="https://github.com/coffeemilktea/hl7-dicom-tools"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg> View the source</a>
+          <a class="sx-btn sx-btn-lg" href="https://github.com/coffeemilktea/hl7-dicom-tools"><svg width="20" height="20" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true" focusable="false"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.012 8.012 0 0 0 16 8c0-4.42-3.58-8-8-8z"/></svg> Source on GitHub</a>
         </div>
         <ul class="facts" data-reveal data-d="4" aria-label="At a glance">
           <li><strong>7</strong><span>browser tools</span></li>
@@ -114,7 +114,7 @@
       <div class="section-head" data-reveal>
         <p class="kicker">The toolkit</p>
         <h2 id="tools-title">7 tools, 2 references, zero setup</h2>
-        <p class="lede">Each one is a standalone page with sample data built in, so you can try it before loading your own files. Select a screenshot to see it full size, on desktop and on a phone.</p>
+        <p class="lede">Every tool is a standalone page with sample data built in, so you can try it before loading your own files. Select any screenshot to enlarge it and compare the desktop and phone views.</p>
       </div>
       <div class="filters" role="group" aria-label="Filter by standard" data-reveal hidden><button class="chip" type="button" data-filter="all" aria-pressed="true">All <span class="chip-n" data-count="all"></span></button><button class="chip" type="button" data-filter="hl7" aria-pressed="false">HL7 <span class="chip-n" data-count="hl7"></span></button><button class="chip" type="button" data-filter="dicom" aria-pressed="false">DICOM <span class="chip-n" data-count="dicom"></span></button><button class="chip" type="button" data-filter="fhir" aria-pressed="false">FHIR <span class="chip-n" data-count="fhir"></span></button></div>
       <ul class="cards" id="cards">
@@ -254,7 +254,7 @@
             <div class="card-body">
               <p class="card-kind">Interface engineering</p>
               <h3 id="t-mirth-transformer"><a href="/HL7-Interface-Javascript-Builder/">Mirth Transformer Builder</a></h3>
-              <p class="card-desc">Map HL7 v2.5.1 fields by dragging one onto another and get a Mirth Connect transformer back: the JavaScript, a channel XML block and a live preview. Ships with 33 ready-made recipes.</p>
+              <p class="card-desc">Maps HL7 v2.5.1 fields as you drag one onto another, and generates a Mirth Connect transformer: the JavaScript, a channel XML block and a live preview. Includes 33 ready-made recipes.</p>
               
               <ul class="tags" aria-label="Tags"><li>HL7 v2.5.1</li><li>Mirth Connect</li><li>JavaScript</li></ul>
               <div class="card-actions">
@@ -319,9 +319,9 @@
         <h2 id="how-title">Static pages. Your data stays in the tab.</h2>
       </div>
       <ol class="steps">
-        <li data-reveal data-d="0"><span class="step-n" aria-hidden="true">01</span><h3>Open a page</h3><p>Every tool is a single static HTML page served from GitHub Pages. No install, no account and no build step.</p></li>
-        <li data-reveal data-d="1"><span class="step-n" aria-hidden="true">02</span><h3>Load a sample or your own file</h3><p>Every tool has a sample or demo button, so you can see it work before you paste a message or drop a DICOM file.</p></li>
-        <li data-reveal data-d="2"><span class="step-n" aria-hidden="true">03</span><h3>It runs in your browser</h3><p>Files and messages are parsed in your browser and are not uploaded anywhere. The site sets no cookies and runs no analytics.</p></li>
+        <li data-reveal data-d="0"><span class="step-n" aria-hidden="true">01</span><h3>Open a page</h3><p>Every tool is a single static HTML page served from GitHub Pages. There is no install, no account and no build step.</p></li>
+        <li data-reveal data-d="1"><span class="step-n" aria-hidden="true">02</span><h3>Load a sample or your own file</h3><p>Every tool has a sample or demo button, so you can see it working before you paste a message or drop in a DICOM file.</p></li>
+        <li data-reveal data-d="2"><span class="step-n" aria-hidden="true">03</span><h3>It runs in your browser</h3><p>Files and messages are parsed in your browser and never uploaded. The site sets no cookies and runs no analytics.</p></li>
       </ol>
       <aside class="privacy" data-reveal aria-labelledby="priv-title">
         <svg class="privacy-ico" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
@@ -337,39 +337,39 @@
     <div class="sx-wrap">
       <div class="section-head" data-reveal>
         <p class="kicker">Open source</p>
-        <h2 id="repos-title">Repositories</h2>
-        <p class="lede">Read the code, open an issue or fork it. Everything here is on GitHub under <a href="https://github.com/coffeemilktea">@coffeemilktea</a>.</p>
+        <h2 id="repos-title">Read the code</h2>
+        <p class="lede">Everything here is open source on GitHub under <a href="https://github.com/coffeemilktea">@coffeemilktea</a>. Browse the code, open an issue or fork it.</p>
       </div>
       <ul class="repo-grid">
           <li class="repo" data-reveal data-d="0">
             <div class="repo-top"><span class="repo-lang" data-lang="HTML">HTML</span></div>
             <h3><a href="https://github.com/coffeemilktea/hl7-dicom-tools"><span class="repo-owner">coffeemilktea/</span>hl7-dicom-tools</a></h3>
             <p>Single-file browser tools for HL7 v2.5.1 and DICOM: parser, diff, DICOM viewer and tag editor, generator, ORM^O01 order builder and MWL C-FIND simulator.</p>
-            <a class="repo-live" href="https://coffeemilktea.github.io/hl7-dicom-tools/">Live site <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a>
+            <div class="repo-links"><a class="repo-live" href="https://coffeemilktea.github.io/hl7-dicom-tools/">Live site<span class="sx-sr">: hl7-dicom-tools</span> <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a><a class="repo-live" href="https://github.com/coffeemilktea/hl7-dicom-tools">GitHub<span class="sx-sr">: hl7-dicom-tools</span> <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a></div>
           </li>
           <li class="repo" data-reveal data-d="1">
             <div class="repo-top"><span class="repo-lang" data-lang="HTML">HTML</span></div>
             <h3><a href="https://github.com/coffeemilktea/coffeemilktea.github.io"><span class="repo-owner">coffeemilktea/</span>coffeemilktea.github.io</a></h3>
             <p>This site: the landing page, the HL7 v2.5.1 &harr; FHIR R4 converter and the radiology transaction handbook.</p>
-            <a class="repo-live" href="https://coffeemilktea.github.io/">Live site <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a>
+            <div class="repo-links"><a class="repo-live" href="https://coffeemilktea.github.io/">Live site<span class="sx-sr">: coffeemilktea.github.io</span> <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a><a class="repo-live" href="https://github.com/coffeemilktea/coffeemilktea.github.io">GitHub<span class="sx-sr">: coffeemilktea.github.io</span> <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a></div>
           </li>
           <li class="repo" data-reveal data-d="2">
             <div class="repo-top"><span class="repo-lang" data-lang="HTML">HTML</span></div>
             <h3><a href="https://github.com/coffeemilktea/HL7-Interface-Javascript-Builder"><span class="repo-owner">coffeemilktea/</span>HL7-Interface-Javascript-Builder</a></h3>
-            <p>Generate Mirth Connect transformers from HL7 v2.5.1 messages by dragging fields around. Single file, no dependencies.</p>
-            <a class="repo-live" href="https://coffeemilktea.github.io/HL7-Interface-Javascript-Builder/">Live site <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a>
+            <p>Generates Mirth Connect transformers from HL7 v2.5.1 messages as you drag fields onto each other. Single file, no dependencies.</p>
+            <div class="repo-links"><a class="repo-live" href="https://coffeemilktea.github.io/HL7-Interface-Javascript-Builder/">Live site<span class="sx-sr">: HL7-Interface-Javascript-Builder</span> <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a><a class="repo-live" href="https://github.com/coffeemilktea/HL7-Interface-Javascript-Builder">GitHub<span class="sx-sr">: HL7-Interface-Javascript-Builder</span> <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a></div>
           </li>
           <li class="repo" data-reveal data-d="0">
             <div class="repo-top"><span class="repo-lang" data-lang="JavaScript">JavaScript</span><span class="sx-wip">Work in progress</span></div>
             <h3><a href="https://github.com/coffeemilktea/hl7-v2-mcp-server"><span class="repo-owner">coffeemilktea/</span>hl7-v2-mcp-server</a></h3>
-            <p>MCP server giving LLMs structured access to the HL7 v2.5.1 standard: segments, message structures, code tables, a parser and a validator.</p>
-            
+            <p>An MCP server that gives LLMs structured access to the HL7 v2.5.1 standard: segments, message structures, code tables, a parser and a validator.</p>
+            <div class="repo-links"><a class="repo-live" href="https://github.com/coffeemilktea/hl7-v2-mcp-server">GitHub<span class="sx-sr">: hl7-v2-mcp-server</span> <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a></div>
           </li>
           <li class="repo" data-reveal data-d="1">
             <div class="repo-top"><span class="repo-lang" data-lang="JavaScript">JavaScript</span><span class="sx-wip">Work in progress</span></div>
             <h3><a href="https://github.com/coffeemilktea/hl7-v2-fhir-mcp-server"><span class="repo-owner">coffeemilktea/</span>hl7-v2-fhir-mcp-server</a></h3>
-            <p>MCP server for the HL7 v2.5.1 &rarr; FHIR R4 crossing: field, datatype and code-value mappings, plus whole-message conversion with a warning for anything it cannot map faithfully.</p>
-            
+            <p>An MCP server for converting HL7 v2.5.1 to FHIR R4: field, datatype and code-value mappings, plus whole-message conversion with a warning for anything it cannot map faithfully.</p>
+            <div class="repo-links"><a class="repo-live" href="https://github.com/coffeemilktea/hl7-v2-fhir-mcp-server">GitHub<span class="sx-sr">: hl7-v2-fhir-mcp-server</span> <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M5 12h14"/><path d="m13 6 6 6-6 6"/></svg></a></div>
           </li>
       </ul>
     </div>
