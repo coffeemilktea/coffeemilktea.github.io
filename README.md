@@ -26,6 +26,13 @@ The landing page links to these tools:
 - Strict Content-Security-Policy on every page (`<meta http-equiv>`, since GitHub Pages can't send headers): scripts and styles only from this site, no inline code, no network requests.
 - Mobile-friendly: 16px inputs on touch screens, 44px tap targets, wide tables and code blocks scroll inside their own box, and safe-area insets are respected.
 
+## Recent changes
+
+- **Nov 2026, polish:** tighter copy and clearer calls to action on the landing page, full-width buttons and an even facts grid on phones, a consistent Live site / GitHub row on repo cards, clearer converter labels, and a fix for the handbook's signal-chain diagram, which was squeezed on desktop and broke words mid-way. README screenshots refreshed.
+- **Nov 2026, modernize:** product-style landing page, light theme alongside Tokyo Night, strict CSP on every page, and an XSS fix in the converter.
+
+Details are in [CHANGES.md](CHANGES.md).
+
 ## HL7 standard: v2.5.1
 
 The converter reads and writes HL7 **v2.5.1**: it warns when an input's MSH-12 is a different version, and it always writes `2.5.1` to MSH-12 when converting from FHIR. The handbook's examples use v2.5.1 too.
